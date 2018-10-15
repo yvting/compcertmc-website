@@ -1,0 +1,430 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module StackInj</title>
+<meta name="description" content="Documentation of Coq module StackInj" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module StackInj</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Coqlib.html">Coqlib</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Tactics.html">Tactics</a></span> <span class="id"><a href="StackADT.html">StackADT</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="sizes">sizes</a></span> : <span class="id"><a href="StackADT.html#frameinj">frameinj</a></span> -&gt; <span class="id"><a href="StackADT.html#stack">stack</a></span> -&gt; <span class="id"><a href="StackADT.html#stack">stack</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id"><a name="sizes_nil">sizes_nil</a></span>: <span class="id"><a href="StackInj.html#sizes">sizes</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span><br/>
+| <span class="id"><a name="sizes_cons">sizes_cons</a></span> <span class="id">g</span> <span class="id">s1</span> <span class="id">s2</span> <span class="id">t1</span> <span class="id">n</span> <span class="id">t2</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackInj.html#sizes">sizes</a></span> <span class="id"><a href="StackInj.html#g">g</a></span> (<span class="id"><a href="StackADT.html#drop">drop</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id"><a href="StackInj.html#n">n</a></span>) <span class="id"><a href="StackInj.html#s1">s1</a></span>) <span class="id"><a href="StackInj.html#s2">s2</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#take">take</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id"><a href="StackInj.html#n">n</a></span>) <span class="id"><a href="StackInj.html#s1">s1</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="StackInj.html#t1">t1</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Exists">Exists</a></span> (<span class="kwd">fun</span> <span class="id">f1</span> =&gt; <span class="id"><a href="StackADT.html#size_frames">size_frames</a></span> <span class="id"><a href="StackInj.html#t2">t2</a></span> &lt;= <span class="id"><a href="StackADT.html#size_frames">size_frames</a></span> <span class="id"><a href="StackInj.html#f1">f1</a></span>) <span class="id"><a href="StackInj.html#t1">t1</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackInj.html#sizes">sizes</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id"><a href="StackInj.html#n">n</a></span>::<span class="id"><a href="StackInj.html#g">g</a></span>) <span class="id"><a href="StackInj.html#s1">s1</a></span> (<span class="id"><a href="StackInj.html#t2">t2</a></span> :: <span class="id"><a href="StackInj.html#s2">s2</a></span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="compat_sizes_tl">compat_sizes_tl</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">g</span> <span class="id">m1</span> <span class="id">m2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackInj.html#sizes">sizes</a></span> (1%<span class="id">nat</span>::<span class="id"><a href="StackInj.html#g">g</a></span>) <span class="id"><a href="StackInj.html#m1">m1</a></span> <span class="id"><a href="StackInj.html#m2">m2</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackInj.html#sizes">sizes</a></span> <span class="id"><a href="StackInj.html#g">g</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#tl">tl</a></span> <span class="id"><a href="StackInj.html#m1">m1</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#tl">tl</a></span> <span class="id"><a href="StackInj.html#m2">m2</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1727')">Proof.</div>
+<div class="proofscript" id="proof1727">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">g</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">SZ</span>. <span class="id">inv</span> <span class="id">SZ</span>. <span class="tactic">simpl</span>. <span class="tactic">simpl</span> <span class="kwd">in</span> *. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="sum">sum</a></span> (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="StackInj.html#l">l</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; 0<br/>
+&nbsp;&nbsp;| <span class="id">a</span>::<span class="id">r</span> =&gt; <span class="id">a</span> + <span class="id"><a href="StackInj.html#sum">sum</a></span> <span class="id">r</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Sorting.Permutation.html">Permutation</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="size_stack_permut">size_stack_permut</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">s</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Sorting.Permutation.html#Permutation">Permutation</a></span> <span class="id"><a href="StackInj.html#s">s</a></span> <span class="id">s</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#s">s</a></span> = <span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id">s</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1728')">Proof.</div>
+<div class="proofscript" id="proof1728">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="size_stack_app">size_stack_app</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s1</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> (<span class="id"><a href="StackInj.html#s1">s1</a></span> ++ <span class="id"><a href="StackInj.html#s2">s2</a></span>) = <span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#s1">s1</a></span> + <span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#s2">s2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1729')">Proof.</div>
+<div class="proofscript" id="proof1729">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">s1</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">IHs1</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="size_stack_concat">size_stack_concat</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ss</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#concat">concat</a></span> <span class="id"><a href="StackInj.html#ss">ss</a></span>) = <span class="id"><a href="StackInj.html#sum">sum</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#ss">ss</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1730')">Proof.</div>
+<div class="proofscript" id="proof1730">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">ss</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="StackInj.html#size_stack_app">size_stack_app</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="id">Opaque</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Nat.html#sub">minus</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="list_nats_S">list_nats_S</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#list_nats">list_nats</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id"><a href="StackInj.html#n">n</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (<span class="id"><a href="StackADT.html#list_nats">list_nats</a></span> <span class="id"><a href="StackInj.html#n">n</a></span>) ++ <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#O">O</a></span> :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1731')">Proof.</div>
+<div class="proofscript" id="proof1731">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">n</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">IHn</span>. <span class="tactic">simpl</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="map_list_nats_rev">map_list_nats_rev</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> (<span class="kwd">fun</span> <span class="id">m</span> =&gt; <span class="id"><a href="StackInj.html#n">n</a></span> - <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id"><a href="StackInj.html#m">m</a></span>)%<span class="id">nat</span> (<span class="id"><a href="StackADT.html#list_nats">list_nats</a></span> <span class="id"><a href="StackInj.html#n">n</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#rev">rev</a></span> (<span class="id"><a href="StackADT.html#list_nats">list_nats</a></span> <span class="id"><a href="StackInj.html#n">n</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1732')">Proof.</div>
+<div class="proofscript" id="proof1732">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">n</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map_ext_in">map_ext_in</a></span> <span class="kwd">with</span> (<span class="id">g</span> := <span class="kwd">fun</span> <span class="id">m</span> =&gt; (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (<span class="id">n</span> - <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id"><a href="StackInj.html#m">m</a></span>))%<span class="id">nat</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map_map">map_map</a></span>. <br/>
+&nbsp;&nbsp;2: <span class="tactic">intros</span>; <span class="tactic">rewrite</span> <span class="id"><a href="StackADT.html#in_list_nats">in_list_nats</a></span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Minus.html#minus_diag">minus_diag</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">IHn</span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map_rev">map_rev</a></span>. <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#rev_unit">rev_unit</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="StackInj.html#list_nats_S">list_nats_S</a></span>. <span class="tactic">simpl</span>. <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="opt_concat">opt_concat</a></span> {<span class="id">A</span>} (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#A">A</a></span>))) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#A">A</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="StackInj.html#l">l</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> :: <span class="id">l</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">a</span>::<span class="id">l</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="StackInj.html#opt_concat">opt_concat</a></span> <span class="id"><a href="StackInj.html#l">l</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">r</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">a</span> ++ <span class="id">r</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="sublist">sublist</a></span> {<span class="id">A</span>: <span class="kwd">Type</span>}  : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id">A</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id">A</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id"><a name="sublist_intro">sublist_intro</a></span> <span class="id">s</span>: <span class="id"><a href="StackInj.html#sublist">sublist</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> <span class="id"><a href="StackInj.html#s">s</a></span><br/>
+| <span class="id"><a name="sublist_skip">sublist_skip</a></span> <span class="id">a</span> <span class="id">s1</span> <span class="id">s2</span>: <span class="id"><a href="StackInj.html#sublist">sublist</a></span> <span class="id"><a href="StackInj.html#s1">s1</a></span> <span class="id"><a href="StackInj.html#s2">s2</a></span> -&gt; <span class="id"><a href="StackInj.html#sublist">sublist</a></span> <span class="id"><a href="StackInj.html#s1">s1</a></span> (<span class="id"><a href="StackInj.html#a">a</a></span>::<span class="id"><a href="StackInj.html#s2">s2</a></span>)<br/>
+| <span class="id"><a name="sublist_same">sublist_same</a></span> <span class="id">a</span> <span class="id">s1</span> <span class="id">s2</span>: <span class="id"><a href="StackInj.html#sublist">sublist</a></span> <span class="id"><a href="StackInj.html#s1">s1</a></span> <span class="id"><a href="StackInj.html#s2">s2</a></span> -&gt; <span class="id"><a href="StackInj.html#sublist">sublist</a></span> (<span class="id"><a href="StackInj.html#a">a</a></span>::<span class="id"><a href="StackInj.html#s1">s1</a></span>) (<span class="id"><a href="StackInj.html#a">a</a></span>::<span class="id"><a href="StackInj.html#s2">s2</a></span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="size_stack_sublist">size_stack_sublist</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s1</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackInj.html#sublist">sublist</a></span> <span class="id"><a href="StackInj.html#s1">s1</a></span> <span class="id"><a href="StackInj.html#s2">s2</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#s1">s1</a></span> &lt;= <span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#s2">s2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1733')">Proof.</div>
+<div class="proofscript" id="proof1733">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>. <span class="tactic">apply</span> <span class="id"><a href="StackADT.html#size_stack_pos">size_stack_pos</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="StackADT.html#size_frames_pos">size_frames_pos</a></span> <span class="id">a</span>); <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="minl">minl</a></span> (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="StackInj.html#l">l</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;| <span class="id">a</span>::<span class="id">r</span> =&gt; <span class="kwd">match</span> <span class="id"><a href="StackInj.html#minl">minl</a></span> <span class="id">r</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">b</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.min">Nat.min</a></span> <span class="id">a</span> <span class="id">b</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">a</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="map_concat">map_concat</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span>} (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#A">A</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#concat">concat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id"><a href="StackInj.html#x">x</a></span>::<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>) <span class="id"><a href="StackInj.html#l">l</a></span>) = <span class="id"><a href="StackInj.html#l">l</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1734')">Proof.</div>
+<div class="proofscript" id="proof1734">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>. <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="partition">partition</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span>} <span class="id">f</span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">l2</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#A">A</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">l1</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#A">A</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCL</span>: <span class="kwd">forall</span> <span class="id">i</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="StackInj.html#i">i</a></span> <span class="id"><a href="StackInj.html#l2">l2</a></span> -&gt; <span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="StackInj.html#x">x</a></span> (<span class="id"><a href="StackInj.html#f">f</a></span> <span class="id"><a href="StackInj.html#i">i</a></span>) -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="StackInj.html#x">x</a></span> <span class="id"><a href="StackInj.html#l1">l1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="StackInj.html#x">x</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#concat">concat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="StackInj.html#f">f</a></span> <span class="id"><a href="StackInj.html#l2">l2</a></span>))),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="StackInj.html#x">x</a></span> <span class="id"><a href="StackInj.html#l1">l1</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1735')">Proof.</div>
+<div class="proofscript" id="proof1735">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l2</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">easy</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id"><a href="Coqlib.html#in_app">in_app</a></span> <span class="kwd">in</span> <span class="id">IN</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">IN</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="lnr_concat">lnr_concat</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span> <span class="id">B</span>} (<span class="id">f</span>: <span class="id"><a href="StackInj.html#A">A</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#B">B</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LNRf</span>: <span class="kwd">forall</span> <span class="id">i</span>, <span class="id"><a href="Coqlib.html#list_norepet">list_norepet</a></span> (<span class="id"><a href="StackInj.html#f">f</a></span> <span class="id"><a href="StackInj.html#i">i</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DISJ</span>: <span class="kwd">forall</span> <span class="id">i</span> <span class="id">j</span>, <span class="id"><a href="StackInj.html#i">i</a></span> &lt;&gt; <span class="id"><a href="StackInj.html#j">j</a></span> -&gt; <span class="id"><a href="Coqlib.html#list_disjoint">list_disjoint</a></span> (<span class="id"><a href="StackInj.html#f">f</a></span> <span class="id"><a href="StackInj.html#i">i</a></span>) (<span class="id"><a href="StackInj.html#f">f</a></span> <span class="id"><a href="StackInj.html#j">j</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">l2</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#A">A</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LNR2</span>: <span class="id"><a href="Coqlib.html#list_norepet">list_norepet</a></span> <span class="id"><a href="StackInj.html#l2">l2</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Coqlib.html#list_norepet">list_norepet</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#concat">concat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="StackInj.html#f">f</a></span> <span class="id"><a href="StackInj.html#l2">l2</a></span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1736')">Proof.</div>
+<div class="proofscript" id="proof1736">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">A</span> <span class="id">B</span> <span class="id">f</span> <span class="id">LNRf</span> <span class="id">DISJ</span> <span class="id">l2</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">simpl</span>. <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#list_norepet_app">list_norepet_app</a></span>. <span class="tactic">split</span>; [|<span class="tactic">split</span>]; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">red</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="StackADT.html#concat_In">concat_In</a></span> <span class="kwd">in</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H1</span> <span class="kwd">as</span> (<span class="id">xx</span> &amp; <span class="id">INx</span> &amp; <span class="id">INMAP</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#in_map_iff">in_map_iff</a></span> <span class="kwd">in</span> <span class="id">INMAP</span>. <span class="tactic">destruct</span> <span class="id">INMAP</span> <span class="kwd">as</span> (<span class="id">a</span> &amp; <span class="id">Fa</span> &amp; <span class="id">INFa</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">DISJ</span>. 2: <span class="tactic">apply</span> <span class="id">H0</span>. 2: <span class="tactic">apply</span> <span class="id">INx</span>. <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="norepet_incl_perm_sublist">norepet_incl_perm_sublist</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span>} (<span class="id">l1</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#A">A</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">lnr1</span>: <span class="id"><a href="Coqlib.html#list_norepet">list_norepet</a></span> <span class="id"><a href="StackInj.html#l1">l1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">l2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">incl</span>: <span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="StackInj.html#x">x</a></span> <span class="id"><a href="StackInj.html#l1">l1</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="StackInj.html#x">x</a></span> <span class="id"><a href="StackInj.html#l2">l2</a></span>),<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">l2</span>', <span class="id"><a href="StackInj.html#sublist">sublist</a></span> <span class="id"><a href="StackInj.html#l1">l1</a></span> <span class="id">l2</span>' /\ <span class="id"><a href="http://coq.inria.fr/library/Coq.Sorting.Permutation.html#Permutation">Permutation</a></span> <span class="id"><a href="StackInj.html#l2">l2</a></span> <span class="id">l2</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1737')">Proof.</div>
+<div class="proofscript" id="proof1737">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exists</span> <span class="id">l2</span>; <span class="tactic">split</span>. <span class="id">constructor</span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;- <span class="id">edestruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#in_split">in_split</a></span> <span class="id">hd</span> <span class="id">l2</span>) <span class="kwd">as</span> (<span class="id">l1</span>' &amp; <span class="id">l2</span>' &amp; <span class="id">EQ</span>). <span class="tactic">apply</span> <span class="id">incl</span>; <span class="tactic">auto</span>. <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">edestruct</span> (<span class="id">IHlnr1</span> (<span class="id">l1</span>' ++ <span class="id">l2</span>')) <span class="kwd">as</span> (<span class="id">l3</span>' &amp; <span class="id">SUB</span> &amp; <span class="id">PERM</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">specialize</span> (<span class="id">incl</span> <span class="id">_</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#or_intror">or_intror</a></span> <span class="id">H0</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="Coqlib.html#in_app">in_app</a></span> <span class="kwd">in</span> <span class="id">incl</span>. <span class="tactic">rewrite</span> <span class="id"><a href="Coqlib.html#in_app">in_app</a></span>. <span class="tactic">destruct</span> <span class="id">incl</span> <span class="kwd">as</span> [<span class="id">IN</span>|[<span class="id">EQ</span>|<span class="id">IN</span>]]; <span class="tactic">auto</span>. <span class="tactic">subst</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">hd</span>::<span class="id">l3</span>'); <span class="tactic">split</span>. <span class="tactic">apply</span> <span class="id"><a href="StackInj.html#sublist_same">sublist_same</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">etransitivity</span>. <span class="tactic">symmetry</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Sorting.Permutation.html#Permutation_middle">Permutation_middle</a></span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Sorting.Permutation.html#perm_skip">perm_skip</a></span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="filter_norepet">filter_norepet</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span>} <span class="id">f</span> (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#A">A</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Coqlib.html#list_norepet">list_norepet</a></span> <span class="id"><a href="StackInj.html#l">l</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Coqlib.html#list_norepet">list_norepet</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#filter">filter</a></span> <span class="id"><a href="StackInj.html#f">f</a></span> <span class="id"><a href="StackInj.html#l">l</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1738')">Proof.</div>
+<div class="proofscript" id="proof1738">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">try</span> <span class="id">destr</span>; <span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#filter_In">filter_In</a></span>. <span class="tactic">intros</span> (<span class="id">B</span> &amp; <span class="id">C</span>). <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="sublist_inj">sublist_inj</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">g</span> (<span class="id">l1</span> <span class="id">l2</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Coqlib.html#list_norepet">list_norepet</a></span> <span class="id"><a href="StackInj.html#l1">l1</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Coqlib.html#list_norepet">list_norepet</a></span> <span class="id"><a href="StackInj.html#l2">l2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">l1</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackInj.html#sublist">sublist</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#concat">concat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">j</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#filter">filter</a></span> (<span class="kwd">fun</span> <span class="id">i</span> =&gt; <span class="id"><a href="Coqlib.html#option_eq">option_eq</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.eq_dec">Nat.eq_dec</a></span> (<span class="id"><a href="StackInj.html#g">g</a></span> <span class="id"><a href="StackInj.html#i">i</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="StackInj.html#j">j</a></span>)) <span class="id"><a href="StackInj.html#l1">l1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackInj.html#l2">l2</a></span>)) <span class="id">l1</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ <span class="id"><a href="http://coq.inria.fr/library/Coq.Sorting.Permutation.html#Permutation">Permutation</a></span> <span class="id"><a href="StackInj.html#l1">l1</a></span> <span class="id">l1</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1739')">Proof.</div>
+<div class="proofscript" id="proof1739">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="StackInj.html#norepet_incl_perm_sublist">norepet_incl_perm_sublist</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="StackInj.html#lnr_concat">lnr_concat</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>; <span class="tactic">apply</span> <span class="id"><a href="StackInj.html#filter_norepet">filter_norepet</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span> <span class="id">i</span> <span class="id">j</span> <span class="id">DIFF</span> <span class="id">x</span> <span class="id">y</span> <span class="id">INx</span> <span class="id">INy</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#filter_In">filter_In</a></span> <span class="kwd">in</span> <span class="id">INx</span>, <span class="id">INy</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">INx</span> <span class="kwd">as</span> (<span class="id">INx</span> &amp; <span class="id">EQx</span>), <span class="id">INy</span> <span class="kwd">as</span> (<span class="id">INy</span> &amp; <span class="id">EQy</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="Coqlib.html#option_eq">option_eq</a></span>; <span class="tactic">simpl</span> <span class="kwd">in</span> *; <span class="tactic">try</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="Coqlib.html#option_eq">option_eq</a></span>; <span class="tactic">simpl</span> <span class="kwd">in</span> *; <span class="tactic">try</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">intros</span> <span class="id">x</span> <span class="id">INC</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="StackADT.html#concat_In">concat_In</a></span> <span class="kwd">in</span> <span class="id">INC</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">setoid_rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#in_map_iff">in_map_iff</a></span> <span class="kwd">in</span> <span class="id">INC</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">INC</span> <span class="kwd">as</span> (<span class="id">x0</span> &amp; <span class="id">INx0</span> &amp; (<span class="id">xx</span> &amp; <span class="id">EQx0</span> &amp; <span class="id">INl2</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#filter_In">filter_In</a></span> <span class="kwd">in</span> <span class="id">INx0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">INx0</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="lnr_list_nats">lnr_list_nats</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Coqlib.html#list_norepet">list_norepet</a></span> (<span class="id"><a href="StackADT.html#list_nats">list_nats</a></span> <span class="id"><a href="StackInj.html#n">n</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1740')">Proof.</div>
+<div class="proofscript" id="proof1740">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">n</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="id">constructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="StackADT.html#in_list_nats">in_list_nats</a></span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="min_exists">min_exists</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">l</span> <span class="id">i</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="StackInj.html#i">i</a></span> <span class="id"><a href="StackInj.html#l">l</a></span> -&gt; <span class="id">exists</span> <span class="id">mi</span>, <span class="id"><a href="StackInj.html#minl">minl</a></span> <span class="id"><a href="StackInj.html#l">l</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="StackInj.html#mi">mi</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1741')">Proof.</div>
+<div class="proofscript" id="proof1741">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">l</span>; <span class="tactic">simpl</span>. <span class="id">easy</span>. <span class="tactic">intros</span>. <span class="id">destr</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="min_in">min_in</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">l</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackInj.html#minl">minl</a></span> <span class="id"><a href="StackInj.html#l">l</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="StackInj.html#m">m</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="StackInj.html#m">m</a></span> <span class="id"><a href="StackInj.html#l">l</a></span> /\ <span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="StackInj.html#x">x</a></span> <span class="id"><a href="StackInj.html#l">l</a></span> -&gt; (<span class="id"><a href="StackInj.html#m">m</a></span> &lt;= <span class="id"><a href="StackInj.html#x">x</a></span>)%<span class="id">nat</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1742')">Proof.</div>
+<div class="proofscript" id="proof1742">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>. <span class="id">easy</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;- <span class="id">specialize</span> (<span class="id">IHl</span> <span class="id">_</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_refl">eq_refl</a></span>). <span class="tactic">destruct</span> <span class="id">IHl</span> <span class="kwd">as</span> (<span class="id">IN</span> &amp; <span class="id">MIN</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Compare_dec.html#le_dec">le_dec</a></span> <span class="id">a</span> <span class="id">n</span>). <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.min_l">Nat.min_l</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.min_r">Nat.min_r</a></span> <span class="tactic">by</span> <span class="tactic">omega</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">destruct</span> <span class="id">H</span>. <span class="tactic">subst</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.le_min_l">Nat.le_min_l</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.min_le_iff">Nat.min_le_iff</a></span>. <span class="tactic">apply</span> <span class="id">MIN</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">l</span>. <span class="tactic">simpl</span>. <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">intros</span> <span class="id">x</span> [|[]]; <span class="tactic">subst</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">Heqo</span>. <span class="id">destr_in</span> <span class="id">Heqo</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="opt_concat_sizes">opt_concat_sizes</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">l1</span> <span class="id">l2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Coqlib.html#list_forall2">list_forall2</a></span> (<span class="kwd">fun</span> <span class="id">ol1</span> <span class="id">ol2</span> =&gt; <span class="kwd">match</span> <span class="id"><a href="StackInj.html#ol1">ol1</a></span>, <span class="id"><a href="StackInj.html#ol2">ol2</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">l1</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">l2</span> =&gt; <span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#l1">l1</a></span> &lt;= <span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#l2">l2</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>) <span class="id"><a href="StackInj.html#l1">l1</a></span> <span class="id"><a href="StackInj.html#l2">l2</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s1</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackInj.html#opt_concat">opt_concat</a></span> <span class="id"><a href="StackInj.html#l1">l1</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="StackInj.html#s1">s1</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackInj.html#opt_concat">opt_concat</a></span> <span class="id"><a href="StackInj.html#l2">l2</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="StackInj.html#s2">s2</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#s1">s1</a></span> &lt;= <span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#s2">s2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1743')">Proof.</div>
+<div class="proofscript" id="proof1743">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">simpl</span>; <span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">inv</span> <span class="id">H0</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">H</span>. <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">H1</span>. <span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="StackInj.html#size_stack_app">size_stack_app</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">IHlist_forall2</span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_refl">eq_refl</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_refl">eq_refl</a></span>); <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="lf2_list_ints_map">lf2_list_ints_map</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>} (<span class="id">f1</span>: <span class="id"><a href="StackInj.html#A">A</a></span> -&gt; <span class="id"><a href="StackInj.html#B">B</a></span>) (<span class="id">f2</span>: <span class="id"><a href="StackInj.html#A">A</a></span> -&gt; <span class="id"><a href="StackInj.html#C">C</a></span>) (<span class="id">P</span>: <span class="id"><a href="StackInj.html#B">B</a></span> -&gt; <span class="id"><a href="StackInj.html#C">C</a></span> -&gt; <span class="kwd">Prop</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#A">A</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PROP</span>: <span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="StackInj.html#x">x</a></span> <span class="id"><a href="StackInj.html#l">l</a></span> -&gt; <span class="id"><a href="StackInj.html#P">P</a></span> (<span class="id"><a href="StackInj.html#f1">f1</a></span> <span class="id"><a href="StackInj.html#x">x</a></span>) (<span class="id"><a href="StackInj.html#f2">f2</a></span> <span class="id"><a href="StackInj.html#x">x</a></span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Coqlib.html#list_forall2">list_forall2</a></span> <span class="id"><a href="StackInj.html#P">P</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="StackInj.html#f1">f1</a></span> <span class="id"><a href="StackInj.html#l">l</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="StackInj.html#f2">f2</a></span> <span class="id"><a href="StackInj.html#l">l</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1744')">Proof.</div>
+<div class="proofscript" id="proof1744">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="id">constructor</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="size_frames_le_size_stack">size_frames_le_size_stack</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">s</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="StackInj.html#f">f</a></span> <span class="id"><a href="StackInj.html#s">s</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#size_frames">size_frames</a></span> <span class="id"><a href="StackInj.html#f">f</a></span> &lt;= <span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#s">s</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1745')">Proof.</div>
+<div class="proofscript" id="proof1745">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">s</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>. <span class="id">easy</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>; <span class="tactic">subst</span>. <span class="tactic">generalize</span> (<span class="id"><a href="StackADT.html#size_stack_pos">size_stack_pos</a></span> <span class="id">s</span>); <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="StackADT.html#size_frames_pos">size_frames_pos</a></span> <span class="id">a</span>). <span class="id">trim</span> <span class="id">IHs</span>; <span class="tactic">auto</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="sizes_size_stack">sizes_size_stack</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">g</span> <span class="id">s1</span> <span class="id">s2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SZ</span>: <span class="id"><a href="StackInj.html#sizes">sizes</a></span> <span class="id"><a href="StackInj.html#g">g</a></span> <span class="id"><a href="StackInj.html#s1">s1</a></span> <span class="id"><a href="StackInj.html#s2">s2</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#s2">s2</a></span> &lt;= <span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#s1">s1</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1746')">Proof.</div>
+<div class="proofscript" id="proof1746">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="StackADT.html#take_drop">take_drop</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="StackInj.html#size_stack_app">size_stack_app</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">cut</span> (<span class="id"><a href="StackADT.html#size_frames">size_frames</a></span> <span class="id">t2</span> &lt;= <span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id">t1</span>). <span class="tactic">intros</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Exists_exists">Exists_exists</a></span> <span class="kwd">in</span> <span class="id">H0</span>. <span class="tactic">destruct</span> <span class="id">H0</span> <span class="kwd">as</span> (<span class="id">f1</span> &amp; <span class="id">INf1</span> &amp; <span class="id">LE</span>).<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. <span class="tactic">apply</span> <span class="id">LE</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="StackInj.html#size_frames_le_size_stack">size_frames_le_size_stack</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="frame_at_pos_tl">frame_at_pos_tl</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">s</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackInj.html#f">f</a></span> @ <span class="id"><a href="StackInj.html#s">s</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id"><a href="StackInj.html#i">i</a></span> &lt;-&gt; <span class="id"><a href="StackInj.html#f">f</a></span> @ <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#tl">tl</a></span> <span class="id"><a href="StackInj.html#s">s</a></span> : <span class="id"><a href="StackInj.html#i">i</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1747')">Proof.</div>
+<div class="proofscript" id="proof1747">
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">destruct</span> <span class="id">s</span>. <span class="tactic">inversion</span> 1. <span class="tactic">rewrite</span> <span class="id"><a href="Coqlib.html#nth_error_nil">nth_error_nil</a></span> <span class="kwd">in</span> <span class="id">H0</span>; <span class="id">inv</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="StackADT.html#frame_at_pos_cons_inv">frame_at_pos_cons_inv</a></span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">auto</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">s</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> *; <span class="tactic">intros</span>. <br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H</span>; <span class="tactic">rewrite</span> <span class="id"><a href="Coqlib.html#nth_error_nil">nth_error_nil</a></span> <span class="kwd">in</span> <span class="id">H0</span>. <span class="id">inv</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="StackADT.html#frame_at_pos_cons">frame_at_pos_cons</a></span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="frame_at_pos_tl_iter">frame_at_pos_tl_iter</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">n</span> <span class="id">s</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackInj.html#f">f</a></span> @ (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.iter">Nat.iter</a></span> <span class="id"><a href="StackInj.html#n">n</a></span> (@<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#tl">tl</a></span> <span class="id">_</span>) <span class="id"><a href="StackInj.html#s">s</a></span>) : <span class="id"><a href="StackInj.html#i">i</a></span> &lt;-&gt; <span class="id"><a href="StackInj.html#f">f</a></span> @ <span class="id"><a href="StackInj.html#s">s</a></span> : (<span class="id"><a href="StackInj.html#n">n</a></span> + <span class="id"><a href="StackInj.html#i">i</a></span>)%<span class="id">nat</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1748')">Proof.</div>
+<div class="proofscript" id="proof1748">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">n</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>. <span class="tactic">tauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">intro</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="StackInj.html#frame_at_pos_tl">frame_at_pos_tl</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">IHn</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Peano.html#plus_n_Sm">plus_n_Sm</a></span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="StackInj.html#frame_at_pos_tl">frame_at_pos_tl</a></span>. <span class="tactic">apply</span> <span class="id">IHn</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">n</span> + <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id">i</span>)%<span class="id">nat</span> <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (<span class="id">n</span> + <span class="id">i</span>))%<span class="id">nat</span>. <span class="tactic">auto</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="tl_drop">tl_drop</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span>} <span class="id">n</span> (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#A">A</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#drop">drop</a></span> <span class="id"><a href="StackInj.html#n">n</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#tl">tl</a></span> <span class="id"><a href="StackInj.html#l">l</a></span>) = <span class="id"><a href="StackADT.html#drop">drop</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id"><a href="StackInj.html#n">n</a></span>) <span class="id"><a href="StackInj.html#l">l</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1749')">Proof.</div>
+<div class="proofscript" id="proof1749">
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="drop_app">drop_app</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span>} <span class="id">n</span> (<span class="id">s1</span> <span class="id">s2</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#A">A</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#length">length</a></span> <span class="id"><a href="StackInj.html#s1">s1</a></span> = <span class="id"><a href="StackInj.html#n">n</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#drop">drop</a></span> <span class="id"><a href="StackInj.html#n">n</a></span> (<span class="id"><a href="StackInj.html#s1">s1</a></span> ++ <span class="id"><a href="StackInj.html#s2">s2</a></span>) = <span class="id"><a href="StackInj.html#s2">s2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1750')">Proof.</div>
+<div class="proofscript" id="proof1750">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">s1</span> <span class="id">s2</span>; <span class="tactic">induction</span> <span class="id">s1</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="compat_sizes_drop">compat_sizes_drop</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> <span class="id">g</span> <span class="id">m1</span> <span class="id">m2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SZ</span>: <span class="id"><a href="StackInj.html#sizes">sizes</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id"><a href="StackInj.html#n">n</a></span> :: <span class="id"><a href="StackInj.html#g">g</a></span>) <span class="id"><a href="StackInj.html#m1">m1</a></span> <span class="id"><a href="StackInj.html#m2">m2</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackInj.html#sizes">sizes</a></span> <span class="id"><a href="StackInj.html#g">g</a></span> (<span class="id"><a href="StackADT.html#drop">drop</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id"><a href="StackInj.html#n">n</a></span>) <span class="id"><a href="StackInj.html#m1">m1</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#tl">tl</a></span> <span class="id"><a href="StackInj.html#m2">m2</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1751')">Proof.</div>
+<div class="proofscript" id="proof1751">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">SZ</span>. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="StackInj.html#tl_drop">tl_drop</a></span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="size_stack_drop">size_stack_drop</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> <span class="id">l</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> (<span class="id"><a href="StackADT.html#drop">drop</a></span> <span class="id"><a href="StackInj.html#n">n</a></span> <span class="id"><a href="StackInj.html#l">l</a></span>) &lt;= <span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> <span class="id"><a href="StackInj.html#l">l</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1752')">Proof.</div>
+<div class="proofscript" id="proof1752">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">n</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. <span class="tactic">apply</span> <span class="id">IHn</span>. <span class="tactic">apply</span> <span class="id"><a href="StackADT.html#size_stack_tl">size_stack_tl</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_iter_plus">nat_iter_plus</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span>} (<span class="id">f</span>: <span class="id"><a href="StackInj.html#A">A</a></span> -&gt; <span class="id"><a href="StackInj.html#A">A</a></span>) <span class="id">n</span> <span class="id">m</span> <span class="id">x</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.iter">Nat.iter</a></span> (<span class="id"><a href="StackInj.html#n">n</a></span> + <span class="id"><a href="StackInj.html#m">m</a></span>) <span class="id"><a href="StackInj.html#f">f</a></span> <span class="id"><a href="StackInj.html#x">x</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.iter">Nat.iter</a></span> <span class="id"><a href="StackInj.html#n">n</a></span> <span class="id"><a href="StackInj.html#f">f</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.iter">Nat.iter</a></span> <span class="id"><a href="StackInj.html#m">m</a></span> <span class="id"><a href="StackInj.html#f">f</a></span> <span class="id"><a href="StackInj.html#x">x</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1753')">Proof.</div>
+<div class="proofscript" id="proof1753">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">n</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>. <span class="tactic">auto</span>. <span class="tactic">rewrite</span> <span class="id">IHn</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="size_stack_iter_tl_mono">size_stack_iter_tl_mono</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> <span class="id">m</span> <span class="id">l</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="StackInj.html#m">m</a></span> &lt;= <span class="id"><a href="StackInj.html#n">n</a></span>)%<span class="id">nat</span> -&gt; <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> (<span class="id"><a href="StackADT.html#drop">drop</a></span> <span class="id"><a href="StackInj.html#n">n</a></span> <span class="id"><a href="StackInj.html#l">l</a></span>) &lt;= <span class="id"><a href="StackADT.html#size_stack">size_stack</a></span> (<span class="id"><a href="StackADT.html#drop">drop</a></span> <span class="id"><a href="StackInj.html#m">m</a></span> <span class="id"><a href="StackInj.html#l">l</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1754')">Proof.</div>
+<div class="proofscript" id="proof1754">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> <span class="id">n</span> <span class="kwd">with</span> ((<span class="id">n</span> - <span class="id">m</span>) + <span class="id">m</span>)%<span class="id">nat</span> <span class="tactic">by</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="StackADT.html#drop_drop">drop_drop</a></span>. <span class="tactic">apply</span> <span class="id"><a href="StackInj.html#size_stack_drop">size_stack_drop</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="length_tl">length_tl</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span>} (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#A">A</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#length">length</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#tl">tl</a></span> <span class="id"><a href="StackInj.html#l">l</a></span>) = (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#length">length</a></span> <span class="id"><a href="StackInj.html#l">l</a></span> - 1)%<span class="id">nat</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1755')">Proof.</div>
+<div class="proofscript" id="proof1755">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">l</span>; <span class="tactic">simpl</span>; <span class="tactic">auto</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="length_drop">length_drop</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span>} <span class="id">n</span> (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="StackInj.html#A">A</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#length">length</a></span> (<span class="id"><a href="StackADT.html#drop">drop</a></span> <span class="id"><a href="StackInj.html#n">n</a></span> <span class="id"><a href="StackInj.html#l">l</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#length">length</a></span> <span class="id"><a href="StackInj.html#l">l</a></span> - <span class="id"><a href="StackInj.html#n">n</a></span>)%<span class="id">nat</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1756')">Proof.</div>
+<div class="proofscript" id="proof1756">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">n</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">IHn</span>. <span class="tactic">rewrite</span> <span class="id"><a href="StackInj.html#length_tl">length_tl</a></span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

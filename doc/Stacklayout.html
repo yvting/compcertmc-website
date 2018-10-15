@@ -1,0 +1,559 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Stacklayout</title>
+<meta name="description" content="Documentation of Coq module Stacklayout" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Stacklayout</h1>
+<div class="coq">
+<br/>
+<div class="doc">Machine- and ABI-dependent layout information for activation records. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Coqlib.html">Coqlib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="AST.html">AST</a></span> <span class="id"><a href="Memory.html">Memory</a></span> <span class="id"><a href="Separation.html">Separation</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Bounds.html">Bounds</a></span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">sep_scope</span>.<br/>
+<br/>
+<div class="doc">The general shape of activation records is as follows,
+  from bottom (lowest offsets) to top:
+<ul>
+<li>
+ Space for outgoing arguments to function calls.
+</li>
+<li>
+ Back link to parent frame
+</li>
+<li>
+ Saved values of integer callee-save registers used by the function.
+</li>
+<li>
+ Saved values of float callee-save registers used by the function.
+</li>
+<li>
+ Local stack slots.
+</li>
+<li>
+ Space for the stack-allocated data declared in Cminor
+</li>
+<li>
+ Return address.
+</li>
+</ul>
+</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="fe_ofs_arg">fe_ofs_arg</a></span> := 0.<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="make_env">make_env</a></span> (<span class="id">b</span>: <span class="id"><a href="Bounds.html#bounds">bounds</a></span>) : <span class="id"><a href="Bounds.html#frame_env">frame_env</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">w</span> := <span class="kwd">if</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> 8 <span class="kwd">else</span> 4 <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">ocs</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (4 * <span class="id"><a href="Stacklayout.html#b">b</a></span>.(<span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="id"><a href="Stacklayout.html#w">w</a></span> <span class="kwd">in</span>  <br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">ol</span> :=  <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="id"><a href="Stacklayout.html#ocs">ocs</a></span>) 8 <span class="kwd">in</span> <br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">ostkdata</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Stacklayout.html#ol">ol</a></span> + 4 * <span class="id"><a href="Stacklayout.html#b">b</a></span>.(<span class="id"><a href="Bounds.html#bound_local">bound_local</a></span>)) 8 <span class="kwd">in</span> <br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">preretaddr</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Stacklayout.html#ostkdata">ostkdata</a></span> + <span class="id"><a href="Stacklayout.html#b">b</a></span>.(<span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span>)) <span class="id"><a href="Stacklayout.html#w">w</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">sz</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Stacklayout.html#preretaddr">preretaddr</a></span> + <span class="id"><a href="Stacklayout.html#w">w</a></span>) 8 <span class="kwd">in</span> <br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">oretaddr</span> := <span class="id"><a href="Stacklayout.html#sz">sz</a></span> - <span class="id"><a href="Stacklayout.html#w">w</a></span> <span class="kwd">in</span> <br/>
+&nbsp;&nbsp;{| <span class="id"><a href="Bounds.html#mk_frame_env">fe_size</a></span> := <span class="id"><a href="Stacklayout.html#sz">sz</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fe_ofs_retaddr</span> := <span class="id"><a href="Stacklayout.html#oretaddr">oretaddr</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fe_ofs_local</span> := <span class="id"><a href="Stacklayout.html#ol">ol</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fe_ofs_callee_save</span> := <span class="id"><a href="Stacklayout.html#ocs">ocs</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fe_stack_data</span> := <span class="id"><a href="Stacklayout.html#ostkdata">ostkdata</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fe_used_callee_save</span> := <span class="id"><a href="Stacklayout.html#b">b</a></span>.(<span class="id"><a href="Bounds.html#used_callee_save">used_callee_save</a></span>) |}.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="retaddr_le">retaddr_le</a></span>: <span class="kwd">forall</span> <span class="id">preretaddr</span> <span class="id">w</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="Stacklayout.html#preretaddr">preretaddr</a></span> &lt;= (<span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Stacklayout.html#preretaddr">preretaddr</a></span> + <span class="id"><a href="Stacklayout.html#w">w</a></span>) 8) - <span class="id"><a href="Stacklayout.html#w">w</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4419')">Proof.</div>
+<div class="proofscript" id="proof4419">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">preretaddr</span> + <span class="id">w</span> &lt;= (<span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">preretaddr</span> + <span class="id">w</span>) 8)).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="WITHMEM">WITHMEM</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> `{<span class="id">memory_model_prf</span>: <span class="id"><a href="Memtype.html#Mem.MemoryModel">Mem.MemoryModel</a></span>}.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="frame_env_separated">frame_env_separated</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">sp</span> (<span class="id">m</span>: <span class="id"><a href="Stacklayout.html#WITHMEM.mem">mem</a></span>) <span class="id">P</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Stacklayout.html#m">m</a></span> |= <span class="id"><a href="Separation.html#range">range</a></span> <span class="id"><a href="Stacklayout.html#sp">sp</a></span> 0 (<span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>) ** <span class="id"><a href="Separation.html#range">range</a></span> <span class="id"><a href="Stacklayout.html#sp">sp</a></span> (<span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span>) (<span class="id"><a href="Bounds.html#fe_size">fe_size</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>) ** <span class="id"><a href="Stacklayout.html#P">P</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Stacklayout.html#m">m</a></span> |= <span class="id"><a href="Separation.html#range">range</a></span> <span class="id"><a href="Stacklayout.html#sp">sp</a></span> (<span class="id"><a href="Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>) (<span class="id"><a href="Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_local">bound_local</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;** <span class="id"><a href="Separation.html#range">range</a></span> <span class="id"><a href="Stacklayout.html#sp">sp</a></span> <span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> (<span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;** <span class="id"><a href="Separation.html#range">range</a></span> <span class="id"><a href="Stacklayout.html#sp">sp</a></span> (<span class="id"><a href="Bounds.html#fe_ofs_retaddr">fe_ofs_retaddr</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>) (<span class="id"><a href="Bounds.html#fe_ofs_retaddr">fe_ofs_retaddr</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="Memdata.html#size_chunk">size_chunk</a></span> <span class="id"><a href="AST.html#Mptr">Mptr</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;** <span class="id"><a href="Separation.html#range">range</a></span> <span class="id"><a href="Stacklayout.html#sp">sp</a></span> (<span class="id"><a href="Bounds.html#fe_ofs_callee_save">fe_ofs_callee_save</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>) (<span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> (<span class="id"><a href="Bounds.html#fe_ofs_callee_save">fe_ofs_callee_save</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;** <span class="id"><a href="Stacklayout.html#P">P</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4420')">Proof.</div>
+<div class="proofscript" id="proof4420">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add">Z.add</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.mul">Z.mul</a></span> <span class="id"><a href="Separation.html#sepconj">sepconj</a></span> <span class="id"><a href="Separation.html#range">range</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">w</span> := <span class="kwd">if</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> 8 <span class="kwd">else</span> 4).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ocs</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="id">w</span>).<br/>
+&nbsp;set&nbsp;(ocs&nbsp;:=&nbsp;olink&nbsp;+&nbsp;w).&nbsp;*)</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ol</span> :=  <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) 8).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ostkdata</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_local">bound_local</a></span>)) 8).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">preretaddr</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ostkdata</span> + <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span>)) <span class="id">w</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">sz</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">preretaddr</span> + <span class="id">w</span>) 8).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">oretaddr</span> := <span class="id">sz</span> - <span class="id">w</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">preretaddr</span> &lt;= <span class="id">oretaddr</span>) <span class="kwd">as</span> <span class="id">RET</span> <span class="tactic">by</span> <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#retaddr_le">retaddr_le</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id"><a href="Memdata.html#size_chunk">size_chunk</a></span> <span class="id"><a href="AST.html#Mptr">Mptr</a></span>) <span class="kwd">with</span> <span class="id">w</span> <span class="tactic">by</span> (<span class="tactic">rewrite</span> <span class="id"><a href="Memdata.html#size_chunk_Mptr">size_chunk_Mptr</a></span>; <span class="tactic">auto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (0 &lt; <span class="id">w</span>) <span class="tactic">by</span> (<span class="tactic">unfold</span> <span class="id">w</span>; <span class="tactic">destruct</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_local_pos">bound_local_pos</a></span>) <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing_pos">bound_outgoing_pos</a></span>) <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_stack_data_pos">bound_stack_data_pos</a></span>); <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (0 &lt;= 4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="tactic">by</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>) &lt;= <span class="id">ocs</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;assert&nbsp;(olink&nbsp;+&nbsp;w&nbsp;&lt;=&nbsp;ocs)&nbsp;by&nbsp;(unfold&nbsp;ocs;&nbsp;omega).&nbsp;*)</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">ocs</span> &lt;= <span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Bounds.html#size_callee_save_area_incr">size_callee_save_area_incr</a></span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span> &lt;= <span class="id">ol</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_local">bound_local</a></span>) &lt;= <span class="id">ostkdata</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">ostkdata</span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id">b</span> &lt;= <span class="id">oretaddr</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_trans">Z.le_trans</a></span> <span class="kwd">with</span> (<span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ostkdata</span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id">b</span>) <span class="id">w</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">preretaddr</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;Reorder&nbsp;as:&nbsp;*)</span>&nbsp;&nbsp;&nbsp;&nbsp;outgoing&nbsp;*)</span>&nbsp;&nbsp;&nbsp;&nbsp;callee-save&nbsp;*)</span>&nbsp;&nbsp;&nbsp;&nbsp;local&nbsp;*)</span>&nbsp;&nbsp;&nbsp;&nbsp;retaddr&nbsp;*)</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="Separation.html#sep_swap12">sep_swap12</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="Separation.html#sep_swap23">sep_swap23</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="Separation.html#sep_swap34">sep_swap34</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="Separation.html#sep_swap23">sep_swap23</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="Separation.html#sep_swap34">sep_swap34</a></span>.<br/>
+&nbsp;Apply&nbsp;range_split&nbsp;and&nbsp;range_split2&nbsp;repeatedly&nbsp;*)</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Separation.html#range_split_2">range_split_2</a></span>. <span class="id">fold</span> <span class="id">ocs</span>. <span class="tactic">omega</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Separation.html#range_split_2">range_split_2</a></span>. <span class="id">fold</span> <span class="id">ol</span>. <span class="tactic">omega</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Separation.html#range_drop_right">range_drop_right</a></span> <span class="kwd">with</span> <span class="id">ostkdata</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="Separation.html#sep_swap">sep_swap</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Separation.html#range_drop_left">range_drop_left</a></span> <span class="kwd">with</span> (<span class="id">ostkdata</span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id">b</span>). <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="Separation.html#sep_swap">sep_swap</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">oretaddr</span> + <span class="id">w</span> = <span class="id"><a href="Bounds.html#fe_size">fe_size</a></span> <span class="id">fe</span>) <span class="kwd">as</span> <span class="id">SZEQ</span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">fe</span>. <span class="tactic">subst</span> <span class="id">w</span> <span class="id">ocs</span> <span class="id">ol</span> <span class="id">ostkdata</span> <span class="id">preretaddr</span> <span class="id">oretaddr</span> <span class="id">sz</span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span>. <span class="tactic">simpl</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">SZEQ</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exact</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">frame_env_separated</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> ,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">w</span> := <span class="kwd">if</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> 8 <span class="kwd">else</span> 4 <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">ocs</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (4 * <span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span>) <span class="id"><a href="Stacklayout.html#w">w</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">ol</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="id"><a href="Stacklayout.html#ocs">ocs</a></span>) 8 <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">ostkdata</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Stacklayout.html#ol">ol</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_local">bound_local</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span>) 8 <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">oretaddr</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Stacklayout.html#ostkdata">ostkdata</a></span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span>) <span class="id"><a href="Stacklayout.html#w">w</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 &lt;= <span class="id"><a href="Stacklayout.html#ocs">ocs</a></span><br/>
+&nbsp;&nbsp;/\ <span class="id"><a href="Stacklayout.html#ocs">ocs</a></span> &lt;= <span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="id"><a href="Stacklayout.html#ocs">ocs</a></span><br/>
+&nbsp;&nbsp;/\ <span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="id"><a href="Stacklayout.html#ocs">ocs</a></span> &lt;= <span class="id"><a href="Stacklayout.html#ol">ol</a></span><br/>
+&nbsp;&nbsp;/\ <span class="id"><a href="Stacklayout.html#ol">ol</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_local">bound_local</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> &lt;= <span class="id"><a href="Stacklayout.html#ostkdata">ostkdata</a></span><br/>
+&nbsp;&nbsp;/\ <span class="id"><a href="Stacklayout.html#ostkdata">ostkdata</a></span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> &lt;= <span class="id"><a href="Stacklayout.html#oretaddr">oretaddr</a></span><br/>
+&nbsp;&nbsp;/\ <span class="id"><a href="Stacklayout.html#ocs">ocs</a></span> &lt;= <span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4421')">Proof.</div>
+<div class="proofscript" id="proof4421">
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add">Z.add</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.mul">Z.mul</a></span> <span class="id"><a href="Separation.html#sepconj">sepconj</a></span> <span class="id"><a href="Separation.html#range">range</a></span> <span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span>.<br/>
+<span class="tactic">intros</span>; <span class="tactic">simpl</span>.<br/>
+<span class="tactic">generalize</span> <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_local_pos">bound_local_pos</a></span>) <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing_pos">bound_outgoing_pos</a></span>) <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_stack_data_pos">bound_stack_data_pos</a></span>); <span class="tactic">intros</span>.<br/>
+<span class="tactic">replace</span> (<span class="id"><a href="Memdata.html#size_chunk">size_chunk</a></span> <span class="id"><a href="AST.html#Mptr">Mptr</a></span>) <span class="kwd">with</span> <span class="id">w</span> <span class="tactic">by</span> (<span class="tactic">rewrite</span> <span class="id"><a href="Memdata.html#size_chunk_Mptr">size_chunk_Mptr</a></span>; <span class="tactic">auto</span>).<br/>
+<span class="tactic">assert</span> (0 &lt; <span class="id">w</span>) <span class="tactic">by</span> (<span class="tactic">unfold</span> <span class="id">w</span>; <span class="tactic">destruct</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span>; <span class="tactic">omega</span>).<br/>
+<span class="tactic">generalize</span> <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_local_pos">bound_local_pos</a></span>) <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing_pos">bound_outgoing_pos</a></span>) <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_stack_data_pos">bound_stack_data_pos</a></span>); <span class="tactic">intros</span>.<br/>
+<span class="tactic">assert</span> (0 &lt;= 4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="tactic">by</span> <span class="tactic">omega</span>.<br/>
+<span class="tactic">assert</span> (4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>) &lt;= <span class="id">ocs</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;assert&nbsp;(olink&nbsp;+&nbsp;w&nbsp;&lt;=&nbsp;ocs)&nbsp;by&nbsp;(unfold&nbsp;ocs;&nbsp;omega).&nbsp;*)</span><span class="tactic">assert</span> (<span class="id">ocs</span> &lt;= <span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Bounds.html#size_callee_save_area_incr">size_callee_save_area_incr</a></span>). <br/>
+<span class="tactic">assert</span> (<span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span> &lt;= <span class="id">ol</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+<span class="tactic">assert</span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_local">bound_local</a></span>) &lt;= <span class="id">ostkdata</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+<span class="tactic">assert</span> (<span class="id">ostkdata</span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id">b</span> &lt;= <span class="id">oretaddr</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+<span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+<span class="tactic">omega</span>.<br/>
+<span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span>.<br/>
+<span class="tactic">simpl</span>. <span class="id">fold</span> <span class="id">w</span>. <span class="id">fold</span> <span class="id">ocs</span>. <span class="id">fold</span> <span class="id">ol</span>. <span class="id">fold</span> <span class="id">ostkdata</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="frame_env_range">frame_env_range</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;0 &lt;= <span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> /\ <span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> &lt;= <span class="id"><a href="Bounds.html#fe_size">fe_size</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4422')">Proof.</div>
+<div class="proofscript" id="proof4422">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">w</span> := <span class="kwd">if</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> 8 <span class="kwd">else</span> 4).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ocs</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="id">w</span>).<br/>
+&nbsp;set&nbsp;(ocs&nbsp;:=&nbsp;olink&nbsp;+&nbsp;w).&nbsp;*)</span>&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ol</span> :=  <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) 8).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ostkdata</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_local">bound_local</a></span>)) 8).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">preretaddr</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ostkdata</span> + <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span>)) <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">sz</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">preretaddr</span> + <span class="id">w</span>) 8).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">oretaddr</span> := <span class="id">sz</span> - <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">preretaddr</span> &lt;= <span class="id">oretaddr</span>) <span class="kwd">as</span> <span class="id">RET</span> <span class="tactic">by</span> <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#retaddr_le">retaddr_le</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (0 &lt; <span class="id">w</span>) <span class="tactic">by</span> (<span class="tactic">unfold</span> <span class="id">w</span>; <span class="tactic">destruct</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_local_pos">bound_local_pos</a></span>) <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing_pos">bound_outgoing_pos</a></span>) <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_stack_data_pos">bound_stack_data_pos</a></span>); <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (0 &lt;= 4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="tactic">by</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>) &lt;= <span class="id">ocs</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">ocs</span> &lt;= <span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Bounds.html#size_callee_save_area_incr">size_callee_save_area_incr</a></span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span> &lt;= <span class="id">ol</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_local">bound_local</a></span>) &lt;= <span class="id">ostkdata</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">ostkdata</span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id">b</span> &lt;= <span class="id">oretaddr</span>).<br/>
+&nbsp;&nbsp;{ <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_trans">Z.le_trans</a></span> <span class="kwd">with</span> (<span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ostkdata</span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id">b</span>) <span class="id">w</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">preretaddr</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">omega</span>. <span class="tactic">subst</span> <span class="id">oretaddr</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="w_divides8">w_divides8</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">w</span> := <span class="kwd">if</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> 8 <span class="kwd">else</span> 4 <span class="kwd">in</span><br/>
+&nbsp;&nbsp;(<span class="id"><a href="Stacklayout.html#w">w</a></span> | 8).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4423')">Proof.</div>
+<div class="proofscript" id="proof4423">
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="id">destr</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.divide_refl">Z.divide_refl</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Znumtheory.html#Zdivide_intro">Zdivide_intro</a></span> <span class="kwd">with</span> 2. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="frame_env_aligned">frame_env_aligned</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(8 | <span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span>)<br/>
+&nbsp;&nbsp;/\ (8 | <span class="id"><a href="Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>)<br/>
+&nbsp;&nbsp;/\ (8 | <span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>)<br/>
+&nbsp;&nbsp;/\ (<span class="id"><a href="Memdata.html#align_chunk">align_chunk</a></span> <span class="id"><a href="AST.html#Mptr">Mptr</a></span> | <span class="id"><a href="Bounds.html#fe_ofs_retaddr">fe_ofs_retaddr</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4424')">Proof.</div>
+<div class="proofscript" id="proof4424">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">w</span> := <span class="kwd">if</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> 8 <span class="kwd">else</span> 4).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ocs</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ol</span> :=  <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) 8).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ostkdata</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_local">bound_local</a></span>)) 8).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">preretaddr</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ostkdata</span> + <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span>)) <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">sz</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">preretaddr</span> + <span class="id">w</span>) 8).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">oretaddr</span> := <span class="id">sz</span> - <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">preretaddr</span> &lt;= <span class="id">oretaddr</span>) <span class="kwd">as</span> <span class="id">RET</span> <span class="tactic">by</span> <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#retaddr_le">retaddr_le</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (0 &lt; <span class="id">w</span>) <span class="tactic">by</span> (<span class="tactic">unfold</span> <span class="id">w</span>; <span class="tactic">destruct</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id"><a href="Memdata.html#align_chunk">align_chunk</a></span> <span class="id"><a href="AST.html#Mptr">Mptr</a></span>) <span class="kwd">with</span> <span class="id">w</span> <span class="tactic">by</span> (<span class="tactic">rewrite</span> <span class="id"><a href="Memdata.html#align_chunk_Mptr">align_chunk_Mptr</a></span>; <span class="tactic">auto</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Znumtheory.html#Zdivide_0">Zdivide_0</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_divides">align_divides</a></span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_divides">align_divides</a></span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">oretaddr</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.divide_sub_r">Z.divide_sub_r</a></span>. <br/>
+&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">sz</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.divide_trans">Z.divide_trans</a></span> <span class="kwd">with</span> 8. <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#w_divides8">w_divides8</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_divides">align_divides</a></span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.divide_refl">Z.divide_refl</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="le_add_pos">le_add_pos</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;0 &lt;= <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Stacklayout.html#a">a</a></span> &lt;= <span class="id"><a href="Stacklayout.html#a">a</a></span> + <span class="id"><a href="Stacklayout.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4425')">Proof.</div>
+<div class="proofscript" id="proof4425">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="lt_add_pos">lt_add_pos</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;0 &lt; <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Stacklayout.html#a">a</a></span> &lt; <span class="id"><a href="Stacklayout.html#a">a</a></span> + <span class="id"><a href="Stacklayout.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4426')">Proof.</div>
+<div class="proofscript" id="proof4426">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="id">Opaque</span> <span class="id"><a href="Bounds.html#bound_local">bound_local</a></span> <span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>  <span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="zero_lt_align8">zero_lt_align8</a></span> : <span class="kwd">forall</span> <span class="id">x</span>,<br/>
+&nbsp;&nbsp;0 &lt; <span class="id"><a href="Stacklayout.html#x">x</a></span> -&gt; 0 &lt; <span class="id"><a href="Coqlib.html#align">align</a></span> <span class="id"><a href="Stacklayout.html#x">x</a></span> 8.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4427')">Proof.</div>
+<div class="proofscript" id="proof4427">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.lt_le_trans">Z.lt_le_trans</a></span>. <br/>
+&nbsp;&nbsp;<span class="id">Focus</span> 2. <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="fe_size_pos">fe_size_pos</a></span> (<span class="id">b</span>: <span class="id"><a href="Bounds.html#bounds">bounds</a></span>) :<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;0 &lt; <span class="id"><a href="Bounds.html#fe_size">fe_size</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4428')">Proof.</div>
+<div class="proofscript" id="proof4428">
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#zero_lt_align8">zero_lt_align8</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> 0 <span class="kwd">with</span> (0 + 0) <span class="tactic">by</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add_le_lt_mono">Z.add_le_lt_mono</a></span>. 2: <span class="id">destr</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. 2: <span class="id">destr</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#le_add_pos">le_add_pos</a></span>. 2: <span class="tactic">generalize</span> (<span class="id"><a href="Bounds.html#bound_stack_data_pos">bound_stack_data_pos</a></span> <span class="id">b</span>); <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. 2: <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#le_add_pos">le_add_pos</a></span>. 2: <span class="tactic">generalize</span> (<span class="id"><a href="Bounds.html#bound_local_pos">bound_local_pos</a></span> <span class="id">b</span>); <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. 2: <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Bounds.html#size_callee_save_area_incr">size_callee_save_area_incr</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. 2: <span class="id">destr</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="Bounds.html#bound_outgoing_pos">bound_outgoing_pos</a></span> <span class="id">b</span>); <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="zero_le_align8">zero_le_align8</a></span> : <span class="kwd">forall</span> <span class="id">x</span>,<br/>
+&nbsp;&nbsp;0 &lt;= <span class="id"><a href="Stacklayout.html#x">x</a></span> -&gt; 0 &lt;= <span class="id"><a href="Coqlib.html#align">align</a></span> <span class="id"><a href="Stacklayout.html#x">x</a></span> 8.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4429')">Proof.</div>
+<div class="proofscript" id="proof4429">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_trans">Z.le_trans</a></span>. <br/>
+&nbsp;&nbsp;<span class="id">Focus</span> 2. <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id"><a name="frame_of_frame_env">frame_of_frame_env</a></span> (<span class="id">b</span>: <span class="id"><a href="Bounds.html#bounds">bounds</a></span>) : <span class="id"><a href="StackADT.html#frame_info">frame_info</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;{|<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="StackADT.html#Build_frame_info">frame_size</a></span> := <span class="id"><a href="Bounds.html#fe_size">fe_size</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">frame_perm</span> := <span class="kwd">fun</span> <span class="id">o</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="Coqlib.html#zle">zle</a></span> (<span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>) <span class="id"><a href="Stacklayout.html#o">o</a></span> &amp;&amp; <span class="id"><a href="Coqlib.html#zlt">zlt</a></span> <span class="id"><a href="Stacklayout.html#o">o</a></span> (<span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">then</span> <span class="id"><a href="StackADT.html#Public">Public</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span> <span class="id"><a href="StackADT.html#Private">Private</a></span><br/>
+&nbsp;&nbsp;|}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4430')">Next Obligation.</div>
+<div class="proofscript" id="proof4430">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#zero_le_align8">zero_le_align8</a></span>. <span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#le_add_pos">le_add_pos</a></span>. 2: <span class="id">destr</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. 2: <span class="id">destr</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#le_add_pos">le_add_pos</a></span>. 2: <span class="tactic">generalize</span> (<span class="id"><a href="Bounds.html#bound_stack_data_pos">bound_stack_data_pos</a></span> <span class="id">b</span>); <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. 2: <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#le_add_pos">le_add_pos</a></span>. 2: <span class="tactic">generalize</span> (<span class="id"><a href="Bounds.html#bound_local_pos">bound_local_pos</a></span> <span class="id">b</span>); <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. 2: <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Bounds.html#size_callee_save_area_incr">size_callee_save_area_incr</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. 2: <span class="id">destr</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="Bounds.html#bound_outgoing_pos">bound_outgoing_pos</a></span> <span class="id">b</span>); <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="stkdata_retaddr_sep">stkdata_retaddr_sep</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">o</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_ofs_retaddr">fe_ofs_retaddr</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#fe_ofs_retaddr">fe_ofs_retaddr</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="Memdata.html#size_chunk">size_chunk</a></span> <span class="id"><a href="AST.html#Mptr">Mptr</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4431')">Proof.</div>
+<div class="proofscript" id="proof4431">
+&nbsp;&nbsp;<span class="tactic">clear</span>. <span class="tactic">intros</span> <span class="id">b</span> <span class="id">fe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">frame_env_separated</span>' <span class="id">b</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>. <span class="tactic">destruct</span> <span class="id">H2</span>. <span class="tactic">destruct</span> <span class="id">H3</span>. <span class="tactic">destruct</span> <span class="id">H4</span>. <span class="tactic">destruct</span> <span class="id">H5</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">w</span> := <span class="kwd">if</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> 8 <span class="kwd">else</span> 4) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ocs</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="id">w</span>) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ol</span> :=  <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) 8) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ostkdata</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_local">bound_local</a></span>)) 8) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">preretaddr</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ostkdata</span> + <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span>)) <span class="id">w</span>) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">sz</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">preretaddr</span> + <span class="id">w</span>) 8) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">oretaddr</span> := <span class="id">sz</span> - <span class="id">w</span>) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">preretaddr</span> &lt;= <span class="id">oretaddr</span>) <span class="kwd">as</span> <span class="id">RET</span> <span class="tactic">by</span> <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#retaddr_le">retaddr_le</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">w</span> <span class="id">ocs</span> <span class="id">ol</span> <span class="id">ostkdata</span> <span class="id">preretaddr</span> <span class="id">sz</span> <span class="id">oretaddr</span>. <span class="tactic">simpl</span> <span class="kwd">in</span> *. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="arg_retaddr_sep">arg_retaddr_sep</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">o</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_ofs_retaddr">fe_ofs_retaddr</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#fe_ofs_retaddr">fe_ofs_retaddr</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="Memdata.html#size_chunk">size_chunk</a></span> <span class="id"><a href="AST.html#Mptr">Mptr</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4432')">Proof.</div>
+<div class="proofscript" id="proof4432">
+&nbsp;&nbsp;<span class="tactic">clear</span>. <span class="tactic">intros</span> <span class="id">b</span> <span class="id">fe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">frame_env_separated</span>' <span class="id">b</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>. <span class="tactic">destruct</span> <span class="id">H2</span>. <span class="tactic">destruct</span> <span class="id">H3</span>. <span class="tactic">destruct</span> <span class="id">H4</span>. <span class="tactic">destruct</span> <span class="id">H5</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">w</span> := <span class="kwd">if</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> 8 <span class="kwd">else</span> 4) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ocs</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="id">w</span>) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ol</span> :=  <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) 8) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ostkdata</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_local">bound_local</a></span>)) 8) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">preretaddr</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ostkdata</span> + <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span>)) <span class="id">w</span>) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">sz</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">preretaddr</span> + <span class="id">w</span>) 8) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">oretaddr</span> := <span class="id">sz</span> - <span class="id">w</span>) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">preretaddr</span> &lt;= <span class="id">oretaddr</span>) <span class="kwd">as</span> <span class="id">RET</span> <span class="tactic">by</span> <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#retaddr_le">retaddr_le</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">cut</span> (<span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span> <span class="id">b</span> &lt;= <span class="id">oretaddr</span>). <br/>
+&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">w</span> <span class="id">ocs</span> <span class="id">ol</span> <span class="id">ostkdata</span> <span class="id">preretaddr</span> <span class="id">sz</span> <span class="id">oretaddr</span>. <span class="tactic">simpl</span> <span class="kwd">in</span> *. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_trans">Z.le_trans</a></span>. 2: <span class="tactic">eauto</span>. <br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">preretaddr</span>. <br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add_0_l">Z.add_0_l</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_trans">Z.le_trans</a></span> <span class="kwd">with</span> <span class="id">ocs</span>. <span class="tactic">unfold</span> <span class="id">ocs</span>. <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. <span class="tactic">unfold</span> <span class="id">w</span>; <span class="id">destr</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_trans">Z.le_trans</a></span>. <span class="tactic">exact</span> <span class="id">H2</span>. <br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_trans">Z.le_trans</a></span> <span class="kwd">with</span> <span class="id">ol</span>. <span class="tactic">unfold</span> <span class="id">ol</span>. <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_trans">Z.le_trans</a></span>. <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#le_add_pos">le_add_pos</a></span> <span class="kwd">with</span> (<span class="id">b</span>:= 4* <span class="id"><a href="Bounds.html#bound_local">bound_local</a></span> <span class="id">b</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="Bounds.html#bound_local_pos">bound_local_pos</a></span> <span class="id">b</span>); <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_trans">Z.le_trans</a></span> <span class="kwd">with</span> <span class="id">ostkdata</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_trans">Z.le_trans</a></span>. <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#le_add_pos">le_add_pos</a></span> <span class="kwd">with</span> (<span class="id">b</span>:= <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id">b</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="Bounds.html#bound_stack_data_pos">bound_stack_data_pos</a></span> <span class="id">b</span>); <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. <span class="tactic">unfold</span> <span class="id">w</span>; <span class="id">destr</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="arg_local_sep">arg_local_sep</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">o</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_local">bound_local</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4433')">Proof.</div>
+<div class="proofscript" id="proof4433">
+&nbsp;&nbsp;<span class="tactic">clear</span>. <span class="tactic">intros</span> <span class="id">b</span> <span class="id">fe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">frame_env_separated</span>' <span class="id">b</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">cut</span> (<span class="id">o</span>&lt;<span class="id">o</span>). <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.lt_le_trans">Z.lt_le_trans</a></span>. <span class="tactic">apply</span> <span class="id">H8</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id">H4</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>; <span class="tactic">try</span> (<span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Bounds.html#size_callee_save_area_incr">size_callee_save_area_incr</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">change</span> <span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> <span class="kwd">with</span> 0.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add_0_l">Z.add_0_l</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. <span class="id">destr</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="arg_callee_save_sep">arg_callee_save_sep</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">o</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_ofs_callee_save">fe_ofs_callee_save</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> (<span class="id"><a href="Bounds.html#fe_ofs_callee_save">fe_ofs_callee_save</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4434')">Proof.</div>
+<div class="proofscript" id="proof4434">
+&nbsp;&nbsp;<span class="tactic">clear</span>. <span class="tactic">intros</span> <span class="id">b</span> <span class="id">fe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">frame_env_separated</span>' <span class="id">b</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">cut</span> (<span class="id">o</span>&lt;<span class="id">o</span>). <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.lt_le_trans">Z.lt_le_trans</a></span>. <span class="tactic">apply</span> <span class="id">H8</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id">H4</span>.<br/>
+&nbsp;&nbsp;<span class="id">change</span> <span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> <span class="kwd">with</span> 0.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add_0_l">Z.add_0_l</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. <span class="id">destr</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="local_retaddr_sep">local_retaddr_sep</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">o</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_local">bound_local</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_ofs_retaddr">fe_ofs_retaddr</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#fe_ofs_retaddr">fe_ofs_retaddr</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="Memdata.html#size_chunk">size_chunk</a></span> <span class="id"><a href="AST.html#Mptr">Mptr</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4435')">Proof.</div>
+<div class="proofscript" id="proof4435">
+&nbsp;&nbsp;<span class="tactic">clear</span>. <span class="tactic">intros</span> <span class="id">b</span> <span class="id">fe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">frame_env_separated</span>' <span class="id">b</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>. <span class="tactic">destruct</span> <span class="id">H2</span>. <span class="tactic">destruct</span> <span class="id">H3</span>. <span class="tactic">destruct</span> <span class="id">H4</span>. <span class="tactic">destruct</span> <span class="id">H5</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">w</span> := <span class="kwd">if</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> 8 <span class="kwd">else</span> 4) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ocs</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="id">w</span>) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ol</span> :=  <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) 8) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ostkdata</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_local">bound_local</a></span>)) 8) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">preretaddr</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">ostkdata</span> + <span class="id">b</span>.(<span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span>)) <span class="id">w</span>) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">sz</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id">preretaddr</span> + <span class="id">w</span>) 8) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">oretaddr</span> := <span class="id">sz</span> - <span class="id">w</span>) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">preretaddr</span> &lt;= <span class="id">oretaddr</span>) <span class="kwd">as</span> <span class="id">RET</span> <span class="tactic">by</span> <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#retaddr_le">retaddr_le</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">cut</span> (<span class="id">ol</span> + 4 * <span class="id"><a href="Bounds.html#bound_local">bound_local</a></span> <span class="id">b</span> &lt;= <span class="id">oretaddr</span>). <br/>
+&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">w</span> <span class="id">ocs</span> <span class="id">ol</span> <span class="id">ostkdata</span> <span class="id">preretaddr</span> <span class="id">sz</span> <span class="id">oretaddr</span>. <span class="tactic">simpl</span> <span class="kwd">in</span> *. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_trans">Z.le_trans</a></span>. 2: <span class="tactic">exact</span> <span class="id">RET</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">preretaddr</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_trans">Z.le_trans</a></span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_trans">Z.le_trans</a></span>. <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#le_add_pos">le_add_pos</a></span> <span class="kwd">with</span> (<span class="id">b</span>:= <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id">b</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="Bounds.html#bound_stack_data_pos">bound_stack_data_pos</a></span> <span class="id">b</span>); <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. <span class="tactic">unfold</span> <span class="id">w</span>; <span class="id">destr</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="local_callee_save_sep">local_callee_save_sep</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">o</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_local">bound_local</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_ofs_callee_save">fe_ofs_callee_save</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> (<span class="id"><a href="Bounds.html#fe_ofs_callee_save">fe_ofs_callee_save</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4436')">Proof.</div>
+<div class="proofscript" id="proof4436">
+&nbsp;&nbsp;<span class="tactic">clear</span>. <span class="tactic">intros</span> <span class="id">b</span> <span class="id">fe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">frame_env_separated</span>' <span class="id">b</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="stkdata_callee_save_sep">stkdata_callee_save_sep</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">o</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_ofs_callee_save">fe_ofs_callee_save</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> (<span class="id"><a href="Bounds.html#fe_ofs_callee_save">fe_ofs_callee_save</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4437')">Proof.</div>
+<div class="proofscript" id="proof4437">
+&nbsp;&nbsp;<span class="tactic">clear</span>. <span class="tactic">intros</span> <span class="id">b</span> <span class="id">fe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">frame_env_separated</span>' <span class="id">b</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">cut</span> (<span class="id">o</span> &lt; <span class="id">o</span>). <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.lt_le_trans">Z.lt_le_trans</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H9</span>. <span class="id">etransitivity</span>.<br/>
+&nbsp;&nbsp;2: <span class="tactic">apply</span> <span class="id">H7</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span> ; <span class="tactic">try</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#le_add_pos">le_add_pos</a></span>; [ <span class="tactic">generalize</span> (<span class="id"><a href="Bounds.html#bound_local_pos">bound_local_pos</a></span> <span class="id">b</span>); <span class="tactic">omega</span>].<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="local_arg_sep">local_arg_sep</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">o</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_local">bound_local</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4438')">Proof.</div>
+<div class="proofscript" id="proof4438">
+&nbsp;&nbsp;<span class="tactic">clear</span>. <span class="tactic">intros</span> <span class="id">b</span> <span class="id">fe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">frame_env_separated</span>' <span class="id">b</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">cut</span> (<span class="id">o</span> &lt; <span class="id">o</span>). <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.lt_le_trans">Z.lt_le_trans</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H9</span>. <span class="id">etransitivity</span>.<br/>
+&nbsp;&nbsp;2: <span class="tactic">apply</span> <span class="id">H7</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span> ; <span class="tactic">try</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Bounds.html#size_callee_save_area_incr">size_callee_save_area_incr</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">change</span> <span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> <span class="kwd">with</span> 0.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add_0_l">Z.add_0_l</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. <span class="id">destr</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="stkdata_arg_sep">stkdata_arg_sep</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">o</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_outgoing">bound_outgoing</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4439')">Proof.</div>
+<div class="proofscript" id="proof4439">
+&nbsp;&nbsp;<span class="tactic">clear</span>. <span class="tactic">intros</span> <span class="id">b</span> <span class="id">fe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">frame_env_separated</span>' <span class="id">b</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">cut</span> (<span class="id">o</span> &lt; <span class="id">o</span>). <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.lt_le_trans">Z.lt_le_trans</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H9</span>. <span class="id">etransitivity</span>.<br/>
+&nbsp;&nbsp;2: <span class="tactic">apply</span> <span class="id">H7</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span> ; <span class="tactic">try</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Stacklayout.html#le_add_pos">le_add_pos</a></span>; [ <span class="tactic">generalize</span> (<span class="id"><a href="Bounds.html#bound_local_pos">bound_local_pos</a></span> <span class="id">b</span>); <span class="tactic">omega</span>].<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span> ; <span class="tactic">try</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">etransitivity</span>. 2: <span class="tactic">apply</span> <span class="id"><a href="Bounds.html#size_callee_save_area_incr">size_callee_save_area_incr</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">change</span> <span class="id"><a href="Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> <span class="kwd">with</span> 0.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add_0_l">Z.add_0_l</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#align_le">align_le</a></span>. <span class="id">destr</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="stkdata_local_sep">stkdata_local_sep</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">o</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> &lt;= <span class="id"><a href="Stacklayout.html#o">o</a></span> &lt; <span class="id"><a href="Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="Stacklayout.html#fe">fe</a></span> + 4 * <span class="id"><a href="Bounds.html#bound_local">bound_local</a></span> <span class="id"><a href="Stacklayout.html#b">b</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4440')">Proof.</div>
+<div class="proofscript" id="proof4440">
+&nbsp;&nbsp;<span class="tactic">clear</span>. <span class="tactic">intros</span> <span class="id">b</span> <span class="id">fe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">frame_env_separated</span>' <span class="id">b</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="Stacklayout.html#WITHMEM">WITHMEM</a></span>.</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

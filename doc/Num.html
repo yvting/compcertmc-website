@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Num</title>
+<meta name="description" content="Documentation of Coq module Num" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Num</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Coqlib.html">Coqlib</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="of_nat_le_mono">of_nat_le_mono</a></span> : <span class="kwd">forall</span> <span class="id">m</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="Num.html#m">m</a></span> &lt;= <span class="id"><a href="Num.html#n">n</a></span>)%<span class="id">nat</span> -&gt; <span class="id"><a href="Coqlib.html#Ple">Ple</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.of_nat">Pos.of_nat</a></span> <span class="id"><a href="Num.html#m">m</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.of_nat">Pos.of_nat</a></span> <span class="id"><a href="Num.html#n">n</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4948')">Proof.</div>
+<div class="proofscript" id="proof4948">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#Ple_refl">Ple_refl</a></span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#Ple_trans">Ple_trans</a></span> <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.of_nat">Pos.of_nat</a></span> <span class="id">m0</span>); <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">destruct</span> <span class="id">m0</span>. <span class="tactic">simpl</span>. <span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#Ple_refl">Ple_refl</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Coqlib.html#Ple_succ">Ple_succ</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="pos_incr_comm">pos_incr_comm</a></span> : <span class="kwd">forall</span> <span class="id">p</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.of_nat">Pos.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">Datatypes.S</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.to_nat">Pos.to_nat</a></span> <span class="id"><a href="Num.html#p">p</a></span>))%<span class="id">nat</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Psucc">Psucc</a></span> <span class="id"><a href="Num.html#p">p</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4949')">Proof.</div>
+<div class="proofscript" id="proof4949">
+&nbsp;&nbsp;<span class="tactic">clear</span>. <span class="tactic">intros</span> <span class="id">p</span>. <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.Pnat.html#Pos2Nat.inj_succ">Pos2Nat.inj_succ</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.Pnat.html#Pos2Nat.id">Pos2Nat.id</a></span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Plt_le_absurd">Plt_le_absurd</a></span> : <span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="Coqlib.html#Plt">Plt</a></span> <span class="id"><a href="Num.html#a">a</a></span> <span class="id"><a href="Num.html#b">b</a></span> -&gt; <span class="id"><a href="Coqlib.html#Ple">Ple</a></span> <span class="id"><a href="Num.html#b">b</a></span> <span class="id"><a href="Num.html#a">a</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4950')">Proof.</div>
+<div class="proofscript" id="proof4950">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">a</span> <span class="id">b</span> <span class="id">H</span> <span class="id">H0</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.lt_nle">Pos.lt_nle</a></span> <span class="kwd">in</span> <span class="id">H</span>. <span class="tactic">unfold</span> <span class="id"><a href="Coqlib.html#Ple">Ple</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="id">contradiction</span>.<br/>
+Qed.</div>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

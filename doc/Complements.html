@@ -1,0 +1,237 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Complements</title>
+<meta name="description" content="Documentation of Coq module Complements" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Complements</h1>
+<div class="coq">
+<br/>
+<div class="doc">Corollaries of the main semantic preservation theorem. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Classical.html">Classical</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Coqlib.html">Coqlib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Integers.html">Integers</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Values.html">Values</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Globalenvs.html">Globalenvs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Smallstep.html">Smallstep</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Behaviors.html">Behaviors</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Csyntax.html">Csyntax</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Csem.html">Csem</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Cstrategy.html">Cstrategy</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Clight.html">Clight</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Cminor.html">Cminor</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="RTL.html">RTL</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Asm.html">Asm</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Compiler.html">Compiler</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Errors.html">Errors</a></span>.<br/>
+<br/>
+<h1> Preservation of whole-program behaviors </h1>
+<br/>
+<div class="doc">From the simulation diagrams proved in file <span class="bracket"><span class="id">Compiler</span></span>. it follows that
+  whole-program observable behaviors are preserved in the following sense.
+  First, every behavior of the generated assembly code is matched by
+  a behavior of the source C code. </div>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="WITHEXTERNALCALLS">WITHEXTERNALCALLS</a></span>.<br/>
+<span class="kwd">Local</span> <span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">Events.symbols_inject_instance</span>.<br/>
+<span class="kwd">Context</span> `{<span class="id">external_calls_prf</span>: <span class="id"><a href="Events.html#ExternalCalls">Events.ExternalCalls</a></span> (<span class="id">symbols_inject_instance</span> := <span class="id"><a href="Events.html#symbols_inject_instance">Events.symbols_inject_instance</a></span>) }.<br/>
+<span class="kwd">Context</span> {<span class="id">i64_helpers_correct_prf</span>: <span class="id"><a href="SplitLongproof.html#I64HelpersCorrect">SplitLongproof.I64HelpersCorrect</a></span> <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.mem">mem</a></span>}.<br/>
+<span class="kwd">Context</span> `{<span class="id">memory_model_x_prf</span>: !<span class="id"><a href="Unusedglobproof.html#Mem.MemoryModelX">Unusedglobproof.Mem.MemoryModelX</a></span> <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.mem">mem</a></span>}.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="transf_c_program_preservation">transf_c_program_preservation</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span> <span class="id">beh</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="Complements.html#p">p</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">init_stk</span> := <span class="id"><a href="Compiler.html#mk_init_stk">mk_init_stk</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="id"><a href="Complements.html#init_stk">init_stk</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">beh</span>', <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Csem.html#semantics">Csem.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span>) <span class="id"><a href="Complements.html#p">p</a></span>) <span class="id">beh</span>' /\ <span class="id"><a href="Behaviors.html#behavior_improves">behavior_improves</a></span> <span class="id">beh</span>' <span class="id"><a href="Complements.html#beh">beh</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6452')">Proof.</div>
+<div class="proofscript" id="proof6452">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id"><a href="Behaviors.html#backward_simulation_behavior_improves">backward_simulation_behavior_improves</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Compiler.html#transf_c_program_correct">transf_c_program_correct</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">As a corollary, if the source C code cannot go wrong, the behavior of the
+  generated assembly code is one of the possible behaviors of the source C code. </div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="transf_c_program_is_refinement">transf_c_program_is_refinement</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="Complements.html#p">p</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Csem.html#semantics">Csem.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span>) <span class="id"><a href="Complements.html#p">p</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="Behaviors.html#not_wrong">not_wrong</a></span> <span class="id"><a href="Complements.html#beh">beh</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">init_stk</span> := <span class="id"><a href="Compiler.html#mk_init_stk">mk_init_stk</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="id"><a href="Complements.html#init_stk">init_stk</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Csem.html#semantics">Csem.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span>) <span class="id"><a href="Complements.html#p">p</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6453')">Proof.</div>
+<div class="proofscript" id="proof6453">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id"><a href="Behaviors.html#backward_simulation_same_safe_behavior">backward_simulation_same_safe_behavior</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Compiler.html#transf_c_program_correct">transf_c_program_correct</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">If we consider the C evaluation strategy implemented by the compiler,
+  we get stronger preservation results. </div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="transf_cstrategy_program_preservation">transf_cstrategy_program_preservation</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="Complements.html#p">p</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">init_stk</span> := <span class="id"><a href="Compiler.html#mk_init_stk">mk_init_stk</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Cstrategy.html#semantics">Cstrategy.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span>) <span class="id"><a href="Complements.html#p">p</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">beh</span>', <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="id"><a href="Complements.html#init_stk">init_stk</a></span>) <span class="id">beh</span>' /\ <span class="id"><a href="Behaviors.html#behavior_improves">behavior_improves</a></span> <span class="id"><a href="Complements.html#beh">beh</a></span> <span class="id">beh</span>')<br/>
+/\(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="id"><a href="Complements.html#init_stk">init_stk</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">beh</span>', <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Cstrategy.html#semantics">Cstrategy.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span>) <span class="id"><a href="Complements.html#p">p</a></span>) <span class="id">beh</span>' /\ <span class="id"><a href="Behaviors.html#behavior_improves">behavior_improves</a></span> <span class="id">beh</span>' <span class="id"><a href="Complements.html#beh">beh</a></span>)<br/>
+/\(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="Behaviors.html#not_wrong">not_wrong</a></span> <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Cstrategy.html#semantics">Cstrategy.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span>) <span class="id"><a href="Complements.html#p">p</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="id"><a href="Complements.html#init_stk">init_stk</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span>)<br/>
+/\(<span class="kwd">forall</span> <span class="id">beh</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>', <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Cstrategy.html#semantics">Cstrategy.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span>) <span class="id"><a href="Complements.html#p">p</a></span>) <span class="id">beh</span>' -&gt; <span class="id"><a href="Behaviors.html#not_wrong">not_wrong</a></span> <span class="id">beh</span>') -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="id"><a href="Complements.html#init_stk">init_stk</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Cstrategy.html#semantics">Cstrategy.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span>) <span class="id"><a href="Complements.html#p">p</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6454')">Proof.</div>
+<div class="proofscript" id="proof6454">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">p</span> <span class="id">tp</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">WBT</span>: <span class="kwd">forall</span> <span class="id">p</span>, <span class="id"><a href="Smallstep.html#well_behaved_traces">well_behaved_traces</a></span> (<span class="id"><a href="Cstrategy.html#semantics">Cstrategy.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id">tp</span>) <span class="id"><a href="Complements.html#p">p</a></span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id"><a href="Smallstep.html#ssr_well_behaved">ssr_well_behaved</a></span>. <span class="tactic">apply</span> <span class="id"><a href="Cstrategy.html#semantics_strongly_receptive">Cstrategy.semantics_strongly_receptive</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">MATCH</span>: <span class="id"><a href="Compiler.html#match_prog">match_prog</a></span> <span class="id">p</span> <span class="id">tp</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="Compiler.html#transf_c_program_match">transf_c_program_match</a></span>; <span class="tactic">auto</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="Behaviors.html#forward_simulation_behavior_improves">forward_simulation_behavior_improves</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj1">proj1</a></span> (<span class="id"><a href="Compiler.html#cstrategy_semantic_preservation">cstrategy_semantic_preservation</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">MATCH</span>)).<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> @<span class="id"><a href="Behaviors.html#backward_simulation_behavior_improves">backward_simulation_behavior_improves</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj2">proj2</a></span> (<span class="id"><a href="Compiler.html#cstrategy_semantic_preservation">cstrategy_semantic_preservation</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">MATCH</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> [<span class="id">beh1</span> [<span class="id">A</span> <span class="id">B</span>]]. <span class="id">exists</span> <span class="id">beh1</span>; <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">rewrite</span> <span class="id"><a href="Behaviors.html#atomic_behaviors">atomic_behaviors</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="Behaviors.html#forward_simulation_same_safe_behavior">forward_simulation_same_safe_behavior</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj1">proj1</a></span> (<span class="id"><a href="Compiler.html#cstrategy_semantic_preservation">cstrategy_semantic_preservation</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">MATCH</span>)).<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> @<span class="id"><a href="Behaviors.html#backward_simulation_same_safe_behavior">backward_simulation_same_safe_behavior</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj2">proj2</a></span> (<span class="id"><a href="Compiler.html#cstrategy_semantic_preservation">cstrategy_semantic_preservation</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">MATCH</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="Behaviors.html#atomic_behaviors">atomic_behaviors</a></span> <span class="kwd">in</span> <span class="id">H2</span>; <span class="tactic">eauto</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="Behaviors.html#atomic_behaviors">atomic_behaviors</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">We can also use the alternate big-step semantics for <span class="bracket"><span class="id">Cstrategy</span></span>
+  to establish behaviors of the generated assembly code. </div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="bigstep_cstrategy_preservation">bigstep_cstrategy_preservation</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="Complements.html#p">p</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">init_stk</span> := <span class="id"><a href="Compiler.html#mk_init_stk">mk_init_stk</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">t</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cstrategy.html#bigstep_program_terminates">Cstrategy.bigstep_program_terminates</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span>) <span class="id"><a href="Complements.html#p">p</a></span> <span class="id"><a href="Complements.html#t">t</a></span> <span class="id"><a href="Complements.html#r">r</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="id"><a href="Complements.html#init_stk">init_stk</a></span>) (<span class="id"><a href="Behaviors.html#Terminates">Terminates</a></span> <span class="id"><a href="Complements.html#t">t</a></span> <span class="id"><a href="Complements.html#r">r</a></span>))<br/>
+/\(<span class="kwd">forall</span> <span class="id">T</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cstrategy.html#bigstep_program_diverges">Cstrategy.bigstep_program_diverges</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span>) <span class="id"><a href="Complements.html#p">p</a></span> <span class="id"><a href="Complements.html#T">T</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="id"><a href="Complements.html#init_stk">init_stk</a></span>) (<span class="id"><a href="Behaviors.html#Reacts">Reacts</a></span> <span class="id"><a href="Complements.html#T">T</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;\/ <span class="id">exists</span> <span class="id">t</span>, <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="id"><a href="Complements.html#init_stk">init_stk</a></span>) (<span class="id"><a href="Behaviors.html#Diverges">Diverges</a></span> <span class="id"><a href="Complements.html#t">t</a></span>) /\ <span class="id"><a href="Events.html#traceinf_prefix">traceinf_prefix</a></span> <span class="id"><a href="Complements.html#t">t</a></span> <span class="id"><a href="Complements.html#T">T</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6455')">Proof.</div>
+<div class="proofscript" id="proof6455">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">p</span> <span class="id">tp</span> <span class="id">TP</span> <span class="id">init_sp</span>. <br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">intros</span> <span class="id">t</span> <span class="id">r</span> <span class="id">BPT</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="Complements.html#transf_cstrategy_program_preservation">transf_cstrategy_program_preservation</a></span>; <span class="tactic">eauto</span>. <span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Behaviors.html#behavior_bigstep_terminates">behavior_bigstep_terminates</a></span> <span class="kwd">with</span> (<span class="id"><a href="Cstrategy.html#bigstep_semantics">Cstrategy.bigstep_semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id">tp</span>) <span class="id">p</span>); <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Cstrategy.html#bigstep_semantics_sound">Cstrategy.bigstep_semantics_sound</a></span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">intros</span> <span class="id">T</span> <span class="id">BPD</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (<span class="id"><a href="Behaviors.html#behavior_bigstep_diverges">behavior_bigstep_diverges</a></span> (<span class="id"><a href="Cstrategy.html#bigstep_semantics_sound">Cstrategy.bigstep_semantics_sound</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id">tp</span>) <span class="id">p</span>)). <span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> [<span class="id">A</span> | [<span class="id">t</span> [<span class="id">A</span> <span class="id">B</span>]]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">left</span>. <span class="tactic">apply</span> <span class="id"><a href="Complements.html#transf_cstrategy_program_preservation">transf_cstrategy_program_preservation</a></span> <span class="kwd">with</span> <span class="id">p</span>; <span class="tactic">auto</span>. <span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">right</span>; <span class="id">exists</span> <span class="id">t</span>; <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">apply</span> <span class="id"><a href="Complements.html#transf_cstrategy_program_preservation">transf_cstrategy_program_preservation</a></span> <span class="kwd">with</span> <span class="id">p</span>; <span class="tactic">auto</span>. <span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<h1> Satisfaction of specifications </h1>
+<br/>
+<div class="doc">The second additional results shows that if all executions
+  of the source C program satisfies a given specification
+  (a predicate on the observable behavior of the program),
+  then all executions of the produced Asm program satisfy
+  this specification as well.
+  We first show this result for specifications that are stable
+  under the <span class="bracket"><span class="id">behavior_improves</span></span> relation. </div>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="WITHEXTERNALCALLS.SPECS_PRESERVED">SPECS_PRESERVED</a></span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WITHEXTERNALCALLS.SPECS_PRESERVED.spec">spec</a></span>: <span class="id"><a href="Behaviors.html#program_behavior">program_behavior</a></span> <span class="id"><a href="Integers.html#int">int</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="WITHEXTERNALCALLS.SPECS_PRESERVED.spec_stable">spec_stable</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">beh1</span> <span class="id">beh2</span>, <span class="id"><a href="Behaviors.html#behavior_improves">behavior_improves</a></span> <span class="id"><a href="Complements.html#beh1">beh1</a></span> <span class="id"><a href="Complements.html#beh2">beh2</a></span> -&gt; <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.SPECS_PRESERVED.spec">spec</a></span> <span class="id"><a href="Complements.html#beh1">beh1</a></span> -&gt; <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.SPECS_PRESERVED.spec">spec</a></span> <span class="id"><a href="Complements.html#beh2">beh2</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="transf_c_program_preserves_spec">transf_c_program_preserves_spec</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="Complements.html#p">p</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">init_stk</span> := <span class="id"><a href="Compiler.html#mk_init_stk">mk_init_stk</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Csem.html#semantics">Csem.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span>) <span class="id"><a href="Complements.html#p">p</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.SPECS_PRESERVED.spec">spec</a></span> <span class="id"><a href="Complements.html#beh">beh</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="id"><a href="Complements.html#init_stk">init_stk</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.SPECS_PRESERVED.spec">spec</a></span> <span class="id"><a href="Complements.html#beh">beh</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6456')">Proof.</div>
+<div class="proofscript" id="proof6456">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="Complements.html#transf_c_program_preservation">transf_c_program_preservation</a></span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> [<span class="id">beh</span>' [<span class="id">A</span> <span class="id">B</span>]].<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.SPECS_PRESERVED.spec_stable">spec_stable</a></span> <span class="kwd">with</span> <span class="id">beh</span>'; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.SPECS_PRESERVED">SPECS_PRESERVED</a></span>.<br/>
+<br/>
+<div class="doc">As a corollary, we obtain preservation of safety specifications:
+  specifications that exclude "going wrong" behaviors. </div>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="WITHEXTERNALCALLS.SAFETY_PRESERVED">SAFETY_PRESERVED</a></span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WITHEXTERNALCALLS.SAFETY_PRESERVED.spec">spec</a></span>: <span class="id"><a href="Behaviors.html#program_behavior">program_behavior</a></span> <span class="id"><a href="Integers.html#int">int</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="WITHEXTERNALCALLS.SAFETY_PRESERVED.spec_safety">spec_safety</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.SAFETY_PRESERVED.spec">spec</a></span> <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="Behaviors.html#not_wrong">not_wrong</a></span> <span class="id"><a href="Complements.html#beh">beh</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="transf_c_program_preserves_safety_spec">transf_c_program_preserves_safety_spec</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="Complements.html#p">p</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">init_stk</span> := <span class="id"><a href="Compiler.html#mk_init_stk">mk_init_stk</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Csem.html#semantics">Csem.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span>) <span class="id"><a href="Complements.html#p">p</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.SAFETY_PRESERVED.spec">spec</a></span> <span class="id"><a href="Complements.html#beh">beh</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="id"><a href="Complements.html#init_stk">init_stk</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.SAFETY_PRESERVED.spec">spec</a></span> <span class="id"><a href="Complements.html#beh">beh</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6457')">Proof.</div>
+<div class="proofscript" id="proof6457">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id"><a href="Complements.html#transf_c_program_preserves_spec">transf_c_program_preserves_spec</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">destruct</span> <span class="id">H2</span>. <span class="tactic">congruence</span>. <span class="tactic">destruct</span> <span class="id">H2</span> <span class="kwd">as</span> [<span class="id">t</span> [<span class="id">EQ1</span> <span class="id">EQ2</span>]].<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">beh1</span>. <span class="tactic">elim</span> (<span class="id"><a href="Complements.html#WITHEXTERNALCALLS.SAFETY_PRESERVED.spec_safety">spec_safety</a></span> <span class="id">_</span> <span class="id">H3</span>).<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.SAFETY_PRESERVED">SAFETY_PRESERVED</a></span>.<br/>
+<br/>
+<div class="doc">We also have preservation of liveness specifications:
+  specifications that assert the existence of a prefix of the observable
+  trace satisfying some conditions. </div>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="WITHEXTERNALCALLS.LIVENESS_PRESERVED">LIVENESS_PRESERVED</a></span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WITHEXTERNALCALLS.LIVENESS_PRESERVED.spec">spec</a></span>: <span class="id"><a href="Events.html#trace">trace</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="liveness_spec_satisfied">liveness_spec_satisfied</a></span> {<span class="id">RETVAL</span>: <span class="kwd">Type</span>} (<span class="id">b</span>: <span class="id"><a href="Behaviors.html#program_behavior">program_behavior</a></span> <span class="id"><a href="Complements.html#RETVAL">RETVAL</a></span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">t</span>, <span class="id"><a href="Behaviors.html#behavior_prefix">behavior_prefix</a></span> <span class="id"><a href="Complements.html#t">t</a></span> <span class="id"><a href="Complements.html#b">b</a></span> /\ <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.LIVENESS_PRESERVED.spec">spec</a></span> <span class="id"><a href="Complements.html#t">t</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="transf_c_program_preserves_liveness_spec">transf_c_program_preserves_liveness_spec</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="Complements.html#p">p</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">init_stk</span> := <span class="id"><a href="Compiler.html#mk_init_stk">mk_init_stk</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Csem.html#semantics">Csem.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">fn_stack_requirements</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span>) <span class="id"><a href="Complements.html#p">p</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="Complements.html#liveness_spec_satisfied">liveness_spec_satisfied</a></span> <span class="id"><a href="Complements.html#beh">beh</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Complements.html#tp">tp</a></span> <span class="id"><a href="Complements.html#init_stk">init_stk</a></span>) <span class="id"><a href="Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="Complements.html#liveness_spec_satisfied">liveness_spec_satisfied</a></span> <span class="id"><a href="Complements.html#beh">beh</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6458')">Proof.</div>
+<div class="proofscript" id="proof6458">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id"><a href="Complements.html#transf_c_program_preserves_spec">transf_c_program_preserves_spec</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">destruct</span> <span class="id">H3</span> <span class="kwd">as</span> [<span class="id">t1</span> [<span class="id">A</span> <span class="id">B</span>]]. <span class="tactic">destruct</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span>. <span class="id">exists</span> <span class="id">t1</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H2</span> <span class="kwd">as</span> [<span class="id">t</span> [<span class="id">C</span> <span class="id">D</span>]]. <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">A</span> <span class="kwd">as</span> [<span class="id">b1</span> <span class="id">E</span>]. <span class="tactic">destruct</span> <span class="id">D</span> <span class="kwd">as</span> [<span class="id">b2</span> <span class="id">F</span>].<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">b1</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">E</span>; <span class="id">inv</span> <span class="id">E</span>.<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">t1</span>; <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">exists</span> (<span class="id"><a href="Behaviors.html#behavior_app">behavior_app</a></span> <span class="id">t0</span> <span class="id">b2</span>); <span class="tactic">apply</span> <span class="id"><a href="Behaviors.html#behavior_app_assoc">behavior_app_assoc</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="Complements.html#WITHEXTERNALCALLS.LIVENESS_PRESERVED">LIVENESS_PRESERVED</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="Complements.html#WITHEXTERNALCALLS">WITHEXTERNALCALLS</a></span>.<br/>
+&nbsp;</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

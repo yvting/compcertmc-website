@@ -1,0 +1,428 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SeparateCompiler</title>
+<meta name="description" content="Documentation of Coq module SeparateCompiler" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SeparateCompiler</h1>
+<div class="coq">
+<br/>
+<div class="doc">We do NOT import compcert.driver.Compiler, because we do NOT want
+to depend on passes that are unsupported (e.g. CompCert C) </div>
+<br/>
+<div class="doc">Also, we separate code generation from proofs. In this file, we
+define the compiler without any proof, so it depends on no proof of
+any compiler pass. </div>
+<br/>
+<div class="doc">I can list the passes of CompCert backwards by heart! </div>
+<br/>
+<span class="kwd">Require</span> <span class="id">compcert.x86.Asmgen</span>.<br/>
+<span class="kwd">Require</span> <span class="id">compcert.backend.Stacking</span>.<br/>
+<span class="kwd">Require</span> <span class="id">compcert.backend.CleanupLabels</span>.<br/>
+<span class="kwd">Require</span> <span class="id">compcert.backend.Linearize</span>.<br/>
+<span class="kwd">Require</span> <span class="id">compcert.backend.Tunneling</span>.<br/>
+<span class="kwd">Require</span> <span class="id">compcert.backend.Allocation</span>.<br/>
+<span class="kwd">Require</span> <span class="id">DeadcodeX</span>.<br/>
+<span class="kwd">Require</span> <span class="id">ConstpropX</span>.<br/>
+<span class="kwd">Require</span> <span class="id">CSEX</span>.<br/>
+<span class="kwd">Require</span> <span class="id">compcert.backend.Renumber</span>.<br/>
+<span class="kwd">Require</span> <span class="id">InliningX</span>.<br/>
+<span class="kwd">Require</span> <span class="id">compcert.backend.Tailcall</span>.<br/>
+<span class="kwd">Require</span> <span class="id">compcert.backend.RTLgen</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SelectionX</span>.<br/>
+<span class="kwd">Require</span> <span class="id">compcert.cfrontend.Cminorgen</span>.<br/>
+<span class="kwd">Require</span> <span class="id">compcert.cfrontend.Cshmgen</span>.<br/>
+<span class="kwd">Require</span> <span class="id">ComposePasses</span>.<br/>
+<br/>
+<span class="kwd">Import</span> <span class="id">Coqlib</span>.<br/>
+<span class="kwd">Import</span> <span class="id">String</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Errors</span>.<br/>
+<span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Import</span> <span class="id">ComposePasses</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">string_scope</span>.<br/>
+<br/>
+<h1> Composing the translation passes </h1>
+<br/>
+<span class="kwd">Definition</span> <span class="id">transf_clight_program_to_rtl</span> (<span class="id">p</span>: <span class="id">Clight.program</span>) : <span class="id">res</span> <span class="id">RTL.program</span> :=<br/>
+&nbsp;&nbsp;<span class="id">OK</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">Cshmgen.transl_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">Cminorgen.transl_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">Selection.sel_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">RTLgen.transl_program</span><br/>
+&nbsp;&nbsp;&nbsp;@@ <span class="id">Tailcall.transf_program</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">transf_rtl_program</span> (<span class="id">fenv</span>: <span class="id">Inlining.funenv</span>) (<span class="id">p</span>: <span class="id">RTL.program</span>): <span class="id">res</span> <span class="id">Asm.program</span> :=<br/>
+&nbsp;&nbsp;<span class="id">OK</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;@@@ (<span class="id">InliningX.transf_program</span> <span class="id">fenv</span>)<br/>
+&nbsp;&nbsp;&nbsp;@@ <span class="id">Renumber.transf_program</span><br/>
+&nbsp;&nbsp;&nbsp;@@ <span class="id">ConstpropX.transf_program</span><br/>
+&nbsp;&nbsp;&nbsp;@@ <span class="id">Renumber.transf_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">CSEX.transf_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">DeadcodeX.transf_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">Allocation.transf_program</span><br/>
+&nbsp;&nbsp;&nbsp;@@ <span class="id">Tunneling.tunnel_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">Linearize.transf_program</span><br/>
+&nbsp;&nbsp;&nbsp;@@ <span class="id">CleanupLabels.transf_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">Stacking.transf_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">Asmgen.transf_program</span>.<br/>
+<br/>
+<span class="id">Opaque</span> <span class="id">SelectionX.sel_program</span>.<br/>
+<br/>
+<div class="doc">Now, let's prove that our compiler is a per-function compiler
+    (given an inlining parameter, which we do not care about how
+    it is computed). </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">transf_clight_fundef_to_rtl</span> (<span class="id">ce</span>: <span class="id">Ctypes.composite_env</span>) (<span class="id">dm</span> : <span class="id">Maps.PTree.t</span> (<span class="id">globdef</span> <span class="id">Cminor.fundef</span> <span class="id">unit</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">hf</span>: <span class="id">SplitLong.helper_functions</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">i</span> : <span class="id">ident</span>) (<span class="id">p</span>: <span class="id">Clight.fundef</span>), <span class="id">res</span> <span class="id">RTL.fundef</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7500')">Proof.</div>
+<div class="proofscript" id="proof7500">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">i</span> <span class="id">p</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">refine</span> ((<span class="id">Cshmgen.transl_fundef</span> <span class="id">ce</span> &gt;&gt; <span class="id">_</span>) <span class="id">i</span> <span class="id">p</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">i</span>'.<br/>
+&nbsp;&nbsp;<span class="tactic">refine</span> ((<span class="id">Cminorgen.transl_fundef</span> ;;; <span class="id">_</span>)).<br/>
+&nbsp;&nbsp;<span class="tactic">refine</span> (<span class="id">SelectionX.sel_fundef</span> <span class="id">dm</span> <span class="id">hf</span> ;;; <span class="id">_</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">refine</span> (<span class="id">RTLgen.transl_fundef</span> ;;; <span class="id">_</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">f</span>. <span class="tactic">refine</span> (<span class="id">OK</span> <span class="id">_</span>).<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">f</span>; <span class="tactic">apply</span> <span class="id">Tailcall.transf_fundef</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">transf_rtl_fundef</span> <span class="id">fenv</span> : <span class="kwd">forall</span> (<span class="id">p</span>: <span class="id">RTL.fundef</span>) , <span class="id">res</span> <span class="id">Asm.fundef</span> :=<br/>
+&nbsp;&nbsp;(<span class="id">Inlining.transf_fundef</span> <span class="id">fenv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">OK</span> (<span class="id">Renumber.transf_fundef</span> <span class="id">x</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">OK</span> (<span class="id">ConstpropX.transf_fundef</span> <span class="id">x</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">OK</span> (<span class="id">Renumber.transf_fundef</span> <span class="id">x</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">CSEX.transf_fundef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">DeadcodeX.transf_fundef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">Allocation.transf_fundef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;&gt; <span class="id">Tunneling.tunnel_fundef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">Linearize.transf_fundef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;&gt; <span class="id">CleanupLabels.transf_fundef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">Stacking.transf_fundef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">Asmgen.transf_fundef</span>.<br/>
+<br/>
+<div class="doc">Auxiliary functions. These functions should be used only in proofs, and should not be extracted,
+    because if the computation of <span class="bracket"><span class="id">fenv</span></span> is based on <span class="bracket"><span class="id">transf_clight_fundef_to_rtl</span></span>, then
+    using <span class="bracket"><span class="id">transf_clight_fundef</span>'</span> will call <span class="bracket"><span class="id">transf_clight_fundef_to_rtl</span></span> twice. </div>
+<br/>
+<div class="doc">In other words, we can consider those functions as the "syntactic
+    specification" of the CompCertX compiler. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">transf_clight_fundef</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ce</span>: <span class="id">Ctypes.composite_env</span>) <span class="id">dm</span> <span class="id">hf</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">fenv</span>: <span class="id">Inlining.funenv</span>): <span class="kwd">forall</span> (<span class="id">i</span>: <span class="id">ident</span>) (<span class="id">p</span>: <span class="id">Clight.fundef</span>), <span class="id">res</span> <span class="id">Asm.fundef</span> :=<br/>
+&nbsp;&nbsp;(<span class="id">transf_clight_fundef_to_rtl</span> <span class="id">ce</span> <span class="id">dm</span> <span class="id">hf</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt; (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">transf_rtl_fundef</span> <span class="id">fenv</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">transf_clight_program</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fenv</span> (<span class="id">p</span>: <span class="id">Clight.program</span>): <span class="id">res</span> <span class="id">Asm.program</span> :=<br/>
+&nbsp;&nbsp;<span class="id">OK</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@@@ <span class="id">transf_clight_program_to_rtl</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@@@ (<span class="id">transf_rtl_program</span> <span class="id">fenv</span>)<br/>
+.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">apply_elim</span> :=<br/>
+&nbsp;&nbsp;<span class="id">ComposePasses.apply_elim</span> <span class="id">idtac</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">compose_elim</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span> : <span class="id">transform_partial_program</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(?<span class="id">f1</span> ;;; ?<span class="id">f2</span>) <span class="id">_</span> = <span class="id">OK</span> <span class="id">_</span> |- <span class="id">_</span> ] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">transform_partial_program_compose_in_out</span> <span class="kwd">in</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ComposePasses.compose_elim</span> <span class="id">idtac</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span> : <span class="id">transform_partial_program</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(?<span class="id">f1</span> ;&gt; ?<span class="id">f2</span>) <span class="id">_</span> = <span class="id">OK</span> <span class="id">_</span> |- <span class="id">_</span> ] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">transform_partial_program_compose_right_in_out</span> <span class="kwd">in</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ComposePasses.compose_elim</span> <span class="id">idtac</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">ComposePasses.compose_elim</span> <span class="id">idtac</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">clight_helpers</span> (<span class="id">p</span>: <span class="id">Clight.program</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">OK</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@@@<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Cshmgen.transl_program</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">Cminorgen.transl_program</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;&gt; (@<span class="id">prog_defmap</span> <span class="id">Cminor.fundef</span> <span class="id">unit</span>)).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transf_clight_fundef_to_rtl_program</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">p</span>: <span class="id">Clight.program</span>) (<span class="id">tp</span>: <span class="id">RTL.program</span>) <span class="id">dm</span> <span class="id">hf</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">clight_helpers</span> <span class="id">p</span> = <span class="id">OK</span> <span class="id">dm</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Selection.get_helpers</span> <span class="id">dm</span> = <span class="id">OK</span> <span class="id">hf</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> (<span class="id">transf_clight_fundef_to_rtl</span> (<span class="id">Ctypes.prog_comp_env</span> <span class="id">p</span>) <span class="id">dm</span> <span class="id">hf</span>) <span class="id">Cshmgen.transl_globvar</span> (<span class="id">Ctypes.program_of_program</span> <span class="id">p</span>) = <span class="id">OK</span> <span class="id">tp</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transf_clight_program_to_rtl</span> <span class="id">p</span> = <span class="id">OK</span> <span class="id">tp</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7501')">Proof.</div>
+<div class="proofscript" id="proof7501">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_clight_program_to_rtl</span>, <span class="id">transf_clight_fundef_to_rtl</span>, <span class="id">clight_helpers</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">p</span> <span class="id">tp</span> <span class="id">dm</span> <span class="id">hf</span> <span class="id">DM</span> <span class="id">HELPERS</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">Cshmgen.transl_globvar</span>) <span class="kwd">with</span> (<span class="id">Cshmgen.transl_globvar</span> &gt;&gt; (<span class="kwd">fun</span> <span class="id">i</span> <span class="id">v</span> =&gt; <span class="id">OK</span> <span class="id">v</span>)) <span class="kwd">in</span> <span class="id">H</span> <span class="tactic">by</span> <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transform_partial_program2_compose_in_out</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">compose_elim</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">type</span> <span class="id">of</span> <span class="id">Hbc</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">transform_partial_program2</span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; ?<span class="id">tf</span>) ?<span class="id">tv</span> ?<span class="id">b</span> = <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">change</span> (<span class="id">transform_partial_program2</span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">tf</span>) <span class="id">tv</span> <span class="id">b</span>) <span class="kwd">with</span> (<span class="id">transform_partial_program</span> <span class="id">tf</span> <span class="id">b</span>) <span class="kwd">in</span> <span class="id">Hbc</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">compose_elim</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">apply_partial_intro</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">apply_partial_intro</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">apply_partial_intro</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">apply_partial_intro</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Cshmgen.transl_program</span> <span class="kwd">in</span> <span class="id">Hab4</span>. <span class="tactic">assert</span> (<span class="id">b</span> = <span class="id">b4</span>) <span class="tactic">by</span> <span class="tactic">congruence</span>. <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Cminorgen.transl_program</span> <span class="kwd">in</span> <span class="id">Hbc</span>. <span class="tactic">assert</span> (<span class="id">b0</span> = <span class="id">b3</span>) <span class="tactic">by</span> <span class="tactic">congruence</span>. <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">SelectionX.sel_fundef</span> <span class="kwd">in</span> <span class="id">Hab1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">apply_partial_intro</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">transform_program_partial_program</span> <span class="kwd">in</span> <span class="id">Hbc0</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transf_rtl_fundef_to_program</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">fenv</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program</span> (<span class="id">transf_rtl_fundef</span> <span class="id">fenv</span>) <span class="id">p</span> = <span class="id">OK</span> <span class="id">tp</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transf_rtl_program</span> <span class="id">fenv</span> <span class="id">p</span> = <span class="id">OK</span> <span class="id">tp</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7502')">Proof.</div>
+<div class="proofscript" id="proof7502">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_rtl_program</span>, <span class="id">transf_rtl_fundef</span>. <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span>  <span class="id">compose_elim</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">apply_partial_intro</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">transform_program_partial_program</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">Hbc5</span>. <span class="id">inv</span> <span class="id">Hbc6</span>. <span class="id">inv</span> <span class="id">Hbc7</span>. <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transf_clight_fundef_to_program</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span> <span class="id">fenv</span> <span class="id">dm</span> <span class="id">hf</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">clight_helpers</span> <span class="id">p</span> = <span class="id">OK</span> <span class="id">dm</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Selection.get_helpers</span> <span class="id">dm</span> = <span class="id">OK</span> <span class="id">hf</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> (<span class="id">transf_clight_fundef</span>' (<span class="id">Ctypes.prog_comp_env</span> <span class="id">p</span>) <span class="id">dm</span> <span class="id">hf</span> <span class="id">fenv</span>) <span class="id">Cshmgen.transl_globvar</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Ctypes.program_of_program</span> <span class="id">p</span>) = <span class="id">OK</span> <span class="id">tp</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transf_clight_program</span>' <span class="id">fenv</span> <span class="id">p</span> = <span class="id">OK</span> <span class="id">tp</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7503')">Proof.</div>
+<div class="proofscript" id="proof7503">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_clight_program</span>', <span class="id">transf_clight_fundef</span>'.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">p</span> <span class="id">tp</span> <span class="id">fenv</span> <span class="id">dm</span> <span class="id">hf</span> <span class="id">DM</span> <span class="id">HELPERS</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">Cshmgen.transl_globvar</span>) <span class="kwd">with</span> (<span class="id">Cshmgen.transl_globvar</span> &gt;&gt; (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">v</span> =&gt; <span class="id">OK</span> <span class="id">v</span>)) <span class="kwd">in</span> <span class="id">H</span> <span class="tactic">by</span> <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transform_partial_program2_compose_in_out</span> <span class="kwd">in</span> <span class="id">H</span>.  <span class="id">compose_elim</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">type</span> <span class="id">of</span> <span class="id">Hbc</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">transform_partial_program2</span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; ?<span class="id">tf</span>) ?<span class="id">tv</span> ?<span class="id">b</span> = <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">change</span> (<span class="id">transform_partial_program2</span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">tf</span>) <span class="id">tv</span> <span class="id">b</span>) <span class="kwd">with</span> (<span class="id">transform_partial_program</span> <span class="id">tf</span> <span class="id">b</span>) <span class="kwd">in</span> <span class="id">Hbc</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">apply_partial</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">transf_clight_fundef_to_rtl_program</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transf_rtl_fundef_to_program</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">compose_intro</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ |- <span class="id">transform_partial_program</span> (?<span class="id">f1</span> ;&gt; ?<span class="id">f2</span>) <span class="id">_</span> = <span class="id">OK</span> <span class="id">_</span> ] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transform_partial_program_compose_right_out_in</span>; <span class="tactic">eapply</span> <span class="id">compose_partial_intro</span>; <span class="tactic">eauto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ |- <span class="id">transform_partial_program</span> (?<span class="id">f1</span> ;;; ?<span class="id">f2</span>) <span class="id">_</span> = <span class="id">OK</span> <span class="id">_</span> ] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transform_partial_program_compose_out_in</span>; <span class="tactic">eapply</span> <span class="id">compose_partial_intro</span>; <span class="tactic">eauto</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transf_clight_program_to_rtl_fundef</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span> <span class="id">dm</span> <span class="id">hf</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DM</span>: <span class="id">clight_helpers</span> <span class="id">p</span> = <span class="id">OK</span> <span class="id">dm</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HELPERS</span>: <span class="id">Selection.get_helpers</span> <span class="id">dm</span> = <span class="id">OK</span> <span class="id">hf</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transf_clight_program_to_rtl</span> <span class="id">p</span> = <span class="id">OK</span> <span class="id">tp</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> (<span class="id">transf_clight_fundef_to_rtl</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Ctypes.prog_comp_env</span> <span class="id">p</span>) <span class="id">dm</span> <span class="id">hf</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Cshmgen.transl_globvar</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Ctypes.program_of_program</span> <span class="id">p</span>) = <span class="id">OK</span> <span class="id">tp</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7504')">Proof.</div>
+<div class="proofscript" id="proof7504">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_clight_program_to_rtl</span>, <span class="id">transf_clight_fundef_to_rtl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">apply_elim</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">Cshmgen.transl_globvar</span>) <span class="kwd">with</span> (<span class="id">Cshmgen.transl_globvar</span> &gt;&gt; (<span class="kwd">fun</span> <span class="id">i</span> <span class="id">v</span> =&gt; <span class="id">OK</span> <span class="id">v</span>)) <span class="tactic">by</span> <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transform_partial_program2_compose_out_in</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">compose_partial_intro</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transform_partial_program_compose_out_in</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">compose_partial_intro</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">compose_intro</span>.<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">Har0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Selection.sel_program</span>.<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">DM</span>; <span class="tactic">unfold</span> <span class="id">clight_helpers</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_total_right</span>, <span class="id">compose_partial</span>; <span class="tactic">simpl</span>. <span class="tactic">rewrite</span> <span class="id">Har2</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">rewrite</span> <span class="id">Har1</span>; <span class="tactic">simpl</span>. <span class="tactic">intro</span> <span class="id">A</span>; <span class="id">inv</span> <span class="id">A</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">HELPERS</span>. <span class="tactic">simpl</span>. <span class="tactic">tauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">transform_program_partial_program</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transf_rtl_program_to_fundef</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">fenv</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transf_rtl_program</span> <span class="id">fenv</span> <span class="id">p</span> = <span class="id">OK</span> <span class="id">tp</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program</span> (<span class="id">transf_rtl_fundef</span> <span class="id">fenv</span>) <span class="id">p</span> = <span class="id">OK</span> <span class="id">tp</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7505')">Proof.</div>
+<div class="proofscript" id="proof7505">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_rtl_program</span>, <span class="id">transf_rtl_fundef</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">apply_elim</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">compose_intro</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">transform_program_partial_program</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">transform_program_partial_program</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">transform_program_partial_program</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transf_clight_program_to_fundef</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span> <span class="id">fenv</span> <span class="id">dm</span> <span class="id">hf</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DM</span>: <span class="id">clight_helpers</span> <span class="id">p</span> = <span class="id">OK</span> <span class="id">dm</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HELPERS</span>: <span class="id">Selection.get_helpers</span> <span class="id">dm</span> = <span class="id">OK</span> <span class="id">hf</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transf_clight_program</span>' <span class="id">fenv</span> <span class="id">p</span> = <span class="id">OK</span> <span class="id">tp</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> (<span class="id">transf_clight_fundef</span>' (<span class="id">Ctypes.prog_comp_env</span> <span class="id">p</span>) <span class="id">dm</span> <span class="id">hf</span> <span class="id">fenv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Cshmgen.transl_globvar</span> (<span class="id">Ctypes.program_of_program</span> <span class="id">p</span>) = <span class="id">OK</span> <span class="id">tp</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7506')">Proof.</div>
+<div class="proofscript" id="proof7506">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_clight_program</span>', <span class="id">transf_clight_fundef</span>'.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">apply_elim</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">Cshmgen.transl_globvar</span>) <span class="kwd">with</span> (<span class="id">Cshmgen.transl_globvar</span> &gt;&gt; (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">v</span> =&gt; <span class="id">OK</span> <span class="id">v</span>)) <span class="tactic">by</span> <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transform_partial_program2_compose_out_in</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">compose_partial_intro</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transf_clight_program_to_rtl_fundef</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transf_rtl_program_to_fundef</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Now, let's prove that our compiler does not change well-typed external functions </div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">transf_clight_fundef_external</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">fenv</span> <span class="id">cenv</span> <span class="id">dm</span> <span class="id">hf</span> <span class="id">i</span> <span class="id">ef</span> <span class="id">tl</span> <span class="id">ty</span> <span class="id">cc</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ef_sig</span> <span class="id">ef</span> = <span class="id">Ctypes.signature_of_type</span> <span class="id">tl</span> <span class="id">ty</span> <span class="id">cc</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transf_clight_fundef</span>' <span class="id">cenv</span> <span class="id">dm</span> <span class="id">hf</span> <span class="id">fenv</span> <span class="id">i</span> (<span class="id">Ctypes.External</span> <span class="id">ef</span> <span class="id">tl</span> <span class="id">ty</span> <span class="id">cc</span>) = <span class="id">OK</span> (<span class="id">AST.External</span> <span class="id">ef</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7507')">Proof.</div>
+<div class="proofscript" id="proof7507">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_clight_fundef</span>'. <span class="tactic">unfold</span> <span class="id">transf_clight_fundef_to_rtl</span>, <span class="id">transf_rtl_fundef</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>, <span class="id">apply_partial</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>'. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">signature_eq</span> (<span class="id">ef_sig</span> <span class="id">ef</span>) (<span class="id">Ctypes.signature_of_type</span> <span class="id">tl</span> <span class="id">ty</span> <span class="id">cc</span>)); <span class="tactic">try</span> <span class="id">contradiction</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Now, let's prove that our compiler is a per-function compiler for internal functions. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">transf_clight_function_to_rtl</span> (<span class="id">ce</span>: <span class="id">Ctypes.composite_env</span>)(<span class="id">dm</span> : <span class="id">Maps.PTree.t</span> (<span class="id">globdef</span> <span class="id">Cminor.fundef</span> <span class="id">unit</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">hf</span>: <span class="id">SplitLong.helper_functions</span>):<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">p</span>: <span class="id">Clight.function</span>), <span class="id">res</span> <span class="id">RTL.function</span> :=<br/>
+&nbsp;&nbsp;(<span class="id">Cshmgen.transl_function</span> <span class="id">ce</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Cminorgen.transl_function</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">SelectionX.sel_function</span> <span class="id">dm</span> <span class="id">hf</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">RTLgen.transl_function</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;;; (<span class="kwd">fun</span> <span class="id">f</span> =&gt; <span class="id">OK</span> (<span class="id">Tailcall.transf_function</span> <span class="id">f</span>)))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">transf_rtl_function</span> <span class="id">fenv</span> : <span class="kwd">forall</span> (<span class="id">p</span>: <span class="id">RTL.function</span>), <span class="id">res</span> <span class="id">Asm.function</span> :=<br/>
+&nbsp;&nbsp;(<span class="id">Inlining.transf_function</span> <span class="id">fenv</span>) ;;;<br/>
+&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">OK</span> (<span class="id">Renumber.transf_function</span> <span class="id">x</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">OK</span> (<span class="id">ConstpropX.transf_function</span> <span class="id">x</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">OK</span> (<span class="id">Renumber.transf_function</span> <span class="id">x</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">CSEX.transf_function</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">DeadcodeX.transf_function</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">Allocation.transf_function</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;&gt; <span class="id">Tunneling.tunnel_function</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">Linearize.transf_function</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;&gt; <span class="id">CleanupLabels.transf_function</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">Stacking.transf_function</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; <span class="id">Asmgen.transf_function</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">transf_clight_function</span>' <span class="id">fenv</span> <span class="id">cenv</span> (<span class="id">dm</span> : <span class="id">Maps.PTree.t</span> (<span class="id">globdef</span> <span class="id">Cminor.fundef</span> <span class="id">unit</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">hf</span>: <span class="id">SplitLong.helper_functions</span>) : <span class="kwd">forall</span> (<span class="id">p</span>: <span class="id">Clight.function</span>), <span class="id">res</span> <span class="id">Asm.function</span> :=<br/>
+&nbsp;&nbsp;<span class="id">transf_clight_function_to_rtl</span> <span class="id">cenv</span> <span class="id">dm</span> <span class="id">hf</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;;; (<span class="id">transf_rtl_function</span> <span class="id">fenv</span>).<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">rewrite_step</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span> : ?<span class="id">x</span> = <span class="id">OK</span> ?<span class="id">y</span> |- <span class="id">context</span> [ <span class="id">bind</span> ?<span class="id">x</span> <span class="id">_</span> ] ] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H</span>; <span class="tactic">simpl</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">transf_clight_fundef_internal</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">fenv</span> <span class="id">cenv</span> <span class="id">dm</span> <span class="id">hf</span> <span class="id">f</span> <span class="id">tf</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transf_clight_function</span>' <span class="id">fenv</span> <span class="id">cenv</span> <span class="id">dm</span> <span class="id">hf</span> <span class="id">f</span> = <span class="id">OK</span> <span class="id">tf</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transf_clight_fundef</span>' <span class="id">cenv</span> <span class="id">dm</span> <span class="id">hf</span> <span class="id">fenv</span> <span class="id">i</span> (<span class="id">Ctypes.Internal</span> <span class="id">f</span>) = <span class="id">OK</span> (<span class="id">AST.Internal</span> <span class="id">tf</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7508')">Proof.</div>
+<div class="proofscript" id="proof7508">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_clight_function</span>', <span class="id">transf_clight_function_to_rtl</span>, <span class="id">transf_rtl_function</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">compose_elim</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_clight_fundef</span>', <span class="id">transf_clight_fundef_to_rtl</span>, <span class="id">transf_rtl_fundef</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>, <span class="id">apply_partial</span>, <span class="id">compose_total_right</span>, <span class="id">apply_total</span>, <span class="id">compose_partial</span>'.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">SelectionX.sel_function</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">CSEX.transf_function</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">ConstpropX.transf_function</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">DeadcodeX.transf_function</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">rewrite_step</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">transf_clight_function_to_rtl_internal</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">tf</span> <span class="id">cenv</span> <span class="id">dm</span> <span class="id">hf</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transf_clight_function_to_rtl</span> <span class="id">cenv</span> <span class="id">dm</span> <span class="id">hf</span> <span class="id">f</span> = <span class="id">OK</span> <span class="id">tf</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transf_clight_fundef_to_rtl</span> <span class="id">cenv</span> <span class="id">dm</span> <span class="id">hf</span> <span class="id">i</span> (<span class="id">Ctypes.Internal</span> <span class="id">f</span>) = <span class="id">OK</span> (<span class="id">Internal</span> <span class="id">tf</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7509')">Proof.</div>
+<div class="proofscript" id="proof7509">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_clight_function_to_rtl</span>, <span class="id">transf_clight_fundef_to_rtl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">compose_elim</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>, <span class="id">apply_partial</span>, <span class="id">compose_total_right</span>, <span class="id">apply_total</span>, <span class="id">compose_partial</span>'.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">SelectionX.sel_function</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">rewrite_step</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">An alternative splitting for the compiler: from Clight to Linear,
+   then from Linear to Asm. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">transf_rtl_program_to_linear</span> <span class="id">fenv</span>  (<span class="id">p</span>: <span class="id">RTL.program</span>) : <span class="id">res</span> <span class="id">Linear.program</span> :=<br/>
+&nbsp;&nbsp;<span class="id">OK</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;@@@ (<span class="id">InliningX.transf_program</span> <span class="id">fenv</span>)<br/>
+&nbsp;&nbsp;&nbsp;@@ <span class="id">Renumber.transf_program</span><br/>
+&nbsp;&nbsp;&nbsp;@@ <span class="id">ConstpropX.transf_program</span><br/>
+&nbsp;&nbsp;&nbsp;@@ <span class="id">Renumber.transf_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">CSEX.transf_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">DeadcodeX.transf_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">Allocation.transf_program</span><br/>
+&nbsp;&nbsp;&nbsp;@@ <span class="id">Tunneling.tunnel_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">Linearize.transf_program</span><br/>
+&nbsp;&nbsp;&nbsp;@@ <span class="id">CleanupLabels.transf_program</span><br/>
+.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">transf_linear_program</span> (<span class="id">p</span>: <span class="id">Linear.program</span>): <span class="id">res</span> <span class="id">Asm.program</span> :=<br/>
+&nbsp;&nbsp;<span class="id">OK</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">Stacking.transf_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">Asmgen.transf_program</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transf_rtl_program_to_linear_to_asm_correct</span> <span class="id">fenv</span> <span class="id">p</span>:<br/>
+&nbsp;&nbsp;<span class="id">OK</span> <span class="id">p</span><br/>
+&nbsp;@@@ (<span class="id">transf_rtl_program_to_linear</span> <span class="id">fenv</span>)<br/>
+&nbsp;@@@ <span class="id">transf_linear_program</span><br/>
+=<br/>
+&nbsp;&nbsp;<span class="id">transf_rtl_program</span> <span class="id">fenv</span> <span class="id">p</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7510')">Proof.</div>
+<div class="proofscript" id="proof7510">
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_rtl_program</span>, <span class="id">transf_rtl_program_to_linear</span>, <span class="id">transf_linear_program</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">InliningX.transf_program</span> <span class="id">fenv</span> <span class="id">p</span>); <span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">CSEX.transf_program</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Renumber.transf_program</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ConstpropX.transf_program</span> (<span class="id">Renumber.transf_program</span> <span class="id">p0</span>)))); <span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">DeadcodeX.transf_program</span> <span class="id">p1</span>); <span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Allocation.transf_program</span> <span class="id">p2</span>); <span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Linearize.transf_program</span> (<span class="id">Tunneling.tunnel_program</span> <span class="id">p3</span>)); <span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module EventsX</title>
+<meta name="description" content="Documentation of Coq module EventsX" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module EventsX</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id">compcert.common.Events</span>.<br/>
+<br/>
+<span class="kwd">Import</span> <span class="id">Coqlib</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Values</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Memory</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Export</span> <span class="id">Events</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHMEM</span>.<br/>
+<span class="kwd">Context</span> `{<span class="id">memory_model_ops</span>: <span class="id">Mem.MemoryModelOps</span>}.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">protect_inject</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">m_init</span>: <span class="id">mem</span>) <span class="id">f</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hincr</span>: <span class="id">inject_incr</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>)) <span class="id">f</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hsep</span>: <span class="id">inject_separated</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>)) <span class="id">f</span> <span class="id">m_init</span> <span class="id">m_init</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">b1</span> <span class="id">b2</span> <span class="id">o</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hf</span>: <span class="id">f</span> <span class="id">b1</span> = <span class="id">Some</span> (<span class="id">b2</span>, <span class="id">o</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">n</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hn</span>: <span class="id">Ple</span> <span class="id">n</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>))<br/>
+&nbsp;&nbsp;,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">Ple</span> <span class="id">n</span> <span class="id">b1</span> /\ <span class="id">Plt</span> <span class="id">b1</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>)) &lt;-&gt; (<span class="id">Ple</span> <span class="id">n</span> <span class="id">b2</span> /\ <span class="id">Plt</span> <span class="id">b2</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>))).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7646')">Proof.</div>
+<div class="proofscript" id="proof7646">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">case_eq</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>) <span class="id">b1</span>).<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> ? <span class="id">Hinj</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="id">Hinj</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mem.flat_inj</span>. <span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b1</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>)); <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">injection</span> 1; <span class="tactic">intros</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Hincr</span> <span class="kwd">in</span> <span class="id">Hinj</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">replace</span> <span class="id">b2</span> <span class="kwd">with</span> <span class="id">b1</span>  <span class="kwd">in</span> * <span class="tactic">by</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">tauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Hsep</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mem.valid_block</span>.<br/>
+&nbsp;&nbsp;<span class="id">xomega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHMEM</span>.<br/>
+<br/>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

@@ -1,0 +1,556 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SmallstepX</title>
+<meta name="description" content="Documentation of Coq module SmallstepX" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SmallstepX</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id">compcert.common.Smallstep</span>.<br/>
+<span class="kwd">Require</span> <span class="id">compcertx.common.MemoryX</span>.<br/>
+<span class="kwd">Require</span> <span class="id">compcertx.common.ValuesX</span>.<br/>
+<br/>
+<span class="kwd">Import</span> <span class="id">Coqlib</span>.<br/>
+<span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Import</span> <span class="id">MemoryX</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Export</span> <span class="id">Smallstep</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id">weak_determ</span> {<span class="id">RETVAL</span>: <span class="kwd">Type</span>} (<span class="id">L</span>: <span class="id">semantics</span> <span class="id">RETVAL</span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="id">WeakDeterm</span> {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sd_determ</span>: <span class="kwd">forall</span> <span class="id">s</span> <span class="id">t1</span> <span class="id">s1</span> <span class="id">t2</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Step</span> <span class="id">L</span> <span class="id">s</span> <span class="id">t1</span> <span class="id">s1</span> -&gt; <span class="id">Step</span> <span class="id">L</span> <span class="id">s</span> <span class="id">t2</span> <span class="id">s2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_traces</span> (<span class="id">symbolenv</span> <span class="id">L</span>) <span class="id">t1</span> <span class="id">t2</span> /\ (<span class="id">t1</span> = <span class="id">t2</span> -&gt; <span class="id">s1</span> = <span class="id">s2</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sd_traces</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">single_events</span> <span class="id">L</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sd_initial_determ</span>: <span class="kwd">forall</span> <span class="id">s1</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">initial_state</span> <span class="id">L</span> <span class="id">s1</span> -&gt; <span class="id">initial_state</span> <span class="id">L</span> <span class="id">s2</span> -&gt; <span class="id">s1</span> = <span class="id">s2</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sd_final_nostep</span>: <span class="kwd">forall</span> <span class="id">s</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_state</span> <span class="id">L</span> <span class="id">s</span> <span class="id">r</span> -&gt; <span class="id">Nostep</span> <span class="id">L</span> <span class="id">s</span><br/>
+&nbsp;&nbsp;}.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">determinate_weak_determ</span> {<span class="id">RETVAL</span>: <span class="kwd">Type</span>} (<span class="id">L</span>: <span class="id">semantics</span> <span class="id">RETVAL</span>):<br/>
+&nbsp;&nbsp;<span class="id">determinate</span> <span class="id">L</span> -&gt; <span class="id">weak_determ</span> <span class="id">L</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7693')">Proof.</div>
+<div class="proofscript" id="proof7693">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">match_states_app</span> {<span class="id">F</span> <span class="id">V</span>: <span class="kwd">Type</span>} (<span class="id">ge</span>: <span class="id">_</span> <span class="id">F</span> <span class="id">V</span>) (<span class="id">t0</span> <span class="id">t1</span> <span class="id">t2</span>: <span class="id">trace</span>):<br/>
+&nbsp;&nbsp;<span class="id">match_traces</span> <span class="id">ge</span> <span class="id">t0</span> (<span class="id">t1</span> ** <span class="id">t2</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="id">t1</span> = <span class="id">E0</span> \/ <span class="id">t2</span> = <span class="id">E0</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7694')">Proof.</div>
+<div class="proofscript" id="proof7694">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>;<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">E0</span>, <span class="id">Eapp</span> <span class="kwd">in</span> * |- * ; <span class="tactic">destruct</span> <span class="id">t1</span> <span class="kwd">as</span> [ |  ? [ | ] ] ; <span class="tactic">simpl</span> <span class="kwd">in</span> * ;<br/>
+&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<div class="doc">Language semantics up to memory extension or injection for final states. </div>
+<br/>
+<div class="doc">We create those two classes because we need to have two instances of extends and inject, one for values, another for lists of values (for low-level languages where functions may return lists of values encoding int64) </div>
+<br/>
+<span class="kwd">Class</span> <span class="id">ValLessdefInjectOps</span> (<span class="id">val</span>: <span class="kwd">Type</span>): <span class="kwd">Type</span> :=<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">val_lessdef</span>: <span class="id">val</span> -&gt; <span class="id">val</span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">val_inject</span>:  <span class="id">Values.meminj</span> -&gt; <span class="id">val</span> -&gt; <span class="id">val</span> -&gt; <span class="kwd">Prop</span><br/>
+&nbsp;&nbsp;}.<br/>
+<br/>
+<span class="kwd">Class</span> <span class="id">ValLessdefInject</span> (<span class="id">val</span>: <span class="kwd">Type</span>) `{<span class="id">val_ops</span>: <span class="id">ValLessdefInjectOps</span> <span class="id">val</span>}: <span class="kwd">Prop</span> := <br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">val_lessdef_refl</span>: <span class="kwd">forall</span> <span class="id">v</span>, <span class="id">val_lessdef</span> <span class="id">v</span> <span class="id">v</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">val_lessdef_trans</span>: <span class="kwd">forall</span> <span class="id">v1</span> <span class="id">v2</span> <span class="id">v3</span>, <span class="id">val_lessdef</span> <span class="id">v1</span> <span class="id">v2</span> -&gt; <span class="id">val_lessdef</span> <span class="id">v2</span> <span class="id">v3</span> -&gt; <span class="id">val_lessdef</span> <span class="id">v1</span> <span class="id">v3</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">val_inject_compose</span>: <span class="kwd">forall</span> <span class="id">i12</span> <span class="id">i23</span> <span class="id">v1</span> <span class="id">v2</span> <span class="id">v3</span>, <span class="id">val_inject</span> <span class="id">i12</span> <span class="id">v1</span> <span class="id">v2</span> -&gt; <span class="id">val_inject</span> <span class="id">i23</span> <span class="id">v2</span> <span class="id">v3</span> -&gt; <span class="id">val_inject</span> (<span class="id">Values.compose_meminj</span> <span class="id">i12</span> <span class="id">i23</span>) <span class="id">v1</span> <span class="id">v3</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">val_inject_lessdef_compose</span>: <span class="kwd">forall</span> <span class="id">i12</span> <span class="id">v1</span> <span class="id">v2</span> <span class="id">v3</span>, <span class="id">val_inject</span> <span class="id">i12</span> <span class="id">v1</span> <span class="id">v2</span> -&gt; <span class="id">val_lessdef</span> <span class="id">v2</span> <span class="id">v3</span> -&gt; <span class="id">val_inject</span> <span class="id">i12</span> <span class="id">v1</span> <span class="id">v3</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">val_lessdef_inject_compose</span>: <span class="kwd">forall</span> <span class="id">i23</span> <span class="id">v1</span> <span class="id">v2</span> <span class="id">v3</span>, <span class="id">val_lessdef</span> <span class="id">v1</span> <span class="id">v2</span> -&gt; <span class="id">val_inject</span> <span class="id">i23</span> <span class="id">v2</span> <span class="id">v3</span> -&gt; <span class="id">val_inject</span> <span class="id">i23</span> <span class="id">v1</span> <span class="id">v3</span><br/>
+&nbsp;&nbsp;}.<br/>
+<br/>
+<span class="kwd">Instance</span> <span class="id">val_lessdef_inject_val_ops</span>: <span class="id">ValLessdefInjectOps</span> <span class="id">Values.val</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7695')">Proof.</div>
+<div class="proofscript" id="proof7695">
+&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">exact</span> <span class="id">Values.Val.lessdef</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">exact</span> <span class="id">Values.Val.inject</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Instance</span> <span class="id">val_lessdef_inject_val</span>: <span class="id">ValLessdefInject</span> <span class="id">Values.val</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7696')">Proof.</div>
+<div class="proofscript" id="proof7696">
+&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Values.Val.lessdef_refl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Values.Val.lessdef_trans</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Values.val_inject_compose</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">eapply</span> <span class="id">ValuesX.val_inject_lessdef_compose</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">eapply</span> <span class="id">ValuesX.val_lessdef_inject_compose</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Instance</span> <span class="id">val_lessdef_inject_list_ops</span>: <span class="id">ValLessdefInjectOps</span> (<span class="id">list</span> <span class="id">Values.val</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7697')">Proof.</div>
+<div class="proofscript" id="proof7697">
+&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">exact</span> <span class="id">Values.Val.lessdef_list</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">exact</span> <span class="id">Values.Val.inject_list</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Instance</span> <span class="id">val_lessdef_inject_list</span>: <span class="id">ValLessdefInject</span> (<span class="id">list</span> <span class="id">Values.val</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7698')">Proof.</div>
+<div class="proofscript" id="proof7698">
+&nbsp;&nbsp;<span class="id">constructor</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">v</span>; <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> 1; <span class="id">revert</span> <span class="id">v3</span>; <span class="tactic">induction</span> <span class="id">H</span>; <span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="id">constructor</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">Values.Val.lessdef_trans</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> 1; <span class="id">revert</span> <span class="id">i23</span> <span class="id">v3</span>; <span class="tactic">induction</span> <span class="id">H</span>; <span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="id">constructor</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">Values.val_inject_compose</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> 1; <span class="id">revert</span> <span class="id">v3</span>; <span class="tactic">induction</span> <span class="id">H</span>; <span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="id">constructor</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">ValuesX.val_inject_lessdef_compose</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> 1; <span class="id">revert</span> <span class="id">i23</span> <span class="id">v3</span>; <span class="tactic">induction</span> <span class="id">H</span>; <span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="id">constructor</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">ValuesX.val_lessdef_inject_compose</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHMEM</span>.<br/>
+<span class="kwd">Context</span> `{<span class="id">memory_model_x</span>: <span class="id">Mem.MemoryModelX</span>}.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHVAL</span>.<br/>
+<span class="kwd">Context</span> `{<span class="id">val_lessdef_inject</span>: <span class="id">ValLessdefInject</span>}.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">FinalStates</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> {<span class="id">state</span>: <span class="kwd">Type</span>} (<span class="id">final_state</span>: <span class="id">state</span> -&gt; (<span class="id">val</span> * <span class="id">mem</span>) -&gt; <span class="kwd">Prop</span>).<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">final_state_with_extends</span> (<span class="id">s</span>: <span class="id">state</span>): <span class="id">val</span> * <span class="id">mem</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id">final_state_extends_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span>' <span class="id">m</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hfinal</span>: <span class="id">final_state</span> <span class="id">s</span> (<span class="id">v</span>', <span class="id">m</span>'))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m</span> (<span class="id">MEXT</span>: <span class="id">Mem.extends</span> <span class="id">m</span> <span class="id">m</span>')<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> (<span class="id">LESSDEF</span>: <span class="id">val_lessdef</span> <span class="id">v</span> <span class="id">v</span>')<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_state_with_extends</span> <span class="id">s</span> (<span class="id">v</span>, <span class="id">m</span>)<br/>
+.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">final_state_extends_strict</span>: <br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_state</span> <span class="id">s</span> <span class="id">v</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_state_with_extends</span> <span class="id">s</span> <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7699')">Proof.</div>
+<div class="proofscript" id="proof7699">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">v</span>. <span class="id">econstructor</span>. <span class="id">eassumption</span>. <span class="tactic">apply</span> <span class="id">Mem.extends_refl</span>. <span class="tactic">apply</span> <span class="id">val_lessdef_refl</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">final_state_extends_weak</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">v</span>' <span class="id">m</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hfinal</span>: <span class="id">final_state_with_extends</span> <span class="id">s</span> (<span class="id">v</span>', <span class="id">m</span>'))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m</span> (<span class="id">MEXT</span>: <span class="id">Mem.extends</span> <span class="id">m</span> <span class="id">m</span>')<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> (<span class="id">LESSDEF</span>: <span class="id">val_lessdef</span> <span class="id">v</span> <span class="id">v</span>')<br/>
+&nbsp;&nbsp;,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_state_with_extends</span> <span class="id">s</span> (<span class="id">v</span>, <span class="id">m</span>)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7700')">Proof.</div>
+<div class="proofscript" id="proof7700">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>. <span class="id">econstructor</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">Mem.extends_extends_compose</span>, <span class="id">val_lessdef_trans</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">final_state_with_inject</span> (<span class="id">m_init</span>: <span class="id">mem</span>) (<span class="id">s</span>: <span class="id">state</span>): <span class="id">val</span> * <span class="id">mem</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id">final_state_inject_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span>' <span class="id">m</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hfinal</span>: <span class="id">final_state</span> <span class="id">s</span> (<span class="id">v</span>', <span class="id">m</span>'))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">g</span> (<span class="id">Hincr</span>: <span class="id">Values.inject_incr</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>)) <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hsep</span>: <span class="id">inject_separated</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>)) <span class="id">j</span> <span class="id">m_init</span> <span class="id">m_init</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m</span> (<span class="id">MINJ</span>: <span class="id">Mem.inject</span> <span class="id">j</span> <span class="id">g</span> <span class="id">m</span> <span class="id">m</span>')<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> (<span class="id">VINJ</span>: <span class="id">val_inject</span> <span class="id">j</span> <span class="id">v</span> <span class="id">v</span>')<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_state_with_inject</span> <span class="id">m_init</span> <span class="id">s</span> (<span class="id">v</span>, <span class="id">m</span>)<br/>
+.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">final_state_inject_from_extends</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">s</span> <span class="id">v</span>' <span class="id">m</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hfinal</span>: <span class="id">final_state_with_extends</span> <span class="id">s</span> (<span class="id">v</span>', <span class="id">m</span>'))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m_init</span> <span class="id">j</span> <span class="id">g</span> (<span class="id">Hincr</span>: <span class="id">Values.inject_incr</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>)) <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hsep</span>: <span class="id">inject_separated</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>)) <span class="id">j</span> <span class="id">m_init</span> <span class="id">m_init</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m</span> (<span class="id">MINJ</span>: <span class="id">Mem.inject</span> <span class="id">j</span> <span class="id">g</span> <span class="id">m</span> <span class="id">m</span>')<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> (<span class="id">VINJ</span>: <span class="id">val_inject</span> <span class="id">j</span> <span class="id">v</span> <span class="id">v</span>')<br/>
+&nbsp;&nbsp;,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_state_with_inject</span> <span class="id">m_init</span> <span class="id">s</span> (<span class="id">v</span>, <span class="id">m</span>)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7701')">Proof.</div>
+<div class="proofscript" id="proof7701">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">Hfinal</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;erewrite&nbsp;Mem.extends_same_length_stack;&nbsp;eauto.&nbsp;*)</span>&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.inject_extends_compose</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">val_inject_lessdef_compose</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">final_state_inject_weak</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">s</span> <span class="id">v</span>' <span class="id">m_init</span> <span class="id">m</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hfinal</span>: <span class="id">final_state_with_inject</span> <span class="id">m_init</span> <span class="id">s</span> (<span class="id">v</span>', <span class="id">m</span>'))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">g</span> (<span class="id">Hincr</span>: <span class="id">Values.inject_incr</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>)) <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hsep</span>: <span class="id">inject_separated</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>)) <span class="id">j</span> <span class="id">m_init</span> <span class="id">m_init</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m</span> (<span class="id">MINJ</span>: <span class="id">Mem.inject</span> <span class="id">j</span> <span class="id">g</span> <span class="id">m</span> <span class="id">m</span>')<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> (<span class="id">VINJ</span>: <span class="id">val_inject</span> <span class="id">j</span> <span class="id">v</span> <span class="id">v</span>')<br/>
+&nbsp;&nbsp;,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_state_with_inject</span> <span class="id">m_init</span> <span class="id">s</span> (<span class="id">v</span>, <span class="id">m</span>)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7702')">Proof.</div>
+<div class="proofscript" id="proof7702">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">edestruct</span> (<span class="id">compose_frameinj_succeeds</span> <span class="id">g</span> <span class="id">g0</span>) <span class="kwd">as</span> (<span class="id">g3</span> &amp; <span class="id">COMP</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.inject_stack_inj_wf</span> <span class="kwd">in</span> <span class="id">MINJ0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.inject_stack_inj_wf</span> <span class="kwd">in</span> <span class="id">MINJ</span>. <span class="tactic">rewrite</span> (<span class="id">proj1</span> <span class="id">MINJ</span>), (<span class="id">proj2</span> <span class="id">MINJ0</span>). <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;3: <span class="tactic">eapply</span> <span class="id">Mem.inject_compose</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Values.inject_incr</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Values.compose_meminj</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">delta</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mem.flat_inj</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>)); <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span>. <span class="id">inv</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">Hincr0</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">Hincr</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">inject_separated</span>, <span class="id">Values.inject_incr</span>, <span class="id">Values.compose_meminj</span> <span class="kwd">in</span> *. <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">j0</span> <span class="id">b1</span>) <span class="id">eqn</span>:?; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">p</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">j</span> <span class="id">b</span>) <span class="id">eqn</span>:?; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">p</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Hsep0</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> 1.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>) <span class="id">b</span> = <span class="id">None</span>).<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mem.flat_inj</span>. <span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>)). <span class="id">contradiction</span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Hsep</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">tauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">val_inject_compose</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">FinalStates</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">FinalStatesMatch</span>.<br/>
+<br/>
+<span class="kwd">Context</span> {<span class="id">state1</span>: <span class="kwd">Type</span>} (<span class="id">final_state1</span>: <span class="id">state1</span> -&gt; (<span class="id">val</span> * <span class="id">mem</span>) -&gt; <span class="kwd">Prop</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">state2</span>: <span class="kwd">Type</span>} (<span class="id">final_state2</span>: <span class="id">state2</span> -&gt; (<span class="id">val</span> * <span class="id">mem</span>) -&gt; <span class="kwd">Prop</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">match_states</span>: <span class="id">state1</span> -&gt; <span class="id">state2</span> -&gt; <span class="kwd">Prop</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">match_final_states_extends_right</span>:<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state1</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_extends</span> <span class="id">final_state2</span> <span class="id">R</span> <span class="id">r</span>) -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state_with_extends</span> <span class="id">final_state1</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_extends</span> <span class="id">final_state2</span> <span class="id">R</span> <span class="id">r</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7703')">Proof.</div>
+<div class="proofscript" id="proof7703">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 3; <span class="tactic">subst</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">final_state_extends_weak</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Corollary</span> <span class="id">match_final_states_extends</span>:<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state1</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state2</span> <span class="id">R</span> <span class="id">r</span>) -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state_with_extends</span> <span class="id">final_state1</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_extends</span> <span class="id">final_state2</span> <span class="id">R</span> <span class="id">r</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7704')">Proof.</div>
+<div class="proofscript" id="proof7704">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">match_final_states_extends_right</span>, <span class="id">final_state_extends_strict</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">match_final_states_extends_inject</span>:<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state_with_extends</span> <span class="id">final_state1</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_extends</span> <span class="id">final_state2</span> <span class="id">R</span> <span class="id">r</span>) -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">j</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state_with_inject</span> <span class="id">final_state1</span> <span class="id">j</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_inject</span> <span class="id">final_state2</span> <span class="id">j</span> <span class="id">R</span> <span class="id">r</span>)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7705')">Proof.</div>
+<div class="proofscript" id="proof7705">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">final_state_inject_from_extends</span>, <span class="id">final_state_extends_strict</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">match_final_states_extends_right_inject</span>:<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state1</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_extends</span> <span class="id">final_state2</span> <span class="id">R</span> <span class="id">r</span>) -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">j</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state_with_inject</span> <span class="id">final_state1</span> <span class="id">j</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_inject</span> <span class="id">final_state2</span> <span class="id">j</span> <span class="id">R</span> <span class="id">r</span>)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7706')">Proof.</div>
+<div class="proofscript" id="proof7706">
+&nbsp;&nbsp;<span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">match_final_states_extends_inject</span>, <span class="id">match_final_states_extends_right</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">match_final_states_inject</span>:<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state1</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state2</span> <span class="id">R</span> <span class="id">r</span>) -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">j</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state_with_inject</span> <span class="id">final_state1</span> <span class="id">j</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_inject</span> <span class="id">final_state2</span> <span class="id">j</span> <span class="id">R</span> <span class="id">r</span>)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7707')">Proof.</div>
+<div class="proofscript" id="proof7707">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">match_final_states_extends_right_inject</span>, <span class="id">final_state_extends_strict</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">match_final_states_inject_right</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m_init</span>,<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state1</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_inject</span> <span class="id">final_state2</span> <span class="id">m_init</span> <span class="id">R</span> <span class="id">r</span>) -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state_with_inject</span> <span class="id">final_state1</span> <span class="id">m_init</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_inject</span> <span class="id">final_state2</span> <span class="id">m_init</span> <span class="id">R</span> <span class="id">r</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7708')">Proof.</div>
+<div class="proofscript" id="proof7708">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 3; <span class="tactic">subst</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">final_state_inject_weak</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">match_final_states_extends_left_inject</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state1</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_inject</span> <span class="id">final_state2</span> <span class="id">m</span> <span class="id">R</span> <span class="id">r</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">final_state_with_extends</span> <span class="id">final_state1</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_inject</span> <span class="id">final_state2</span> <span class="id">m</span> <span class="id">R</span> <span class="id">r</span>)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7709')">Proof.</div>
+<div class="proofscript" id="proof7709">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.extends_inject_compose</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">val_lessdef_inject_compose</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">FinalStatesMatch</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">semantics_with_extends</span> (<span class="id">sem</span>: <span class="id">semantics</span> (<span class="id">val</span> * <span class="id">mem</span>)%<span class="id">type</span>) : <span class="id">semantics</span> (<span class="id">val</span> * <span class="id">mem</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7710')">Proof.</div>
+<div class="proofscript" id="proof7710">
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">eexact</span> (<span class="id">step</span> <span class="id">sem</span>).<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">exact</span> (<span class="id">initial_state</span> <span class="id">sem</span>).<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">final_state_with_extends</span>. <span class="tactic">exact</span> (<span class="id">final_state</span> <span class="id">sem</span>).<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id">globalenv</span> <span class="id">sem</span>).<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id">symbolenv</span> <span class="id">sem</span>).<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">forward_simulation_extends_right</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s1</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> <span class="id">s1</span> (<span class="id">semantics_with_extends</span> <span class="id">s2</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> (<span class="id">semantics_with_extends</span> <span class="id">s1</span>) (<span class="id">semantics_with_extends</span> <span class="id">s2</span>)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7711')">Proof.</div>
+<div class="proofscript" id="proof7711">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">props</span>. <span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">i</span>. <span class="tactic">apply</span> <span class="id">match_final_states_extends_right</span>. <span class="tactic">apply</span> <span class="id">fsim_match_final_states</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">forward_simulation_extends</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s1</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> <span class="id">s1</span> <span class="id">s2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> (<span class="id">semantics_with_extends</span> <span class="id">s1</span>) (<span class="id">semantics_with_extends</span> <span class="id">s2</span>)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7712')">Proof.</div>
+<div class="proofscript" id="proof7712">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">props</span>; <span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">i</span>. <span class="tactic">apply</span> <span class="id">match_final_states_extends</span>. <span class="tactic">apply</span> <span class="id">fsim_match_final_states</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">semantics_with_inject</span> (<span class="id">sem</span>: <span class="id">semantics</span> (<span class="id">val</span> * <span class="id">mem</span>)%<span class="id">type</span>) (<span class="id">m_init</span>: <span class="id">mem</span>) : <span class="id">semantics</span> (<span class="id">val</span> * <span class="id">mem</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7713')">Proof.</div>
+<div class="proofscript" id="proof7713">
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">eexact</span> (<span class="id">step</span> <span class="id">sem</span>).<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">exact</span> (<span class="id">initial_state</span> <span class="id">sem</span>).<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">final_state_with_inject</span>. <span class="tactic">exact</span> (<span class="id">final_state</span> <span class="id">sem</span>). <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id">globalenv</span> <span class="id">sem</span>).<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id">symbolenv</span> <span class="id">sem</span>).<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">forward_simulation_extends_inject</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s1</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> (<span class="id">semantics_with_extends</span> <span class="id">s1</span>) (<span class="id">semantics_with_extends</span> <span class="id">s2</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m_init</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> (<span class="id">semantics_with_inject</span> <span class="id">s1</span> <span class="id">m_init</span>) (<span class="id">semantics_with_inject</span> <span class="id">s2</span> <span class="id">m_init</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7714')">Proof.</div>
+<div class="proofscript" id="proof7714">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">props</span>; <span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">i</span>. <span class="tactic">apply</span> <span class="id">match_final_states_extends_inject</span>. <span class="tactic">apply</span> <span class="id">fsim_match_final_states</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Corollary</span> <span class="id">forward_simulation_extends_right_inject</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s1</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> <span class="id">s1</span> (<span class="id">semantics_with_extends</span> <span class="id">s2</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m_init</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> (<span class="id">semantics_with_inject</span> <span class="id">s1</span> <span class="id">m_init</span>) (<span class="id">semantics_with_inject</span> <span class="id">s2</span> <span class="id">m_init</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7715')">Proof.</div>
+<div class="proofscript" id="proof7715">
+&nbsp;&nbsp;<span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">forward_simulation_extends_inject</span>, <span class="id">forward_simulation_extends_right</span>.<br/>
+Defined.</div>
+<br/>
+<br/>
+<span class="kwd">Corollary</span> <span class="id">forward_simulation_inject</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s1</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> <span class="id">s1</span> <span class="id">s2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m_init</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> (<span class="id">semantics_with_inject</span> <span class="id">s1</span> <span class="id">m_init</span>) (<span class="id">semantics_with_inject</span> <span class="id">s2</span> <span class="id">m_init</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7716')">Proof.</div>
+<div class="proofscript" id="proof7716">
+&nbsp;&nbsp;<span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">forward_simulation_extends_inject</span>, <span class="id">forward_simulation_extends</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">forward_simulation_inject_right</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s1</span> <span class="id">s2</span> <span class="id">m_init</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> <span class="id">s1</span> (<span class="id">semantics_with_inject</span> <span class="id">s2</span> <span class="id">m_init</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> (<span class="id">semantics_with_inject</span> <span class="id">s1</span> <span class="id">m_init</span>) (<span class="id">semantics_with_inject</span> <span class="id">s2</span> <span class="id">m_init</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7717')">Proof.</div>
+<div class="proofscript" id="proof7717">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">props</span>; <span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">i</span>. <span class="tactic">apply</span> <span class="id">match_final_states_inject_right</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">fsim_match_final_states</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">forward_simulation_extends_left_inject</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m_init</span> <span class="id">s1</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> <span class="id">s1</span> (<span class="id">semantics_with_inject</span> <span class="id">s2</span> <span class="id">m_init</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_simulation</span> (<span class="id">semantics_with_extends</span> <span class="id">s1</span>) (<span class="id">semantics_with_inject</span> <span class="id">s2</span> <span class="id">m_init</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7718')">Proof.</div>
+<div class="proofscript" id="proof7718">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">props</span>; <span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id">match_final_states_extends_left_inject</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id">fsim_match_final_states</span>. 2: <span class="id">eassumption</span>. <span class="id">eassumption</span>. <span class="id">eassumption</span>. <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Defined.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">semantics_with_extends_weak_determ</span> <span class="id">s</span>:<br/>
+&nbsp;&nbsp;<span class="id">weak_determ</span> <span class="id">s</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">weak_determ</span> (<span class="id">semantics_with_extends</span> <span class="id">s</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7719')">Proof.</div>
+<div class="proofscript" id="proof7719">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">semantics_with_inject_weak_determ</span> <span class="id">m_init</span> <span class="id">s</span>:<br/>
+&nbsp;&nbsp;<span class="id">weak_determ</span> <span class="id">s</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">weak_determ</span> (<span class="id">semantics_with_inject</span> <span class="id">s</span> <span class="id">m_init</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7720')">Proof.</div>
+<div class="proofscript" id="proof7720">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHVAL</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHMEM</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">final_state_without_retval</span> {<span class="id">RETVAL</span>: <span class="kwd">Type</span>} (<span class="id">S</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>) (<span class="id">s</span>: <span class="id">Smallstep.state</span> <span class="id">S</span>) (<span class="id">dummy_retval</span>: <span class="id">unit</span>): <span class="kwd">Prop</span> :=<br/>
+| <span class="id">final_state_without_retval_intro</span> (<span class="id">r</span>: <span class="id">RETVAL</span>) (<span class="id">FINAL</span>: <span class="id">Smallstep.final_state</span> <span class="id">S</span> <span class="id">s</span> <span class="id">r</span>)<br/>
+.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">semantics_without_retval</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">RETVAL</span>: <span class="kwd">Type</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">S</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>):<br/>
+&nbsp;&nbsp;<span class="id">Smallstep.semantics</span> <span class="id">unit</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Smallstep.Semantics_gen</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Smallstep.step</span> <span class="id">S</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Smallstep.initial_state</span> <span class="id">S</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">final_state_without_retval</span> <span class="id">S</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Smallstep.globalenv</span> <span class="id">S</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Smallstep.symbolenv</span> <span class="id">S</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">semantics_without_retval_receptive</span> {<span class="id">RETVAL</span>: <span class="kwd">Type</span>} (<span class="id">S</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>):<br/>
+&nbsp;&nbsp;<span class="id">receptive</span> <span class="id">S</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">receptive</span> (<span class="id">semantics_without_retval</span> <span class="id">S</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7721')">Proof.</div>
+<div class="proofscript" id="proof7721">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">semantics_without_retval_determ</span> {<span class="id">RETVAL</span>: <span class="kwd">Type</span>} (<span class="id">S</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>):<br/>
+&nbsp;&nbsp;<span class="id">weak_determ</span> <span class="id">S</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">determinate</span> (<span class="id">semantics_without_retval</span> <span class="id">S</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7722')">Proof.</div>
+<div class="proofscript" id="proof7722">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">intros</span> <span class="id">s</span> <span class="id">r1</span> <span class="id">r2</span> <span class="id">H0</span> <span class="id">H1</span>; <span class="tactic">destruct</span> <span class="id">r1</span>; <span class="tactic">destruct</span> <span class="id">r2</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">semantics_without_retval_forward_simulation</span> {<span class="id">RETVAL</span>: <span class="kwd">Type</span>} (<span class="id">S1</span> <span class="id">S2</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>):<br/>
+&nbsp;&nbsp;<span class="id">Smallstep.forward_simulation</span> <span class="id">S1</span> <span class="id">S2</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Smallstep.forward_simulation</span> (<span class="id">semantics_without_retval</span> <span class="id">S1</span>) (<span class="id">semantics_without_retval</span> <span class="id">S2</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7723')">Proof.</div>
+<div class="proofscript" id="proof7723">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">props</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> 2; <span class="tactic">subst</span>; <span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">semantics_without_retval_forward_to_backward</span> {<span class="id">RETVAL</span>: <span class="kwd">Type</span>} (<span class="id">S1</span> <span class="id">S2</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>):<br/>
+&nbsp;&nbsp;<span class="id">receptive</span> <span class="id">S1</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">weak_determ</span> <span class="id">S2</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Smallstep.forward_simulation</span> <span class="id">S1</span> <span class="id">S2</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Smallstep.backward_simulation</span> (<span class="id">semantics_without_retval</span> <span class="id">S1</span>) (<span class="id">semantics_without_retval</span> <span class="id">S2</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7724')">Proof.</div>
+<div class="proofscript" id="proof7724">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">H</span> <span class="id">H0</span> <span class="id">X</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">forward_to_backward_simulation</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">semantics_without_retval_forward_simulation</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">semantics_without_retval_receptive</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">semantics_without_retval_determ</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module RockSaltAsm</title>
+<meta name="description" content="Documentation of Coq module RockSaltAsm" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module RockSaltAsm</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Integers.html">Integers</a></span> <span class="id"><a href="AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">X86Model.Encode</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">X86Model.X86Syntax</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Errors.html">Errors</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html">String</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="instr_to_string">instr_to_string</a></span> (<span class="id">i</span>: <span class="id">instr</span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html#string">string</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="RockSaltAsm.html#i">i</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">AAA</span> =&gt; "<span class="id">AAA</span>"<br/>
+&nbsp;&nbsp;| <span class="id">AAD</span> =&gt; "<span class="id">AAD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">AAM</span> =&gt; "<span class="id">AAM</span>"<br/>
+&nbsp;&nbsp;| <span class="id">AAS</span> =&gt; "<span class="id">AAS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">ADC</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>  =&gt; "<span class="id">ADC</span>"<br/>
+&nbsp;&nbsp;| <span class="id">ADD</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">ADD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">AND</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">AND</span>"<br/>
+&nbsp;&nbsp;| <span class="id">ARPL</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">ARPL</span>"<br/>
+&nbsp;&nbsp;| <span class="id">BOUND</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">BOUND</span>"<br/>
+&nbsp;&nbsp;| <span class="id">BSF</span>  <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">BSF</span>"<br/>
+&nbsp;&nbsp;| <span class="id">BSR</span>  <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">BSR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">BSWAP</span> <span class="id">_</span> =&gt; "<span class="id">BSWAP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">BT</span>  <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">BT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">BTC</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">BTC</span>"<br/>
+&nbsp;&nbsp;| <span class="id">BTR</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">BTR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">BTS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">BTS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CALL</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">CALL</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CDQ</span> =&gt; "<span class="id">CDQ</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CLC</span> =&gt; "<span class="id">CLC</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CLD</span> =&gt; "<span class="id">CLD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CLI</span> =&gt; "<span class="id">CLI</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CLTS</span> =&gt; "<span class="id">CLTS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CMC</span> =&gt; "<span class="id">CMC</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CMOVcc</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">CMOVcc</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CMP</span>  <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">CMP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CMPS</span>  <span class="id">_</span> =&gt; "<span class="id">CMPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CMPXCHG</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">CMPXCNG</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CPUID</span>  =&gt; "<span class="id">CPUID</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CWDE</span>   =&gt; "<span class="id">CWDE</span>"<br/>
+&nbsp;&nbsp;| <span class="id">DAA</span>    =&gt; "<span class="id">DAA</span>"<br/>
+&nbsp;&nbsp;| <span class="id">DAS</span>    =&gt; "<span class="id">DAS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">DEC</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">DEC</span>"<br/>
+&nbsp;&nbsp;| <span class="id">DIV</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">DIV</span>"<br/>
+<br/>
+&nbsp;&nbsp;| <span class="id">F2XM1</span> =&gt; "<span class="id">F2XM1</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FABS</span> =&gt; "<span class="id">FABS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FADD</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">FADD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FADDP</span> <span class="id">_</span> =&gt; "<span class="id">FADDP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FBLD</span> <span class="id">_</span> =&gt; "<span class="id">FBLD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FBSTP</span> <span class="id">_</span> =&gt; "<span class="id">FBSTP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FCHS</span> =&gt; "<span class="id">FCHS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FCMOVcc</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">FCMOVcc</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FCOM</span> <span class="id">_</span> =&gt; "<span class="id">FCOM</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FCOMP</span> <span class="id">_</span> =&gt; "<span class="id">FCOMP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FCOMPP</span> =&gt; "<span class="id">FCOMPP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FCOMIP</span> <span class="id">_</span> =&gt; "<span class="id">FCOMIP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FCOS</span> =&gt; "<span class="id">FCOS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FDECSTP</span> =&gt; "<span class="id">FDECSTP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FDIV</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">FDIV</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FDIVP</span> <span class="id">_</span> =&gt; "<span class="id">FDIVP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FDIVR</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">FDIVR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FDIVRP</span> <span class="id">_</span> =&gt; "<span class="id">FDIVP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FFREE</span> <span class="id">_</span> =&gt; "<span class="id">FFREE</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FIADD</span> <span class="id">_</span> =&gt; "<span class="id">FIADD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FICOM</span> <span class="id">_</span> =&gt; "<span class="id">FICOM</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FICOMP</span> <span class="id">_</span> =&gt; "<span class="id">FICOMP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FIDIV</span> <span class="id">_</span> =&gt; "<span class="id">FIDIV</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FIDIVR</span> <span class="id">_</span> =&gt; "<span class="id">FIDIVR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FILD</span> <span class="id">_</span> =&gt; "<span class="id">FILD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FIMUL</span> <span class="id">_</span> =&gt; "<span class="id">FIMUL</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FINCSTP</span> =&gt; "<span class="id">FINCSTP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FIST</span> <span class="id">_</span> =&gt; "<span class="id">FIST</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FISTP</span> <span class="id">_</span> =&gt; "<span class="id">FISTP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FISUB</span> <span class="id">_</span> =&gt; "<span class="id">FISUB</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FISUBR</span> <span class="id">_</span> =&gt; "<span class="id">FISUBR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FLD</span> <span class="id">_</span> =&gt; "<span class="id">FLD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FLD1</span> =&gt; "<span class="id">FLD1</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FLDCW</span> <span class="id">_</span> =&gt; "<span class="id">FLDCW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FLDENV</span> <span class="id">_</span> =&gt; "<span class="id">FLDENV</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FLDL2E</span> =&gt; "<span class="id">FLDL2E</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FLDL2T</span> =&gt; "<span class="id">FLDL2T</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FLDLG2</span> =&gt; "<span class="id">FLDLG2</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FLDLN2</span> =&gt; "<span class="id">FLDN2</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FLDPI</span> =&gt; "<span class="id">FLDPI</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FLDZ</span> =&gt; "<span class="id">FLDZ</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FMUL</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">FMUL</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FMULP</span> <span class="id">_</span> =&gt; "<span class="id">FMULP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FNCLEX</span> =&gt; "<span class="id">FNCLEX</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FNINIT</span> =&gt; "<span class="id">FNINIT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FNOP</span> =&gt; "<span class="id">FNOP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FNSAVE</span> <span class="id">_</span> =&gt; "<span class="id">FNSAVE</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FNSTCW</span> <span class="id">_</span> =&gt; "<span class="id">FNSTCW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FNSTSW</span> <span class="id">_</span> =&gt; "<span class="id">FNSTSW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FPATAN</span> =&gt; "<span class="id">FPATAN</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FPREM</span> =&gt; "<span class="id">FPREM</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FPREM1</span> =&gt; "<span class="id">FPREM1</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FPTAN</span> =&gt; "<span class="id">FPTAN</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FRNDINT</span> =&gt; "<span class="id">FRNDINT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FRSTOR</span> <span class="id">_</span> =&gt; "<span class="id">FRSTOR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FSCALE</span> =&gt; "<span class="id">FSCALE</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FSIN</span> =&gt; "<span class="id">FSIN</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FSINCOS</span> =&gt; "<span class="id">FSINCOS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FSQRT</span> =&gt; "<span class="id">FSQRT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FST</span> <span class="id">_</span> =&gt; "<span class="id">FST</span>"<br/>
+<br/>
+<br/>
+&nbsp;&nbsp;| <span class="id">FSTENV</span> <span class="id">_</span> =&gt; "<span class="id">FSTENV</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FSTP</span> <span class="id">_</span> =&gt; "<span class="id">FSTP</span>"<br/>
+<br/>
+<br/>
+&nbsp;&nbsp;| <span class="id">FSUB</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">FSUB</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FSUBP</span> <span class="id">_</span> =&gt; "<span class="id">FSUBP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FSUBR</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">FSUBR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FSUBRP</span> <span class="id">_</span> =&gt; "<span class="id">FSUBRP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FTST</span> =&gt; "<span class="id">FTST</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FUCOM</span> <span class="id">_</span> =&gt; "<span class="id">FUCOM</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FUCOMP</span> <span class="id">_</span> =&gt; "<span class="id">FUCOMP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FUCOMPP</span> =&gt; "<span class="id">FUCOMPP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FUCOMI</span> <span class="id">_</span> =&gt; "<span class="id">FUCOMI</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FUCOMIP</span> <span class="id">_</span> =&gt; "<span class="id">FUCOMIP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FXAM</span> =&gt; "<span class="id">FXAM</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FXCH</span> <span class="id">_</span> =&gt; "<span class="id">FXCH</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FXTRACT</span> =&gt; "<span class="id">FXTRACT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FYL2X</span> =&gt; "<span class="id">FYL2X</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FYL2XP1</span> =&gt; "<span class="id">FYL2XP1</span>"<br/>
+&nbsp;&nbsp;| <span class="id">FWAIT</span> =&gt; "<span class="id">FWAIT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">EMMS</span> =&gt; "<span class="id">EMMS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVD</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVQ</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVQ</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PACKSSDW</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PACKSSDW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PACKSSWB</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PACKSSWB</span>" <br/>
+&nbsp;&nbsp;| <span class="id">PACKUSWB</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PACKUSWB</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PADD</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PADD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PADDS</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PADDS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PADDUS</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PADDUS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PAND</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PAND</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PANDN</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PANDN</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PCMPEQ</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PCMPEQ</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PCMPGT</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PCMPGT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PMADDWD</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PMADDWD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PMULHUW</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PMULHUW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PMULHW</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PMULHW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PMULLW</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PMULLW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">POR</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">POR</span>" <br/>
+&nbsp;&nbsp;| <span class="id">PSLL</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PSLL</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PSRA</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PSRA</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PSRL</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PSRL</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PSUB</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PSUB</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PSUBS</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PSUBS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PSUBUS</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PSUBUS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PUNPCKH</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>  =&gt; "<span class="id">PUNPCKH</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PUNPCKL</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PUNPCKL</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PXOR</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PXOR</span>"<br/>
+<br/>
+&nbsp;&nbsp;| <span class="id">ADDPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">ADDPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">ADDSS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">ADDSS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">ANDNPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">ANDNPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">ANDPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">ANDPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CMPPS</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">CMPPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CMPSS</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">CMPSS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">COMISS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">COMISS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CVTPI2PS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">CVTPI2PS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CVTPS2PI</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">CVTPS2PI</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CVTSI2SS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">CVTSI2SS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CVTSS2SI</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">CVTSS2SI</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CVTTPS2PI</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">CVTTPS2PI</span>"<br/>
+&nbsp;&nbsp;| <span class="id">CVTTSS2SI</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">CVTTSS2SI</span>"<br/>
+&nbsp;&nbsp;| <span class="id">DIVPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">DIVPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">DIVSS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">DIVSS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LDMXCSR</span> <span class="id">_</span> =&gt; "<span class="id">LDMXCSR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MAXPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MAXPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MAXSS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MAXSS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MINPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MINPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MINSS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MINSS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVAPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVAPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVHLPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVHLPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVHPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVHPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVLHPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVLHPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVLPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVLPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVMSKPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVMSKPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVSS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVSS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVUPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVUPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MULPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MULPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MULSS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MULSS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">ORPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">ORPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">RCPPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">RCPPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">RCPSS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">RCPSS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">RSQRTPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">RSQRTPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">RSQRTSS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">RSQRTSS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SHUFPS</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">SHUFPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SQRTPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">SQRTPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SQRTSS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">SQRTSS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">STMXCSR</span> <span class="id">_</span> =&gt; "<span class="id">STMXCSR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SUBPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">SUBPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SUBSS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">SUBSS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">UCOMISS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">UCOMISS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">UNPCKHPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">UNPCKHPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">UNPCKLPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">UNPCKLPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">XORPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">XORPS</span>" <br/>
+&nbsp;&nbsp;| <span class="id">PAVGB</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PAVGB</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PEXTRW</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PEXTRW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PINSRW</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PINSRW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PMAXSW</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PMAXSW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PMAXUB</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PMAXUB</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PMINSW</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PMINSW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PMINUB</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PMINUB</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PMOVMSKB</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PMOVMSKB</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PSADBW</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PSADBW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PSHUFW</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PSHUFW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MASKMOVQ</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MASKMOVQ</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVNTPS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVNTPS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVNTQ</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVNTQ</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PREFETCHT0</span> <span class="id">_</span> =&gt; "<span class="id">PREFETCHT0</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PREFETCHT1</span> <span class="id">_</span> =&gt; "<span class="id">PREFETCHT1</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PREFETCHT2</span> <span class="id">_</span> =&gt; "<span class="id">PREFETCHT2</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PREFETCHNTA</span> <span class="id">_</span> =&gt; "<span class="id">PREFETCHNTA</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SFENCE</span> =&gt; "<span class="id">SFENCE</span>" <br/>
+<br/>
+&nbsp;&nbsp;| <span class="id">HLT</span> =&gt; "<span class="id">HLT</span>"  <br/>
+&nbsp;&nbsp;| <span class="id">IDIV</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">IDIV</span>"<br/>
+&nbsp;&nbsp;| <span class="id">IMUL</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">IMUL</span>"<br/>
+&nbsp;&nbsp;| <span class="id">IN</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">IN</span>"  <br/>
+&nbsp;&nbsp;| <span class="id">INC</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">INC</span>"<br/>
+&nbsp;&nbsp;| <span class="id">INS</span> <span class="id">_</span> =&gt; "<span class="id">INS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">INTn</span> <span class="id">_</span> =&gt; "<span class="id">INTn</span>"<br/>
+&nbsp;&nbsp;| <span class="id">INT</span>  =&gt; "<span class="id">INT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">INTO</span>  =&gt; "<span class="id">INTO</span>"<br/>
+&nbsp;&nbsp;| <span class="id">INVD</span>  =&gt; "<span class="id">INVD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">INVLPG</span> <span class="id">_</span> =&gt; "<span class="id">INVLPG</span>"<br/>
+&nbsp;&nbsp;| <span class="id">IRET</span>   =&gt; "<span class="id">IRET</span>"<br/>
+&nbsp;&nbsp;| <span class="id">Jcc</span>   <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">Jcc</span>"<br/>
+&nbsp;&nbsp;| <span class="id">JCXZ</span>  <span class="id">_</span> =&gt; "<span class="id">JCXZ</span>"<br/>
+&nbsp;&nbsp;| <span class="id">JMP</span>   <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">JMP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LAHF</span> =&gt; "<span class="id">LAHF</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LAR</span>  <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">LAR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LDS</span>  <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">LDS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LEA</span>  <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">LEA</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LEAVE</span> =&gt; "<span class="id">LEAVE</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LES</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">LES</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LFS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">LFS</span>" <br/>
+&nbsp;&nbsp;| <span class="id">LGDT</span> <span class="id">_</span> =&gt; "<span class="id">LGDT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LGS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">LGS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LIDT</span> <span class="id">_</span> =&gt; "<span class="id">LIDT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LLDT</span> <span class="id">_</span> =&gt; "<span class="id">LLDT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LMSW</span> <span class="id">_</span> =&gt; "<span class="id">LMSW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LODS</span> <span class="id">_</span> =&gt; "<span class="id">LODS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LOOP</span> <span class="id">_</span> =&gt; "<span class="id">LOOP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LOOPZ</span> <span class="id">_</span> =&gt; "<span class="id">LOOPZ</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LOOPNZ</span> <span class="id">_</span> =&gt; "<span class="id">LOOPNZ</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LSL</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">LSL</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LSS</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">LSS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">LTR</span> <span class="id">_</span> =&gt; "<span class="id">LTR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOV</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOV</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVCR</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVCR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVDR</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVDR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVSR</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVSR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVBE</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVBE</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVS</span> <span class="id">_</span> =&gt; "<span class="id">MOVS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVSX</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVSX</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MOVZX</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MOVZX</span>"<br/>
+&nbsp;&nbsp;| <span class="id">MUL</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">MUL</span>"<br/>
+&nbsp;&nbsp;| <span class="id">NEG</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">NEG</span>"<br/>
+&nbsp;&nbsp;| <span class="id">NOP</span> <span class="id">_</span> =&gt; "<span class="id">NOP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">NOT</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">NOT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">OR</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">OR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">OUT</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">OUT</span>" <br/>
+&nbsp;&nbsp;| <span class="id">OUTS</span> <span class="id">_</span> =&gt; "<span class="id">OUTS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">POP</span> <span class="id">_</span> =&gt; "<span class="id">POP</span>"  <br/>
+&nbsp;&nbsp;| <span class="id">POPSR</span> <span class="id">_</span> =&gt; "<span class="id">POPSR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">POPA</span> =&gt; "<span class="id">POPA</span>" <br/>
+&nbsp;&nbsp;| <span class="id">POPF</span> =&gt; "<span class="id">POPF</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PUSH</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">PUSH</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PUSHSR</span> <span class="id">_</span> =&gt; "<span class="id">PUSHSR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PUSHA</span> =&gt; "<span class="id">PUSHA</span>"<br/>
+&nbsp;&nbsp;| <span class="id">PUSHF</span> =&gt; "<span class="id">PUSHF</span>"<br/>
+&nbsp;&nbsp;| <span class="id">RCL</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">RCL</span>"<br/>
+&nbsp;&nbsp;| <span class="id">RCR</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">RCR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">RDMSR</span> =&gt; "<span class="id">RDMSR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">RDPMC</span> =&gt; "<span class="id">RDPMC</span>"<br/>
+&nbsp;&nbsp;| <span class="id">RDTSC</span> =&gt; "<span class="id">RDTSC</span>"<br/>
+&nbsp;&nbsp;| <span class="id">RDTSCP</span> =&gt; "<span class="id">RDTSCP</span>"<br/>
+&nbsp;&nbsp;| <span class="id">RET</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">RET</span>"<br/>
+&nbsp;&nbsp;| <span class="id">ROL</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">ROL</span>"<br/>
+&nbsp;&nbsp;| <span class="id">ROR</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">ROR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">RSM</span> =&gt; "<span class="id">RSM</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SAHF</span> =&gt; "<span class="id">SAHF</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SAR</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">SAR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SBB</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">SBB</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SCAS</span> <span class="id">_</span> =&gt; "<span class="id">SCAS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SETcc</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">SETcc</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SGDT</span> <span class="id">_</span> =&gt; "<span class="id">SGDT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SHL</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">SHL</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SHLD</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">SHLD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SHR</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">SHR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SHRD</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">SHRD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SIDT</span> <span class="id">_</span> =&gt; "<span class="id">SIDT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SLDT</span> <span class="id">_</span> =&gt; "<span class="id">SLDT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">SMSW</span> <span class="id">_</span> =&gt; "<span class="id">SMSW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">STC</span> =&gt; "<span class="id">STC</span>"<br/>
+&nbsp;&nbsp;| <span class="id">STD</span> =&gt; "<span class="id">STD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">STI</span> =&gt; "<span class="id">STI</span>"<br/>
+&nbsp;&nbsp;| <span class="id">STOS</span> <span class="id">_</span> =&gt; "<span class="id">STOS</span>"<br/>
+&nbsp;&nbsp;| <span class="id">STR</span> <span class="id">_</span> =&gt; "<span class="id">STR</span>"   <br/>
+&nbsp;&nbsp;| <span class="id">SUB</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">SUB</span>"<br/>
+&nbsp;&nbsp;| <span class="id">TEST</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">TEST</span>"<br/>
+&nbsp;&nbsp;| <span class="id">UD2</span> =&gt; "<span class="id">UD2</span>"<br/>
+&nbsp;&nbsp;| <span class="id">VERR</span> <span class="id">_</span> =&gt; "<span class="id">VERR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">VERW</span> <span class="id">_</span> =&gt; "<span class="id">VERW</span>"<br/>
+&nbsp;&nbsp;| <span class="id">WBINVD</span> =&gt; "<span class="id">WBINVD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">WRMSR</span> =&gt; "<span class="id">WRMSR</span>"<br/>
+&nbsp;&nbsp;| <span class="id">XADD</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">XADD</span>"<br/>
+&nbsp;&nbsp;| <span class="id">XCHG</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">XCHG</span>"<br/>
+&nbsp;&nbsp;| <span class="id">XLAT</span> =&gt; "<span class="id">XLAT</span>"<br/>
+&nbsp;&nbsp;| <span class="id">XOR</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; "<span class="id">XOR</span>"<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="ACCUM_LIST">ACCUM_LIST</a></span> (<span class="id">A</span>:<span class="kwd">Type</span>) := <span class="id">int32</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="RockSaltAsm.html#A">A</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="ACCUM_INSTRS">ACCUM_INSTRS</a></span> := <span class="id"><a href="RockSaltAsm.html#ACCUM_LIST">ACCUM_LIST</a></span> <span class="id">instr</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="ACCUM_DATA">ACCUM_DATA</a></span>   := <span class="id"><a href="RockSaltAsm.html#ACCUM_LIST">ACCUM_LIST</a></span> <span class="id">int8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="app_accum_list">app_accum_list</a></span> {<span class="id">A</span>:<span class="kwd">Type</span>} (<span class="id">l1</span> <span class="id">l2</span> : <span class="id"><a href="RockSaltAsm.html#ACCUM_LIST">ACCUM_LIST</a></span> <span class="id"><a href="RockSaltAsm.html#A">A</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">data_addr</span> =&gt; (<span class="id"><a href="RockSaltAsm.html#l1">l1</a></span> <span class="id"><a href="RockSaltAsm.html#data_addr">data_addr</a></span>) ++ (<span class="id"><a href="RockSaltAsm.html#l2">l2</a></span> <span class="id"><a href="RockSaltAsm.html#data_addr">data_addr</a></span>).<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="flat_map_accum_list">flat_map_accum_list</a></span> {<span class="id">A</span> <span class="id">B</span>:<span class="kwd">Type</span>} (<span class="id">f</span>: <span class="id"><a href="RockSaltAsm.html#A">A</a></span> -&gt; <span class="id"><a href="RockSaltAsm.html#ACCUM_LIST">ACCUM_LIST</a></span> <span class="id"><a href="RockSaltAsm.html#B">B</a></span>) (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="RockSaltAsm.html#A">A</a></span>) : <span class="id"><a href="RockSaltAsm.html#ACCUM_LIST">ACCUM_LIST</a></span> <span class="id"><a href="RockSaltAsm.html#B">B</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="RockSaltAsm.html#l">l</a></span> <span class="kwd">with</span> <br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; <span class="kwd">fun</span> <span class="id">data_addr</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span><br/>
+&nbsp;&nbsp;| <span class="id">h</span>::<span class="id">t</span> =&gt; <span class="id"><a href="RockSaltAsm.html#app_accum_list">app_accum_list</a></span> (<span class="id"><a href="RockSaltAsm.html#f">f</a></span> <span class="id">h</span>) (<span class="id"><a href="RockSaltAsm.html#flat_map_accum_list">flat_map_accum_list</a></span> <span class="id"><a href="RockSaltAsm.html#f">f</a></span> <span class="id">t</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id"><a name="gv_info">gv_info</a></span> := <span class="id"><a name="mkInfo">mkInfo</a></span> {<br/>
+&nbsp;&nbsp;<span class="id"><a name="gv_offset">gv_offset</a></span> : <span class="id">int32</span>;  <br/>
+&nbsp;&nbsp;<span class="id"><a name="gv_size">gv_size</a></span> : <span class="id">int32</span> <br/>
+}.<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id"><a name="function">function</a></span> := <span class="id"><a name="mkFun">mkFun</a></span> {<br/>
+&nbsp;&nbsp;<span class="id"><a name="fun_offset">fun_offset</a></span> : <span class="id">int32</span>; <br/>
+&nbsp;&nbsp;<span class="id"><a name="fun_size">fun_size</a></span>   : <span class="id">int32</span>; <br/>
+}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="fundef">fundef</a></span> := <span class="id"><a href="AST.html#fundef">AST.fundef</a></span> <span class="id"><a href="RockSaltAsm.html#function">function</a></span>.<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id"><a name="program">program</a></span> := <span class="id"><a name="mkProg">mkProg</a></span> {<br/>
+&nbsp;&nbsp;<span class="id"><a name="prog_defs">prog_defs</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> (<span class="id"><a href="AST.html#ident">ident</a></span> * <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="AST.html#globdef">globdef</a></span> <span class="id"><a href="RockSaltAsm.html#fundef">fundef</a></span> <span class="id"><a href="RockSaltAsm.html#gv_info">gv_info</a></span>));<br/>
+&nbsp;&nbsp;<span class="id"><a name="prog_public">prog_public</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="AST.html#ident">ident</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="prog_main">prog_main</a></span>: <span class="id"><a href="AST.html#ident">ident</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="text_instrs">text_instrs</a></span> : <span class="id"><a href="RockSaltAsm.html#ACCUM_INSTRS">ACCUM_INSTRS</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="init_data">init_data</a></span> : <span class="id"><a href="RockSaltAsm.html#ACCUM_DATA">ACCUM_DATA</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="main_ofs">main_ofs</a></span>  : <span class="id">int32</span>;<br/>
+}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="program_of_program">program_of_program</a></span> (<span class="id">p</span>: <span class="id"><a href="RockSaltAsm.html#program">program</a></span>) : <span class="id"><a href="AST.html#program">AST.program</a></span> <span class="id"><a href="RockSaltAsm.html#fundef">fundef</a></span> <span class="id"><a href="RockSaltAsm.html#gv_info">gv_info</a></span> :=<br/>
+&nbsp;&nbsp;{| <span class="id"><a href="AST.html#mkprogram">AST.prog_defs</a></span> := <span class="id"><a href="RockSaltAsm.html#p">p</a></span>.(<span class="id"><a href="RockSaltAsm.html#prog_defs">prog_defs</a></span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">AST.prog_public</span> := <span class="id"><a href="RockSaltAsm.html#p">p</a></span>.(<span class="id"><a href="RockSaltAsm.html#prog_public">prog_public</a></span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">AST.prog_main</span> := <span class="id"><a href="RockSaltAsm.html#p">p</a></span>.(<span class="id"><a href="RockSaltAsm.html#prog_main">prog_main</a></span>) |}.<br/>
+<br/>
+<span class="kwd">Coercion</span> <span class="id"><a href="RockSaltAsm.html#program_of_program">program_of_program</a></span>: <span class="id">program</span> &gt;-&gt; <span class="id">AST.program</span>.</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Assoc</title>
+<meta name="description" content="Documentation of Coq module Assoc" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Assoc</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Coqlib.html">Coqlib</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="ASSOC">ASSOC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variables</span> <span class="id"><a name="ASSOC.A">A</a></span> <span class="id"><a name="ASSOC.B">B</a></span>: <span class="kwd">Type</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="ASSOC.Aeq">Aeq</a></span>: <span class="kwd">forall</span> (<span class="id">a1</span> <span class="id">a2</span>: <span class="id"><a href="Assoc.html#ASSOC.A">A</a></span>), {<span class="id"><a href="Assoc.html#a1">a1</a></span>=<span class="id"><a href="Assoc.html#a2">a2</a></span>}+{<span class="id"><a href="Assoc.html#a1">a1</a></span>&lt;&gt;<span class="id"><a href="Assoc.html#a2">a2</a></span>}.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Fixpoint</span> <span class="id"><a name="get_assoc">get_assoc</a></span> (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> (<span class="id"><a href="Assoc.html#ASSOC.A">A</a></span>*<span class="id"><a href="Assoc.html#ASSOC.B">B</a></span>)) (<span class="id">b</span>: <span class="id"><a href="Assoc.html#ASSOC.A">A</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="Assoc.html#ASSOC.B">B</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="Assoc.html#l">l</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| (<span class="id">k</span>,<span class="id">v</span>)::<span class="id">r</span> =&gt; <span class="kwd">if</span> <span class="id"><a href="Assoc.html#ASSOC.Aeq">Aeq</a></span> <span class="id">k</span> <span class="id"><a href="Assoc.html#b">b</a></span> <span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">v</span> <span class="kwd">else</span> <span class="id"><a href="Assoc.html#get_assoc">get_assoc</a></span> <span class="id">r</span> <span class="id"><a href="Assoc.html#b">b</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="get_assoc_in_fst">get_assoc_in_fst</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> (<span class="id"><a href="Assoc.html#ASSOC.A">A</a></span>*<span class="id"><a href="Assoc.html#ASSOC.B">B</a></span>)) <span class="id">b</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Assoc.html#get_assoc">get_assoc</a></span> <span class="id"><a href="Assoc.html#l">l</a></span> <span class="id"><a href="Assoc.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="Assoc.html#r">r</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="Assoc.html#b">b</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="Assoc.html#l">l</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1546')">Proof.</div>
+<div class="proofscript" id="proof1546">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>. <span class="id">inv</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">H</span>. <span class="tactic">simpl</span>. <span class="id">right</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="get_assoc_in">get_assoc_in</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> (<span class="id"><a href="Assoc.html#ASSOC.A">A</a></span>*<span class="id"><a href="Assoc.html#ASSOC.B">B</a></span>)) <span class="id">b</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Assoc.html#get_assoc">get_assoc</a></span> <span class="id"><a href="Assoc.html#l">l</a></span> <span class="id"><a href="Assoc.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="Assoc.html#r">r</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> (<span class="id"><a href="Assoc.html#b">b</a></span>,<span class="id"><a href="Assoc.html#r">r</a></span>) <span class="id"><a href="Assoc.html#l">l</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1547')">Proof.</div>
+<div class="proofscript" id="proof1547">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>. <span class="id">inv</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">H</span>. <span class="tactic">simpl</span>. <span class="id">right</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="in_lnr_get_assoc">in_lnr_get_assoc</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">l</span> <span class="id">b</span> <span class="id">f</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Coqlib.html#list_norepet">list_norepet</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="Assoc.html#l">l</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> (<span class="id"><a href="Assoc.html#b">b</a></span>,<span class="id"><a href="Assoc.html#f">f</a></span>) <span class="id"><a href="Assoc.html#l">l</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Assoc.html#get_assoc">get_assoc</a></span> <span class="id"><a href="Assoc.html#l">l</a></span> <span class="id"><a href="Assoc.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="Assoc.html#f">f</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1548')">Proof.</div>
+<div class="proofscript" id="proof1548">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="tactic">intros</span> <span class="id">b</span> <span class="id">f</span> <span class="id">LNR</span> <span class="id">IN</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> *. <span class="id">easy</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">IN</span>. <span class="tactic">subst</span>. <span class="id">destr</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">LNR</span>. <span class="id">erewrite</span> <span class="id">IHl</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">destr</span>. <span class="tactic">subst</span>. <span class="tactic">simpl</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exfalso</span>; <span class="tactic">apply</span> <span class="id">H2</span>; <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#in_map_iff">in_map_iff</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">b</span>,<span class="id">f</span>); <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="Assoc.html#ASSOC">ASSOC</a></span>.<br/>
+<br/>
+<br/>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

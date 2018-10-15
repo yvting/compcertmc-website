@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module FlatAsmBuiltin</title>
+<meta name="description" content="Documentation of Coq module FlatAsmBuiltin" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module FlatAsmBuiltin</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Axioms.html">Axioms</a></span> <span class="id"><a href="Coqlib.html">Coqlib</a></span> <span class="id"><a href="Errors.html">Errors</a></span> <span class="id"><a href="Maps.html">Maps</a></span> <span class="id"><a href="AST.html">AST</a></span> <span class="id"><a href="Linking.html">Linking</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Integers.html">Integers</a></span> <span class="id"><a href="Floats.html">Floats</a></span> <span class="id"><a href="Values.html">Values</a></span> <span class="id"><a href="Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="FlatAsmGlobenv.html">FlatAsmGlobenv</a></span> <span class="id"><a href="Segment.html">Segment</a></span> <span class="id"><a href="Events.html">Events</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="WITHMEMMODEL">WITHMEMMODEL</a></span>.<br/>
+<br/>
+<span class="kwd">Context</span> `{<span class="id">memory_model_ops</span>: <span class="id"><a href="Memtype.html#Mem.MemoryModelOps">Mem.MemoryModelOps</a></span>}.<br/>
+<br/>
+<h1> Evaluation of builtin arguments </h1>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="WITHMEMMODEL.EVAL_BUILTIN_ARG">EVAL_BUILTIN_ARG</a></span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WITHMEMMODEL.EVAL_BUILTIN_ARG.F">F</a></span>: <span class="kwd">Type</span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WITHMEMMODEL.EVAL_BUILTIN_ARG.V">V</a></span>: <span class="kwd">Type</span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WITHMEMMODEL.EVAL_BUILTIN_ARG.I">I</a></span>: <span class="kwd">Type</span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WITHMEMMODEL.EVAL_BUILTIN_ARG.A">A</a></span>: <span class="kwd">Type</span>.<br/>
+<br/>
+<span class="kwd">Global</span> <span class="id">Arguments</span> <span class="id"><a href="FlatAsmBuiltin.html#F">F</a></span> : <span class="id">default</span> <span class="id">implicits</span>. <br/>
+<span class="kwd">Global</span> <span class="id">Arguments</span> <span class="id"><a href="FlatAsmBuiltin.html#V">V</a></span> : <span class="id">default</span> <span class="id">implicits</span>. <br/>
+<span class="kwd">Global</span> <span class="id">Arguments</span> <span class="id"><a href="FlatAsmBuiltin.html#I">I</a></span> : <span class="id">default</span> <span class="id">implicits</span>. <br/>
+<span class="kwd">Global</span> <span class="id">Arguments</span> <span class="id"><a href="FlatAsmBuiltin.html#I">I</a></span> : <span class="id">default</span> <span class="id">implicits</span>. <br/>
+<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WITHMEMMODEL.EVAL_BUILTIN_ARG.ge">ge</a></span>: <span class="id"><a href="FlatAsmGlobenv.html#Genv.t">Genv.t</a></span> <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG.F">F</a></span> <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG.V">V</a></span> <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG.I">I</a></span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WITHMEMMODEL.EVAL_BUILTIN_ARG.e">e</a></span>: <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG.A">A</a></span> -&gt; <span class="id"><a href="Values.html#val">val</a></span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WITHMEMMODEL.EVAL_BUILTIN_ARG.sp">sp</a></span>: <span class="id"><a href="Values.html#val">val</a></span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WITHMEMMODEL.EVAL_BUILTIN_ARG.m">m</a></span>:<span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.mem">mem</a></span>. <br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="eval_builtin_arg">eval_builtin_arg</a></span>: <span class="id"><a href="AST.html#builtin_arg">builtin_arg</a></span> <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG.A">A</a></span> -&gt; <span class="id"><a href="Values.html#val">val</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="eval_BA">eval_BA</a></span>: <span class="kwd">forall</span> <span class="id">x</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> (<span class="id"><a href="AST.html#BA">BA</a></span> <span class="id"><a href="FlatAsmBuiltin.html#x">x</a></span>) (<span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG.e">e</a></span> <span class="id"><a href="FlatAsmBuiltin.html#x">x</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="eval_BA_int">eval_BA_int</a></span>: <span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> (<span class="id"><a href="AST.html#BA_int">BA_int</a></span> <span class="id"><a href="FlatAsmBuiltin.html#n">n</a></span>) (<span class="id"><a href="Values.html#Vint">Vint</a></span> <span class="id"><a href="FlatAsmBuiltin.html#n">n</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="eval_BA_long">eval_BA_long</a></span>: <span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> (<span class="id"><a href="AST.html#BA_long">BA_long</a></span> <span class="id"><a href="FlatAsmBuiltin.html#n">n</a></span>) (<span class="id"><a href="Values.html#Vlong">Vlong</a></span> <span class="id"><a href="FlatAsmBuiltin.html#n">n</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="eval_BA_float">eval_BA_float</a></span>: <span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> (<span class="id"><a href="AST.html#BA_float">BA_float</a></span> <span class="id"><a href="FlatAsmBuiltin.html#n">n</a></span>) (<span class="id"><a href="Values.html#Vfloat">Vfloat</a></span> <span class="id"><a href="FlatAsmBuiltin.html#n">n</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="eval_BA_single">eval_BA_single</a></span>: <span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> (<span class="id"><a href="AST.html#BA_single">BA_single</a></span> <span class="id"><a href="FlatAsmBuiltin.html#n">n</a></span>) (<span class="id"><a href="Values.html#Vsingle">Vsingle</a></span> <span class="id"><a href="FlatAsmBuiltin.html#n">n</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="eval_BA_loadstack">eval_BA_loadstack</a></span>: <span class="kwd">forall</span> <span class="id">chunk</span> <span class="id">ofs</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Memtype.html#Mem.loadv">Mem.loadv</a></span> <span class="id"><a href="FlatAsmBuiltin.html#chunk">chunk</a></span> <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG.m">m</a></span> (<span class="id"><a href="Values.html#Val.offset_ptr">Val.offset_ptr</a></span> <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG.sp">sp</a></span> <span class="id"><a href="FlatAsmBuiltin.html#ofs">ofs</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="FlatAsmBuiltin.html#v">v</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> (<span class="id"><a href="AST.html#BA_loadstack">BA_loadstack</a></span> <span class="id"><a href="FlatAsmBuiltin.html#chunk">chunk</a></span> <span class="id"><a href="FlatAsmBuiltin.html#ofs">ofs</a></span>) <span class="id"><a href="FlatAsmBuiltin.html#v">v</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="eval_BA_addrstack">eval_BA_addrstack</a></span>: <span class="kwd">forall</span> <span class="id">ofs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> (<span class="id"><a href="AST.html#BA_addrstack">BA_addrstack</a></span> <span class="id"><a href="FlatAsmBuiltin.html#ofs">ofs</a></span>) (<span class="id"><a href="Values.html#Val.offset_ptr">Val.offset_ptr</a></span> <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG.sp">sp</a></span> <span class="id"><a href="FlatAsmBuiltin.html#ofs">ofs</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="eval_BA_loadglobal">eval_BA_loadglobal</a></span>: <span class="kwd">forall</span> <span class="id">chunk</span> <span class="id">id</span> <span class="id">ofs</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Memtype.html#Mem.loadv">Mem.loadv</a></span> <span class="id"><a href="FlatAsmBuiltin.html#chunk">chunk</a></span> <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG.m">m</a></span>  (<span class="id"><a href="FlatAsmGlobenv.html#Genv.symbol_address">Genv.symbol_address</a></span> <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG.ge">ge</a></span> <span class="id"><a href="FlatAsmBuiltin.html#id">id</a></span> <span class="id"><a href="FlatAsmBuiltin.html#ofs">ofs</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="FlatAsmBuiltin.html#v">v</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> (<span class="id"><a href="AST.html#BA_loadglobal">BA_loadglobal</a></span> <span class="id"><a href="FlatAsmBuiltin.html#chunk">chunk</a></span> <span class="id"><a href="FlatAsmBuiltin.html#id">id</a></span> <span class="id"><a href="FlatAsmBuiltin.html#ofs">ofs</a></span>) <span class="id"><a href="FlatAsmBuiltin.html#v">v</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="eval_BA_addrglobal">eval_BA_addrglobal</a></span>: <span class="kwd">forall</span> <span class="id">id</span> <span class="id">ofs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> (<span class="id"><a href="AST.html#BA_addrglobal">BA_addrglobal</a></span> <span class="id"><a href="FlatAsmBuiltin.html#id">id</a></span> <span class="id"><a href="FlatAsmBuiltin.html#ofs">ofs</a></span>) (<span class="id"><a href="FlatAsmGlobenv.html#Genv.symbol_address">Genv.symbol_address</a></span> <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG.ge">ge</a></span> <span class="id"><a href="FlatAsmBuiltin.html#id">id</a></span> <span class="id"><a href="FlatAsmBuiltin.html#ofs">ofs</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="eval_BA_splitlong">eval_BA_splitlong</a></span>: <span class="kwd">forall</span> <span class="id">hi</span> <span class="id">lo</span> <span class="id">vhi</span> <span class="id">vlo</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> <span class="id"><a href="FlatAsmBuiltin.html#hi">hi</a></span> <span class="id"><a href="FlatAsmBuiltin.html#vhi">vhi</a></span> -&gt; <span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> <span class="id"><a href="FlatAsmBuiltin.html#lo">lo</a></span> <span class="id"><a href="FlatAsmBuiltin.html#vlo">vlo</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> (<span class="id"><a href="AST.html#BA_splitlong">BA_splitlong</a></span> <span class="id"><a href="FlatAsmBuiltin.html#hi">hi</a></span> <span class="id"><a href="FlatAsmBuiltin.html#lo">lo</a></span>) (<span class="id"><a href="Values.html#Val.longofwords">Val.longofwords</a></span> <span class="id"><a href="FlatAsmBuiltin.html#vhi">vhi</a></span> <span class="id"><a href="FlatAsmBuiltin.html#vlo">vlo</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="eval_builtin_args">eval_builtin_args</a></span> (<span class="id">al</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> (<span class="id"><a href="AST.html#builtin_arg">builtin_arg</a></span> <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG.A">A</a></span>)) (<span class="id">vl</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="Values.html#val">val</a></span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="Coqlib.html#list_forall2">list_forall2</a></span> <span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> <span class="id"><a href="FlatAsmBuiltin.html#al">al</a></span> <span class="id"><a href="FlatAsmBuiltin.html#vl">vl</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="eval_builtin_arg_determ">eval_builtin_arg_determ</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">v</span>, <span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> <span class="id"><a href="FlatAsmBuiltin.html#a">a</a></span> <span class="id"><a href="FlatAsmBuiltin.html#v">v</a></span> -&gt; <span class="kwd">forall</span> <span class="id">v</span>', <span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg">eval_builtin_arg</a></span> <span class="id"><a href="FlatAsmBuiltin.html#a">a</a></span> <span class="id">v</span>' -&gt; <span class="id">v</span>' = <span class="id"><a href="FlatAsmBuiltin.html#v">v</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5210')">Proof.</div>
+<div class="proofscript" id="proof5210">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span> <span class="id">v</span>' <span class="id">EV</span>; <span class="id">inv</span> <span class="id">EV</span>; <span class="tactic">try</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">f_equal</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="eval_builtin_args_determ">eval_builtin_args_determ</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">al</span> <span class="id">vl</span>, <span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_args">eval_builtin_args</a></span> <span class="id"><a href="FlatAsmBuiltin.html#al">al</a></span> <span class="id"><a href="FlatAsmBuiltin.html#vl">vl</a></span> -&gt; <span class="kwd">forall</span> <span class="id">vl</span>', <span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_args">eval_builtin_args</a></span> <span class="id"><a href="FlatAsmBuiltin.html#al">al</a></span> <span class="id">vl</span>' -&gt; <span class="id">vl</span>' = <span class="id"><a href="FlatAsmBuiltin.html#vl">vl</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5211')">Proof.</div>
+<div class="proofscript" id="proof5211">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span> <span class="id">v</span>' <span class="id">EV</span>; <span class="id">inv</span> <span class="id">EV</span>; <span class="tactic">f_equal</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id"><a href="FlatAsmBuiltin.html#eval_builtin_arg_determ">eval_builtin_arg_determ</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL.EVAL_BUILTIN_ARG">EVAL_BUILTIN_ARG</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="FlatAsmBuiltin.html#WITHMEMMODEL">WITHMEMMODEL</a></span>.</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

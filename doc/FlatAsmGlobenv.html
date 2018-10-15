@@ -1,0 +1,160 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module FlatAsmGlobenv</title>
+<meta name="description" content="Documentation of Coq module FlatAsmGlobenv" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module FlatAsmGlobenv</h1>
+<div class="coq">
+<br/>
+<div class="doc">Global environments are a component of the dynamic semantics of
+  all languages involved in the compiler.  A global environment
+  maps symbol names (names of functions and of global variables)
+  to the corresponding memory addresses.  It also maps memory addresses
+  of functions to the corresponding function descriptions.
+  Global environments, along with the initial memory state at the beginning
+  of program execution, are built from the program of interest, as follows:
+<ul>
+<li>
+ A distinct memory address is assigned to each function of the program.
+  These function addresses use negative numbers to distinguish them from
+  addresses of memory blocks.  The associations of function name to function
+  address and function address to function description are recorded in
+  the global environment.
+</li>
+<li>
+ For each global variable, a memory block is allocated and associated to
+  the name of the variable.
+</li>
+</ul>
+  These operations reflect (at a high level of abstraction) what takes
+  place during program linking and program loading in a real operating
+  system. </div>
+<br/>
+<span class="kwd">Require</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.funind.Recdef.html">Recdef</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zwf.html">Zwf</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Axioms.html">Axioms</a></span> <span class="id"><a href="Coqlib.html">Coqlib</a></span> <span class="id"><a href="Errors.html">Errors</a></span> <span class="id"><a href="Maps.html">Maps</a></span> <span class="id"><a href="AST.html">AST</a></span> <span class="id"><a href="Linking.html">Linking</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Integers.html">Integers</a></span> <span class="id"><a href="Floats.html">Floats</a></span> <span class="id"><a href="Values.html">Values</a></span> <span class="id"><a href="Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Segment.html">Segment</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Globalenvs.html">Globalenvs</a></span>.<br/>
+<br/>
+<span class="kwd">Notation</span> "<span class="id">s</span> #1" := (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">s</span>) (<span class="tactic">at</span> <span class="id">level</span> 9, <span class="id">format</span> "<span class="id">s</span> '#1'") : <span class="id">pair_scope</span>.<br/>
+<span class="kwd">Notation</span> "<span class="id">s</span> #2" := (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id">s</span>) (<span class="tactic">at</span> <span class="id">level</span> 9, <span class="id">format</span> "<span class="id">s</span> '#2'") : <span class="id">pair_scope</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">pair_scope</span>.<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">error_monad_scope</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Unset</span> <span class="id">Elimination</span> <span class="id">Schemes</span>.<br/>
+<span class="kwd">Local</span> <span class="kwd">Unset</span> <span class="id">Case</span> <span class="id">Analysis</span> <span class="id">Schemes</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Genv">Genv</a></span>.<br/>
+<br/>
+<h1> Global environments </h1>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Genv.GENV">GENV</a></span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="Genv.GENV.F">F</a></span>: <span class="kwd">Type</span>.  <span class="docright">(* The type of function descriptions  *)</span><br/>
+<span class="kwd">Variable</span> <span class="id"><a name="Genv.GENV.V">V</a></span>: <span class="kwd">Type</span>.  <span class="docright">(* The type of information attached to variables  *)</span><br/>
+<span class="kwd">Variable</span> <span class="id"><a name="Genv.GENV.I">I</a></span>: <span class="kwd">Type</span>.  <span class="docright">(* The type of instructions  *)</span><br/>
+<br/>
+<div class="doc">The type of global environments. </div>
+<br/>
+<span class="kwd">Record</span> <span class="id"><a name="Genv.t">t</a></span>: <span class="kwd">Type</span> := <span class="id"><a name="Genv.mkgenv">mkgenv</a></span> {<br/>
+&nbsp;&nbsp;<span class="id"><a name="Genv.genv_public">genv_public</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="AST.html#ident">ident</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="Genv.genv_symb">genv_symb</a></span>: <span class="id"><a href="AST.html#ident">ident</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="Values.html#block">block</a></span> * <span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span>);        <span class="docright">(* mapping symbol -&gt; block * ptrofs  *)</span><br/>
+&nbsp;&nbsp;<span class="id"><a name="Genv.genv_defs">genv_defs</a></span>: <span class="id"><a href="Values.html#block">block</a></span> -&gt; <span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="AST.html#globdef">globdef</a></span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.GENV.F">F</a></span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.GENV.V">V</a></span>);             <span class="docright">(* mapping offsets -&gt; function defintions  *)</span><br/>
+&nbsp;&nbsp;<span class="id"><a name="Genv.genv_instrs">genv_instrs</a></span>: <span class="id"><a href="Values.html#block">block</a></span> -&gt; <span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.GENV.I">I</a></span>;           <span class="docright">(* mapping offset -&gt; instructions * function id  *)</span><br/>
+&nbsp;&nbsp;<span class="id"><a name="Genv.genv_internal_codeblock">genv_internal_codeblock</a></span> : <span class="id"><a href="Values.html#block">block</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="Genv.genv_lbl">genv_lbl</a></span>: <span class="id"><a href="AST.html#ident">ident</a></span> -&gt; <span class="id"><a href="AST.html#ident">ident</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="Values.html#block">block</a></span> * <span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span>);<br/>
+&nbsp;&nbsp;<span class="id"><a name="Genv.genv_next">genv_next</a></span> : <span class="id"><a href="Values.html#block">block</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="Genv.genv_senv">genv_senv</a></span> : <span class="id"><a href="Globalenvs.html#Senv.t">Globalenvs.Senv.t</a></span>;<br/>
+}.<br/>
+<br/>
+<h2> Lookup functions </h2>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Genv.find_symbol">find_symbol</a></span> (<span class="id">ge</span>: <span class="id"><a href="FlatAsmGlobenv.html#Genv.t">t</a></span>) (<span class="id">id</span>: <span class="id"><a href="AST.html#ident">ident</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="Values.html#block">block</a></span> * <span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span>):=<br/>
+&nbsp;&nbsp;<span class="id"><a href="FlatAsmGlobenv.html#ge">ge</a></span>.(<span class="id"><a href="FlatAsmGlobenv.html#Genv.genv_symb">genv_symb</a></span>) <span class="id"><a href="FlatAsmGlobenv.html#id">id</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Genv.symbol_address">symbol_address</a></span> (<span class="id">ge</span>: <span class="id"><a href="FlatAsmGlobenv.html#Genv.t">t</a></span>) (<span class="id">id</span>: <span class="id"><a href="AST.html#ident">ident</a></span>) (<span class="id">ofs</span>: <span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span>) : <span class="id"><a href="Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.find_symbol">find_symbol</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ge">ge</a></span> <span class="id"><a href="FlatAsmGlobenv.html#id">id</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">b</span>, <span class="id">o</span>) =&gt; <span class="id"><a href="Values.html#Vptr">Vptr</a></span> <span class="id">b</span> (<span class="id"><a href="Integers.html#Ptrofs.add">Ptrofs.add</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ofs">ofs</a></span> <span class="id">o</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="Values.html#Vundef">Vundef</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Genv.find_def">find_def</a></span> (<span class="id">ge</span>: <span class="id"><a href="FlatAsmGlobenv.html#Genv.t">t</a></span>) (<span class="id">b</span>: <span class="id"><a href="Values.html#block">block</a></span>) (<span class="id">ofs</span>:<span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="AST.html#globdef">globdef</a></span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.GENV.F">F</a></span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.GENV.V">V</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="FlatAsmGlobenv.html#Genv.genv_defs">genv_defs</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ge">ge</a></span> <span class="id"><a href="FlatAsmGlobenv.html#b">b</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ofs">ofs</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Genv.find_funct_ptr">find_funct_ptr</a></span> (<span class="id">ge</span>: <span class="id"><a href="FlatAsmGlobenv.html#Genv.t">t</a></span>) (<span class="id">b</span>: <span class="id"><a href="Values.html#block">block</a></span>) (<span class="id">ofs</span>:<span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.GENV.F">F</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.find_def">find_def</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ge">ge</a></span> <span class="id"><a href="FlatAsmGlobenv.html#b">b</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ofs">ofs</a></span> <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="AST.html#Gfun">Gfun</a></span> <span class="id">f</span>) =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">f</span> | <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> <span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Genv.find_funct">find_funct</a></span> (<span class="id">ge</span>: <span class="id"><a href="FlatAsmGlobenv.html#Genv.t">t</a></span>) (<span class="id">v</span>:<span class="id"><a href="Values.html#val">val</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.GENV.F">F</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="FlatAsmGlobenv.html#v">v</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="Values.html#Vptr">Vptr</a></span> <span class="id">b</span> <span class="id">ofs</span> =&gt; <span class="id"><a href="FlatAsmGlobenv.html#Genv.find_funct_ptr">find_funct_ptr</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ge">ge</a></span> <span class="id">b</span> <span class="id">ofs</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Genv.label_address">label_address</a></span> (<span class="id">ge</span>: <span class="id"><a href="FlatAsmGlobenv.html#Genv.t">t</a></span>) (<span class="id">fid</span>:<span class="id"><a href="AST.html#ident">ident</a></span>) (<span class="id">lid</span>:<span class="id"><a href="AST.html#ident">ident</a></span>) : <span class="id"><a href="Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.genv_lbl">genv_lbl</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ge">ge</a></span> <span class="id"><a href="FlatAsmGlobenv.html#fid">fid</a></span> <span class="id"><a href="FlatAsmGlobenv.html#lid">lid</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="Values.html#Vundef">Vundef</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">b</span>,<span class="id">o</span>) =&gt; <span class="id"><a href="Values.html#Vptr">Vptr</a></span> <span class="id">b</span> <span class="id">o</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Genv.label_to_ptr">label_to_ptr</a></span> (<span class="id">smap</span>: <span class="id"><a href="Segment.html#segid_type">segid_type</a></span> -&gt; <span class="id"><a href="Values.html#block">block</a></span>) (<span class="id">l</span>:<span class="id"><a href="Segment.html#seglabel">seglabel</a></span>) : <span class="id"><a href="Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="Values.html#Vptr">Vptr</a></span> (<span class="id"><a href="FlatAsmGlobenv.html#smap">smap</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="FlatAsmGlobenv.html#l">l</a></span>)) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="FlatAsmGlobenv.html#l">l</a></span>).<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Genv.symbol_address_offset">symbol_address_offset</a></span> : <span class="kwd">forall</span> <span class="id">ge</span> <span class="id">ofs1</span> <span class="id">b</span> <span class="id">s</span> <span class="id">ofs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmGlobenv.html#Genv.symbol_address">symbol_address</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ge">ge</a></span> <span class="id"><a href="FlatAsmGlobenv.html#s">s</a></span> <span class="id"><a href="Integers.html#Ptrofs.zero">Ptrofs.zero</a></span> = <span class="id"><a href="Values.html#Vptr">Vptr</a></span> <span class="id"><a href="FlatAsmGlobenv.html#b">b</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ofs">ofs</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmGlobenv.html#Genv.symbol_address">symbol_address</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ge">ge</a></span> <span class="id"><a href="FlatAsmGlobenv.html#s">s</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ofs1">ofs1</a></span> = <span class="id"><a href="Values.html#Vptr">Vptr</a></span> <span class="id"><a href="FlatAsmGlobenv.html#b">b</a></span> (<span class="id"><a href="Integers.html#Ptrofs.add">Ptrofs.add</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ofs">ofs</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ofs1">ofs1</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5208')">Proof.</div>
+<div class="proofscript" id="proof5208">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.symbol_address">symbol_address</a></span>. <span class="tactic">intros</span>. <br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="FlatAsmGlobenv.html#Genv.find_symbol">find_symbol</a></span> <span class="id">ge</span> <span class="id">s</span>) <span class="id">eqn</span>:<span class="id">FSM</span>.<br/>
+&nbsp;&nbsp;- <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">p</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.label_to_ptr">label_to_ptr</a></span> <span class="kwd">in</span> *. <span class="id">inv</span> <span class="id">H</span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="Integers.html#Ptrofs.add_zero_l">Ptrofs.add_zero_l</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="Integers.html#Ptrofs.add_commut">Ptrofs.add_commut</a></span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Genv.find_sym_to_addr">find_sym_to_addr</a></span> : <span class="kwd">forall</span> (<span class="id">ge</span>:<span class="id"><a href="FlatAsmGlobenv.html#Genv.t">t</a></span>) <span class="id">id</span> <span class="id">b</span> <span class="id">ofs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmGlobenv.html#Genv.find_symbol">find_symbol</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ge">ge</a></span> <span class="id"><a href="FlatAsmGlobenv.html#id">id</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="FlatAsmGlobenv.html#b">b</a></span>, <span class="id"><a href="FlatAsmGlobenv.html#ofs">ofs</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmGlobenv.html#Genv.symbol_address">symbol_address</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ge">ge</a></span> <span class="id"><a href="FlatAsmGlobenv.html#id">id</a></span> <span class="id"><a href="Integers.html#Ptrofs.zero">Ptrofs.zero</a></span> = <span class="id"><a href="Values.html#Vptr">Vptr</a></span> <span class="id"><a href="FlatAsmGlobenv.html#b">b</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ofs">ofs</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5209')">Proof.</div>
+<div class="proofscript" id="proof5209">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.symbol_address">symbol_address</a></span>. <span class="tactic">rewrite</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="Integers.html#Ptrofs.add_zero_l">Ptrofs.add_zero_l</a></span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<div class="doc">Find an instruction at an offset </div>
+<span class="kwd">Definition</span> <span class="id"><a name="Genv.find_instr">find_instr</a></span> (<span class="id">ge</span>: <span class="id"><a href="FlatAsmGlobenv.html#Genv.t">t</a></span>) (<span class="id">v</span>:<span class="id"><a href="Values.html#val">val</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.GENV.I">I</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="FlatAsmGlobenv.html#v">v</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="Values.html#Vptr">Vptr</a></span> <span class="id">b</span> <span class="id">ofs</span> =&gt; (<span class="id"><a href="FlatAsmGlobenv.html#Genv.genv_instrs">genv_instrs</a></span> <span class="id"><a href="FlatAsmGlobenv.html#ge">ge</a></span> <span class="id">b</span> <span class="id">ofs</span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="FlatAsmGlobenv.html#Genv.GENV">GENV</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="FlatAsmGlobenv.html#Genv">Genv</a></span>.</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

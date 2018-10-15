@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module FlatAsmSep</title>
+<meta name="description" content="Documentation of Coq module FlatAsmSep" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module FlatAsmSep</h1>
+<div class="coq">
+<br/>
+<div class="doc">Separate compilation proof for the FlatAsm generation *</div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Coqlib.html">Coqlib</a></span> <span class="id"><a href="Integers.html">Integers</a></span> <span class="id"><a href="Values.html">Values</a></span> <span class="id"><a href="Maps.html">Maps</a></span> <span class="id"><a href="AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Asm.html">Asm</a></span> <span class="id"><a href="FlatAsm.html">FlatAsm</a></span> <span class="id"><a href="FlatAsmgen.html">FlatAsmgen</a></span> <span class="id"><a href="FlatAsmProgram.html">FlatAsmProgram</a></span> <span class="id"><a href="FlatAsmgenproof.html">FlatAsmgenproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Segment.html">Segment</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Linking.html">Linking</a></span> <span class="id"><a href="Errors.html">Errors</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Num.html">Num</a></span>.<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="de_transl_instr">de_transl_instr</a></span> (<span class="id">i</span>: <span class="id"><a href="FlatAsm.html#instr_with_info">FlatAsm.instr_with_info</a></span>) : <span class="id"><a href="Asm.html#instruction">Asm.instruction</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> '(<span class="id">i</span>',<span class="id">_</span>,<span class="id">_</span>) := <span class="id"><a href="FlatAsmSep.html#i">i</a></span> <span class="kwd">in</span> <span class="id">i</span>'.<br/>
+&nbsp;&nbsp;<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="de_transl_fun">de_transl_fun</a></span> (<span class="id">f</span> : @<span class="id"><a href="FlatAsmProgram.html#function">function</a></span> <span class="id"><a href="Asm.html#instruction">instruction</a></span>) : <span class="id"><a href="Asm.html#function">Asm.function</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">code</span>' := <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">List.map</a></span> <span class="id"><a href="FlatAsmSep.html#de_transl_instr">de_transl_instr</a></span> (<span class="id"><a href="FlatAsmProgram.html#fn_code">fn_code</a></span> <span class="id"><a href="FlatAsmSep.html#f">f</a></span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="Asm.html#mkfunction">Asm.mkfunction</a></span> (<span class="id"><a href="FlatAsmProgram.html#fn_sig">fn_sig</a></span> <span class="id"><a href="FlatAsmSep.html#f">f</a></span>) <span class="id">code</span>' (<span class="id"><a href="FlatAsmProgram.html#fn_stacksize">fn_stacksize</a></span> <span class="id"><a href="FlatAsmSep.html#f">f</a></span>) (<span class="id"><a href="FlatAsmProgram.html#fn_pubrange">fn_pubrange</a></span> <span class="id"><a href="FlatAsmSep.html#f">f</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="de_transl_globdef">de_transl_globdef</a></span> (<span class="id">def</span>: <span class="id"><a href="AST.html#ident">ident</a></span> * <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="FlatAsmProgram.html#gdef">FlatAsmProgram.gdef</a></span> * <span class="id"><a href="Segment.html#segblock">segblock</a></span>) <br/>
+&nbsp;&nbsp;: (<span class="id"><a href="AST.html#ident">ident</a></span> * <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="AST.html#globdef">globdef</a></span> <span class="id"><a href="Asm.html#fundef">Asm.fundef</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#unit">unit</a></span>)) :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> '(<span class="id">id</span>, <span class="id">def</span>, <span class="id">_</span>) := <span class="id"><a href="FlatAsmSep.html#def">def</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="FlatAsmSep.html#def">def</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; (<span class="id">id</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="AST.html#Gfun">Gfun</a></span> (<span class="id"><a href="AST.html#Internal">Internal</a></span> <span class="id">f</span>)) =&gt; (<span class="id">id</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="AST.html#Gfun">Gfun</a></span> (<span class="id"><a href="AST.html#Internal">Internal</a></span> (<span class="id"><a href="FlatAsmSep.html#de_transl_fun">de_transl_fun</a></span> <span class="id">f</span>))))<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="AST.html#Gfun">Gfun</a></span> (<span class="id"><a href="AST.html#External">External</a></span> <span class="id">f</span>)) =&gt; (<span class="id">id</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="AST.html#Gfun">Gfun</a></span> (<span class="id"><a href="AST.html#External">External</a></span> <span class="id">f</span>)))<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="AST.html#Gvar">Gvar</a></span> <span class="id">v</span>) =&gt; (<span class="id">id</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="AST.html#Gvar">Gvar</a></span> <span class="id">v</span>))<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="flatasm_to_asm">flatasm_to_asm</a></span> (<span class="id">p</span>:<span class="id"><a href="FlatAsm.html#program">FlatAsm.program</a></span>) : <span class="id"><a href="Asm.html#program">Asm.program</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">prog_defs</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">List.map</a></span>  <span class="id"><a href="FlatAsmSep.html#de_transl_globdef">de_transl_globdef</a></span> (<span class="id"><a href="FlatAsmProgram.html#prog_defs">prog_defs</a></span> <span class="id"><a href="FlatAsmSep.html#p">p</a></span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">prog_public</span> := (<span class="id"><a href="FlatAsmProgram.html#prog_public">prog_public</a></span> <span class="id"><a href="FlatAsmSep.html#p">p</a></span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">prog_main</span> := (<span class="id"><a href="FlatAsmProgram.html#prog_main">prog_main</a></span> <span class="id"><a href="FlatAsmSep.html#p">p</a></span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="AST.html#mkprogram">mkprogram</a></span> <span class="id"><a href="FlatAsmSep.html#prog_defs">prog_defs</a></span> <span class="id"><a href="FlatAsmSep.html#prog_public">prog_public</a></span> <span class="id"><a href="FlatAsmSep.html#prog_main">prog_main</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="link_flatasmprog">link_flatasmprog</a></span> (<span class="id">p1</span> <span class="id">p2</span>: <span class="id"><a href="FlatAsm.html#program">FlatAsm.program</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="FlatAsm.html#program">FlatAsm.program</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="Linking.html#link">link</a></span> (<span class="id"><a href="FlatAsmSep.html#flatasm_to_asm">flatasm_to_asm</a></span> <span class="id"><a href="FlatAsmSep.html#p1">p1</a></span>) (<span class="id"><a href="FlatAsmSep.html#flatasm_to_asm">flatasm_to_asm</a></span> <span class="id"><a href="FlatAsmSep.html#p2">p2</a></span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">p</span> =&gt; <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> (<span class="id"><a href="FlatAsmgen.html#transf_program">transf_program</a></span> <span class="id">p</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id">p</span>' =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">p</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="Errors.html#Error">Error</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="Linker_flatasmprog">Linker_flatasmprog</a></span> : <span class="id"><a href="Linking.html#Linker">Linker</a></span> <span class="id"><a href="FlatAsm.html#program">FlatAsm.program</a></span> := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="Linking.html#link">link</a></span> := <span class="id"><a href="FlatAsmSep.html#link_flatasmprog">link_flatasmprog</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="Linking.html#linkorder">linkorder</a></span> := <span class="kwd">fun</span> <span class="id">p1</span> <span class="id">p2</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#True">True</a></span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5566')">Proof.</div>
+<div class="proofscript" id="proof5566">
+&nbsp;&nbsp;- <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">auto</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Axiom</span> <span class="id"><a name="transf_prog_combine">transf_prog_combine</a></span> : <br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">p1</span> <span class="id">p2</span>: <span class="id"><a href="Asm.html#program">Asm.program</a></span>) (<span class="id">tp1</span> <span class="id">tp2</span>: <span class="id"><a href="FlatAsm.html#program">FlatAsm.program</a></span>) <span class="id">p</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LK</span>: <span class="id"><a href="Linking.html#link">link</a></span> <span class="id"><a href="FlatAsmSep.html#p1">p1</a></span> <span class="id"><a href="FlatAsmSep.html#p2">p2</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="FlatAsmSep.html#p">p</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TF1</span>: <span class="id"><a href="FlatAsmgen.html#transf_program">transf_program</a></span> <span class="id"><a href="FlatAsmSep.html#p1">p1</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="FlatAsmSep.html#tp1">tp1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TF2</span>: <span class="id"><a href="FlatAsmgen.html#transf_program">transf_program</a></span> <span class="id"><a href="FlatAsmSep.html#p2">p2</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="FlatAsmSep.html#tp2">tp2</a></span>),<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">tp</span>, <span class="id"><a href="FlatAsmgen.html#transf_program">transf_program</a></span> <span class="id"><a href="FlatAsmSep.html#p">p</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="FlatAsmSep.html#tp">tp</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="transl_instr_inv">transl_instr_inv</a></span> : <span class="kwd">forall</span> <span class="id">fid</span> <span class="id">sid</span> <span class="id">ofs</span> <span class="id">i</span> <span class="id">i</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmgen.html#transl_instr">transl_instr</a></span> <span class="id"><a href="FlatAsmSep.html#ofs">ofs</a></span> <span class="id"><a href="FlatAsmSep.html#fid">fid</a></span> <span class="id"><a href="FlatAsmSep.html#sid">sid</a></span> <span class="id"><a href="FlatAsmSep.html#i">i</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id">i</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmSep.html#de_transl_instr">de_transl_instr</a></span> <span class="id">i</span>' = <span class="id"><a href="FlatAsmSep.html#i">i</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5567')">Proof.</div>
+<div class="proofscript" id="proof5567">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">destruct</span> <span class="id">i</span>; <span class="id">monadInv</span> <span class="id">H</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="transl_instrs_inv">transl_instrs_inv</a></span> : <span class="kwd">forall</span> <span class="id">code</span> <span class="id">fid</span> <span class="id">sid</span> <span class="id">ofs</span> <span class="id">ofs</span>' <span class="id">code</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmgen.html#transl_instrs">transl_instrs</a></span> <span class="id"><a href="FlatAsmSep.html#fid">fid</a></span> <span class="id"><a href="FlatAsmSep.html#sid">sid</a></span> <span class="id"><a href="FlatAsmSep.html#ofs">ofs</a></span> <span class="id"><a href="FlatAsmSep.html#code">code</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> (<span class="id">ofs</span>', <span class="id">code</span>') -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="FlatAsmSep.html#de_transl_instr">de_transl_instr</a></span> <span class="id">code</span>' = <span class="id"><a href="FlatAsmSep.html#code">code</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5568')">Proof.</div>
+<div class="proofscript" id="proof5568">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">code</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">monadInv</span> <span class="id">H</span>. <span class="tactic">simpl</span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id"><a href="FlatAsmSep.html#transl_instr_inv">transl_instr_inv</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">IHcode</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="transl_fun_inv">transl_fun_inv</a></span>: <span class="kwd">forall</span> <span class="id">g</span> <span class="id">i</span> <span class="id">f</span> <span class="id">f</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmgen.html#transl_fun">transl_fun</a></span> <span class="id"><a href="FlatAsmSep.html#g">g</a></span> <span class="id"><a href="FlatAsmSep.html#i">i</a></span> <span class="id"><a href="FlatAsmSep.html#f">f</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id">f</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmSep.html#de_transl_fun">de_transl_fun</a></span> <span class="id">f</span>' = <span class="id"><a href="FlatAsmSep.html#f">f</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5569')">Proof.</div>
+<div class="proofscript" id="proof5569">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">monadInvX</span> <span class="id">H</span>. <span class="id">destr_in</span> <span class="id">EQ2</span>. <span class="id">inv</span> <span class="id">EQ2</span>. <br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="FlatAsmSep.html#de_transl_fun">de_transl_fun</a></span>. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id"><a href="FlatAsmSep.html#transl_instrs_inv">transl_instrs_inv</a></span>; <span class="tactic">eauto</span>. <br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">f</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="transl_globdef_inv">transl_globdef_inv</a></span>: <span class="kwd">forall</span> <span class="id">g</span> <span class="id">i</span> <span class="id">def</span> <span class="id">def</span>',<br/>
+&nbsp;&nbsp;<span class="id"><a href="FlatAsmgen.html#transl_globdef">transl_globdef</a></span> <span class="id"><a href="FlatAsmSep.html#g">g</a></span> <span class="id"><a href="FlatAsmSep.html#i">i</a></span> <span class="id"><a href="FlatAsmSep.html#def">def</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id">def</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="FlatAsmSep.html#de_transl_globdef">de_transl_globdef</a></span> <span class="id">def</span>' = (<span class="id"><a href="FlatAsmSep.html#i">i</a></span>, <span class="id"><a href="FlatAsmSep.html#def">def</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5570')">Proof.</div>
+<div class="proofscript" id="proof5570">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">destruct</span> <span class="id">def</span>. <span class="tactic">destruct</span> <span class="id">g0</span>. <span class="tactic">destruct</span> <span class="id">f</span>.<br/>
+&nbsp;&nbsp;- <span class="id">monadInv</span> <span class="id">H</span>. <span class="tactic">simpl</span>.    <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id"><a href="FlatAsmSep.html#transl_fun_inv">transl_fun_inv</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">monadInv</span> <span class="id">H</span>. <span class="tactic">simpl</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">monadInvX</span> <span class="id">H</span>. <span class="tactic">simpl</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">monadInv</span> <span class="id">H</span>. <span class="tactic">simpl</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="transl_globdefs_inv">transl_globdefs_inv</a></span>: <span class="kwd">forall</span> <span class="id">g</span> <span class="id">defs</span> <span class="id">defs</span>',<br/>
+&nbsp;&nbsp;<span class="id"><a href="FlatAsmgen.html#transl_globdefs">transl_globdefs</a></span> <span class="id"><a href="FlatAsmSep.html#g">g</a></span> <span class="id"><a href="FlatAsmSep.html#defs">defs</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id">defs</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="FlatAsmSep.html#de_transl_globdef">de_transl_globdef</a></span> <span class="id">defs</span>' = <span class="id"><a href="FlatAsmSep.html#defs">defs</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5571')">Proof.</div>
+<div class="proofscript" id="proof5571">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">defs</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">a</span>. <span class="id">monadInv</span> <span class="id">H</span>. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id"><a href="FlatAsmSep.html#transl_globdef_inv">transl_globdef_inv</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">IHdefs</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="transl_prog_with_map_inv">transl_prog_with_map_inv</a></span> : <span class="kwd">forall</span> <span class="id">g</span> <span class="id">l</span> <span class="id">dz</span> <span class="id">cz</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmgen.html#transl_prog_with_map">transl_prog_with_map</a></span> <span class="id"><a href="FlatAsmSep.html#g">g</a></span> <span class="id"><a href="FlatAsmSep.html#l">l</a></span> <span class="id"><a href="FlatAsmSep.html#p">p</a></span> <span class="id"><a href="FlatAsmSep.html#dz">dz</a></span> <span class="id"><a href="FlatAsmSep.html#cz">cz</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="FlatAsmSep.html#tp">tp</a></span> -&gt; <span class="id"><a href="FlatAsmSep.html#flatasm_to_asm">flatasm_to_asm</a></span> <span class="id"><a href="FlatAsmSep.html#tp">tp</a></span> = <span class="id"><a href="FlatAsmSep.html#p">p</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5572')">Proof.</div>
+<div class="proofscript" id="proof5572">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">monadInv</span> <span class="id">H</span>. <span class="tactic">unfold</span> <span class="id"><a href="FlatAsmSep.html#flatasm_to_asm">flatasm_to_asm</a></span>. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id"><a href="FlatAsmSep.html#transl_globdefs_inv">transl_globdefs_inv</a></span>; <span class="tactic">eauto</span>. <br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">p</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="transf_prog_inv">transf_prog_inv</a></span> : <span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="FlatAsmgen.html#transf_program">transf_program</a></span> <span class="id"><a href="FlatAsmSep.html#p">p</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="FlatAsmSep.html#tp">tp</a></span> -&gt; <span class="id"><a href="FlatAsmSep.html#flatasm_to_asm">flatasm_to_asm</a></span> <span class="id"><a href="FlatAsmSep.html#tp">tp</a></span> = <span class="id"><a href="FlatAsmSep.html#p">p</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5573')">Proof.</div>
+<div class="proofscript" id="proof5573">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id"><a href="FlatAsmgen.html#transf_program">transf_program</a></span> <span class="kwd">in</span> <span class="id">H</span>. <span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">H</span>.  <br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="FlatAsmSep.html#transl_prog_with_map_inv">transl_prog_with_map_inv</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="TransfFlatAsmLink">TransfFlatAsmLink</a></span> : <span class="id"><a href="Linking.html#TransfLink">TransfLink</a></span> <span class="id"><a href="FlatAsmgenproof.html#match_prog">match_prog</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5574')">Proof.</div>
+<div class="proofscript" id="proof5574">
+&nbsp;&nbsp;<span class="tactic">red</span>. <span class="tactic">unfold</span> <span class="id"><a href="FlatAsmgenproof.html#match_prog">match_prog</a></span>. <span class="tactic">simpl</span> <span class="id">link</span>. <span class="tactic">intros</span> <span class="id">p1</span> <span class="id">p2</span> <span class="id">tp1</span> <span class="id">tp2</span> <span class="id">p</span> <span class="id">LK</span> <span class="id">MC1</span> <span class="id">MC2</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MC1</span>. <span class="id">inv</span> <span class="id">MC2</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="FlatAsmSep.html#transf_prog_combine">transf_prog_combine</a></span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> [<span class="id">p</span>' <span class="id">TF</span>].<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">p</span>'. <span class="tactic">split</span>. <span class="tactic">unfold</span> <span class="id"><a href="FlatAsmSep.html#link_flatasmprog">link_flatasmprog</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="id">erewrite</span> <span class="id"><a href="FlatAsmSep.html#transf_prog_inv">transf_prog_inv</a></span>; <span class="tactic">eauto</span>). <br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">LK</span>. <span class="tactic">rewrite</span> <span class="id">TF</span>. <span class="tactic">auto</span>. <span class="tactic">auto</span>.<br/>
+Defined.</div>
+<br/>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

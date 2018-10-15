@@ -1,0 +1,727 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module ComposePasses</title>
+<meta name="description" content="Documentation of Coq module ComposePasses" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module ComposePasses</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id">compcert.common.Globalenvs</span>.<br/>
+<br/>
+<span class="kwd">Import</span> <span class="id">Coqlib</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Errors</span>.<br/>
+<span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<div class="doc">We first define useful monadic composition operators,
+    along with funny (but convenient) notations. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">apply_partial</span> (<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">x</span>: <span class="id">res</span> <span class="id">A</span>) (<span class="id">f</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) : <span class="id">res</span> <span class="id">B</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span> <span class="kwd">with</span> <span class="id">Error</span> <span class="id">msg</span> =&gt; <span class="id">Error</span> <span class="id">msg</span> | <span class="id">OK</span> <span class="id">x1</span> =&gt; <span class="id">f</span> <span class="id">x1</span> <span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">apply_partial_bind</span>: <span class="id">apply_partial</span> = <span class="id">Errors.bind</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7647')">Proof.</div>
+<div class="proofscript" id="proof7647">
+ <span class="tactic">reflexivity</span>. Qed.</div>
+<br/>
+<span class="kwd">Notation</span> "<span class="id">a</span> @@@ <span class="id">b</span>" :=<br/>
+&nbsp;&nbsp;&nbsp;(<span class="id">apply_partial</span> <span class="id">a</span> <span class="id">b</span>) (<span class="tactic">at</span> <span class="id">level</span> 50, <span class="id">left</span> <span class="id">associativity</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">compose_partial</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) (<span class="id">g</span>: <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>) : <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">C</span> := <span class="kwd">fun</span> <span class="id">a</span> =&gt; (((<span class="id">OK</span> <span class="id">a</span>) @@@ <span class="id">f</span>) @@@ <span class="id">g</span>).<br/>
+<br/>
+<span class="kwd">Notation</span> "<span class="id">a</span> ';;;' <span class="id">b</span>" :=<br/>
+&nbsp;&nbsp;(<span class="id">compose_partial</span> <span class="id">a</span> <span class="id">b</span>) (<span class="tactic">at</span> <span class="id">level</span> 50, <span class="id">left</span> <span class="id">associativity</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">compose_partial</span>' (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span> <span class="id">D</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id">A</span> -&gt; <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>) (<span class="id">g</span>: <span class="id">A</span> -&gt; <span class="id">C</span> -&gt; <span class="id">res</span> <span class="id">D</span>) : <span class="id">A</span> -&gt; <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">D</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">a</span> <span class="id">b</span> =&gt; <span class="id">f</span> <span class="id">a</span> <span class="id">b</span> @@@ <span class="id">g</span> <span class="id">a</span> .<br/>
+<br/>
+<span class="kwd">Notation</span> "<span class="id">f</span> '&gt;&gt;' <span class="id">g</span>" := (<span class="id">compose_partial</span>' <span class="id">f</span> <span class="id">g</span>) (<span class="tactic">at</span> <span class="id">level</span> 50, <span class="id">left</span> <span class="id">associativity</span>).<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">destr</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;|- <span class="id">context</span> [<span class="kwd">match</span> ?<span class="id">a</span> <span class="kwd">with</span> <span class="id">_</span> =&gt; <span class="id">_</span> <span class="kwd">end</span>] =&gt; <span class="tactic">destruct</span> <span class="id">a</span> <span class="id">eqn</span>:?; <span class="tactic">simpl</span> <span class="kwd">in</span> *; <span class="tactic">try</span> <span class="id">now</span> <span class="tactic">intuition</span> <span class="tactic">congruence</span><br/>
+&nbsp;&nbsp;| |- <span class="id">_</span> =&gt; <span class="tactic">simpl</span> <span class="kwd">in</span> *; <span class="tactic">try</span> <span class="id">now</span> <span class="tactic">intuition</span> <span class="tactic">congruence</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">destr_in</span> <span class="id">H</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">type</span> <span class="id">of</span> <span class="id">H</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">context</span> [<span class="kwd">match</span> ?<span class="id">a</span> <span class="kwd">with</span> <span class="id">_</span> =&gt; <span class="id">_</span> <span class="kwd">end</span>] =&gt; <span class="tactic">destruct</span> <span class="id">a</span> <span class="id">eqn</span>:?; <span class="tactic">simpl</span> <span class="kwd">in</span> *; <span class="tactic">try</span> <span class="id">now</span> <span class="tactic">intuition</span> <span class="tactic">congruence</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">destr_hyps</span> :=<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">H</span> : <span class="id">_</span> |- <span class="id">_</span> =&gt; <span class="id">destr_in</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">des</span> <span class="id">t</span> := <span class="tactic">destruct</span> <span class="id">t</span> <span class="id">eqn</span>:?; <span class="tactic">simpl</span> <span class="kwd">in</span> *; <span class="tactic">try</span> <span class="tactic">subst</span>; <span class="tactic">try</span> <span class="id">now</span> <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Transf_partial2_compose</span>.<br/>
+<br/>
+<span class="kwd">Variables</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>) (<span class="id">ab</span>: <span class="id">ident</span> -&gt; <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) (<span class="id">bc</span>: <span class="id">ident</span> -&gt; <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">U</span> <span class="id">V</span> <span class="id">W</span>: <span class="kwd">Type</span>) (<span class="id">uv</span>: <span class="id">ident</span> -&gt; <span class="id">U</span> -&gt; <span class="id">res</span> <span class="id">V</span>) (<span class="id">vw</span>: <span class="id">ident</span> -&gt; <span class="id">V</span> -&gt; <span class="id">res</span> <span class="id">W</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transf_globdefs_compose</span>: <span class="kwd">forall</span> <span class="id">lau</span> <span class="id">lbv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transf_globdefs</span> <span class="id">ab</span> <span class="id">uv</span> <span class="id">lau</span> = <span class="id">OK</span> <span class="id">lbv</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transf_globdefs</span> ( <span class="id">ab</span> &gt;&gt; <span class="id">bc</span> ) ( <span class="id">uv</span> &gt;&gt; <span class="id">vw</span> ) <span class="id">lau</span> = <span class="id">transf_globdefs</span> <span class="id">bc</span> <span class="id">vw</span> <span class="id">lbv</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7648')">Proof.</div>
+<div class="proofscript" id="proof7648">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">lau</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">intros</span> <span class="id">lbv</span> <span class="id">H</span>; <span class="id">inv</span> <span class="id">H</span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;- <span class="id">des</span> <span class="id">a</span>. <span class="id">des</span> <span class="id">o</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="comment">(*&nbsp;some&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span> <span class="id">g</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="comment">(*&nbsp;fun&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">bind</span> <span class="tactic">at</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>' <span class="tactic">at</span> 1. <span class="tactic">unfold</span> <span class="id">apply_partial</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span> (<span class="id">ab</span> <span class="id">i</span> <span class="id">f</span>). <span class="id">destr_in</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">IHlau</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="comment">(*&nbsp;var&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_globvar</span> <span class="tactic">at</span> 1. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_globvar</span> <span class="tactic">at</span> 1. <span class="tactic">unfold</span> <span class="id">compose_partial</span>' <span class="tactic">at</span> 1. <span class="tactic">unfold</span> <span class="id">apply_partial</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span> (<span class="id">uv</span> <span class="id">i</span> (<span class="id">gvar_info</span> <span class="id">v</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span> (<span class="id">transf_globdefs</span> <span class="id">ab</span> <span class="id">uv</span> <span class="id">lau</span>). <span class="id">inv</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">IHlau</span>; <span class="tactic">eauto</span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="comment">(*&nbsp;none&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">case_eq</span> (<span class="id">transf_globdefs</span> ( <span class="id">ab</span>) ( <span class="id">uv</span>) <span class="id">lau</span>); <span class="tactic">try</span> <span class="tactic">discriminate</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">injection</span> 2; <span class="tactic">intros</span>; <span class="tactic">subst</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">IHlau</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transf_globdefs_compose_error</span>: <span class="kwd">forall</span> <span class="id">lau</span> <span class="id">msg</span>,<br/>
+&nbsp;&nbsp;<span class="id">transf_globdefs</span> <span class="id">ab</span> <span class="id">uv</span> <span class="id">lau</span> = <span class="id">Error</span> <span class="id">msg</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">msg</span>',<br/>
+&nbsp;&nbsp;<span class="id">transf_globdefs</span> ( <span class="id">ab</span> &gt;&gt; <span class="id">bc</span>) ( <span class="id">uv</span> &gt;&gt; <span class="id">vw</span> ) <span class="id">lau</span> = <span class="id">Error</span> <span class="id">msg</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7649')">Proof.</div>
+<div class="proofscript" id="proof7649">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">lau</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;- <span class="id">des</span> <span class="id">a</span>; <span class="id">des</span> <span class="id">o</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="comment">(*&nbsp;some&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">g</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="comment">(*&nbsp;fun&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">bind</span> <span class="tactic">at</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>' <span class="tactic">at</span> 1. <span class="tactic">unfold</span> <span class="id">apply_partial</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span> (<span class="id">ab</span> <span class="id">i</span> <span class="id">f</span>); <span class="tactic">eauto</span>. <span class="id">destr</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">msg</span> <span class="id">I</span>; <span class="id">inv</span> <span class="id">I</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">IHlau</span> <span class="id">_</span> <span class="id">eq_refl</span>) <span class="kwd">as</span> (<span class="id">msg</span>' &amp; <span class="id">TG</span>). <span class="tactic">rewrite</span> <span class="id">TG</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">destr</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="comment">(*&nbsp;var&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_globvar</span> <span class="tactic">at</span> 1. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_globvar</span> <span class="tactic">at</span> 1. <span class="tactic">unfold</span> <span class="id">compose_partial</span>' <span class="tactic">at</span> 1. <span class="tactic">unfold</span> <span class="id">apply_partial</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">uv</span> <span class="id">i</span> (<span class="id">gvar_info</span> <span class="id">v</span>)); <span class="tactic">simpl</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span> (<span class="id">transf_globdefs</span> <span class="id">ab</span> <span class="id">uv</span> <span class="id">lau</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> ? <span class="id">I</span>; <span class="id">inv</span> <span class="id">I</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">IHlau</span> <span class="id">_</span> <span class="id">eq_refl</span>) <span class="kwd">as</span> (<span class="id">msg</span>' &amp; <span class="id">TG</span>). <span class="tactic">rewrite</span> <span class="id">TG</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">destr</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="comment">(*&nbsp;none&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span> (<span class="id">transf_globdefs</span> <span class="id">ab</span> <span class="id">uv</span> <span class="id">lau</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> ? <span class="id">I</span>; <span class="id">inv</span> <span class="id">I</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">IHlau</span> <span class="id">_</span> <span class="id">eq_refl</span>) <span class="kwd">as</span> (<span class="id">msg</span>' &amp; <span class="id">TG</span>). <span class="tactic">rewrite</span> <span class="id">TG</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">destr</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">transform_partial_program2_compose</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">pau</span> <span class="id">pbv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> <span class="id">ab</span> <span class="id">uv</span> <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> <span class="id">bc</span> <span class="id">vw</span> <span class="id">pbv</span> = <span class="id">transform_partial_program2</span> (<span class="id">ab</span> &gt;&gt; <span class="id">bc</span>) (<span class="id">uv</span> &gt;&gt; <span class="id">vw</span>) <span class="id">pau</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7650')">Proof.</div>
+<div class="proofscript" id="proof7650">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">pbv</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">pau</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transform_partial_program2</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">H</span>. <span class="id">monadInv</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">transf_globdefs_compose</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">transform_partial_program2_compose_error</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">pau</span> <span class="id">msg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> <span class="id">ab</span> <span class="id">uv</span> <span class="id">pau</span> = <span class="id">Error</span> <span class="id">msg</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">msg</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> (<span class="id">ab</span> &gt;&gt; <span class="id">bc</span>) (<span class="id">uv</span> &gt;&gt; <span class="id">vw</span>) <span class="id">pau</span> = <span class="id">Error</span> <span class="id">msg</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7651')">Proof.</div>
+<div class="proofscript" id="proof7651">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">msg</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">pau</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transform_partial_program2</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="id">case_eq</span> (<span class="id">transf_globdefs</span> (<span class="id">ab</span>) ( <span class="id">uv</span>) <span class="id">prog_defs</span>); <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> 1.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">transf_globdefs_compose_error</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> 1 <span class="kwd">as</span> [? <span class="id">ERR</span>].<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">ERR</span>. <span class="tactic">simpl</span>. <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transform_partial_program2_compose_out_in</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">pau</span> <span class="id">pbv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">transform_partial_program2</span> <span class="id">ab</span> <span class="id">uv</span>) ;;; (<span class="id">transform_partial_program2</span> <span class="id">bc</span> <span class="id">vw</span>)) <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> (<span class="id">ab</span> &gt;&gt; <span class="id">bc</span>) (<span class="id">uv</span> &gt;&gt; <span class="id">vw</span>) <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7652')">Proof.</div>
+<div class="proofscript" id="proof7652">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span> <span class="tactic">at</span> 1.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">pbv</span>.<br/>
+&nbsp;&nbsp;<span class="id">des</span> (<span class="id">transform_partial_program2</span> <span class="id">ab</span> <span class="id">uv</span> <span class="id">pau</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">transform_partial_program2_compose</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transform_partial_program2_compose_in_out</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">pau</span> <span class="id">pbv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> (<span class="id">ab</span> &gt;&gt; <span class="id">bc</span>) (<span class="id">uv</span> &gt;&gt; <span class="id">vw</span>) <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">transform_partial_program2</span> <span class="id">ab</span> <span class="id">uv</span>) ;;; (<span class="id">transform_partial_program2</span> <span class="id">bc</span> <span class="id">vw</span>)) <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7653')">Proof.</div>
+<div class="proofscript" id="proof7653">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">des</span> (<span class="id">transform_partial_program2</span> <span class="id">ab</span> <span class="id">uv</span> <span class="id">pau</span>).<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">transform_partial_program2_compose</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">edestruct</span> (<span class="id">transform_partial_program2_compose_error</span>); <span class="tactic">eauto</span>. <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Transf_partial2_compose</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">apply_total</span> (<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>) (<span class="id">x</span>: <span class="id">res</span> <span class="id">A</span>) (<span class="id">f</span>: <span class="id">A</span> -&gt; <span class="id">B</span>) : <span class="id">res</span> <span class="id">B</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span> <span class="kwd">with</span> <span class="id">Error</span> <span class="id">msg</span> =&gt; <span class="id">Error</span> <span class="id">msg</span> | <span class="id">OK</span> <span class="id">x1</span> =&gt; <span class="id">OK</span> (<span class="id">f</span> <span class="id">x1</span>) <span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Notation</span> "<span class="id">a</span> @@ <span class="id">b</span>" :=<br/>
+&nbsp;&nbsp;&nbsp;(<span class="id">apply_total</span> <span class="id">a</span> <span class="id">b</span>) (<span class="tactic">at</span> <span class="id">level</span> 50, <span class="id">left</span> <span class="id">associativity</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">compose_total_left</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id">A</span> -&gt; <span class="id">B</span>) (<span class="id">g</span>: <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>) : <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">C</span> := <span class="kwd">fun</span> <span class="id">a</span> =&gt; ((<span class="id">OK</span> <span class="id">a</span> @@ <span class="id">f</span>) @@@ <span class="id">g</span>).<br/>
+<br/>
+<span class="kwd">Notation</span> "<span class="id">a</span> '&lt;;' <span class="id">b</span>" :=<br/>
+&nbsp;&nbsp;(<span class="id">compose_total_left</span> <span class="id">a</span> <span class="id">b</span>) (<span class="tactic">at</span> <span class="id">level</span> 50, <span class="id">left</span> <span class="id">associativity</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">compose_total_left</span>' (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span> <span class="id">D</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id">B</span> -&gt; <span class="id">C</span>) (<span class="id">g</span>: <span class="id">A</span> -&gt; <span class="id">C</span> -&gt; <span class="id">res</span> <span class="id">D</span>) : <span class="id">A</span> -&gt; <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">D</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">a</span> <span class="id">b</span> =&gt; (<span class="id">OK</span> (<span class="id">f</span> <span class="id">b</span>)) @@@ <span class="id">g</span> <span class="id">a</span>.<br/>
+<br/>
+<span class="kwd">Notation</span> "<span class="id">a</span> '&gt;&gt;&gt;' <span class="id">b</span>" :=<br/>
+&nbsp;&nbsp;(<span class="id">compose_total_left</span>' <span class="id">a</span> <span class="id">b</span>) (<span class="tactic">at</span> <span class="id">level</span> 50, <span class="id">left</span> <span class="id">associativity</span>).<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Transf_partial2_compose_total_left</span>.<br/>
+<br/>
+<span class="kwd">Variables</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>) (<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">B</span>) (<span class="id">bc</span>: <span class="id">ident</span> -&gt; <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">U</span> <span class="id">W</span>: <span class="kwd">Type</span>) (<span class="id">uw</span>: <span class="id">ident</span> -&gt; <span class="id">U</span> -&gt; <span class="id">res</span> <span class="id">W</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">ctl_rew</span>: (<span class="id">ab</span> &gt;&gt;&gt; <span class="id">bc</span>) = ((<span class="kwd">fun</span> <span class="id">a</span> <span class="id">b</span> =&gt; <span class="id">OK</span> (<span class="id">ab</span> <span class="id">b</span>)) &gt;&gt; <span class="id">bc</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7654')">Proof.</div>
+<div class="proofscript" id="proof7654">
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">id_compose_partial</span>: <span class="id">uw</span> = ((<span class="kwd">fun</span> <span class="id">a</span> <span class="id">b</span> =&gt; <span class="id">OK</span> <span class="id">b</span>)  &gt;&gt; <span class="id">uw</span> ).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7655')">Proof.</div>
+<div class="proofscript" id="proof7655">
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">transform_partial_program_compose_total_left</span>:<br/>
+&nbsp;&nbsp;(<span class="id">transform_program</span> <span class="id">ab</span>) &lt;; (<span class="id">transform_partial_program2</span> <span class="id">bc</span> <span class="id">uw</span>) = <span class="id">transform_partial_program2</span> (<span class="id">ab</span> &gt;&gt;&gt; <span class="id">bc</span>) <span class="id">uw</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7656')">Proof.</div>
+<div class="proofscript" id="proof7656">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">FunctionalExtensionality.functional_extensionality</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_total_left</span>. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">ctl_rew</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">id_compose_partial</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">transform_partial_program2_compose</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">transform_program_partial_program</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">Transf_partial2_compose_total_left</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">compose_total_right</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) (<span class="id">g</span>: <span class="id">B</span> -&gt; <span class="id">C</span>) : <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">C</span> := <span class="kwd">fun</span> <span class="id">a</span> =&gt; (((<span class="id">OK</span> <span class="id">a</span>) @@@ <span class="id">f</span>) @@ <span class="id">g</span>).<br/>
+<br/>
+<span class="kwd">Notation</span> "<span class="id">a</span> ';&gt;' <span class="id">b</span>" :=<br/>
+&nbsp;&nbsp;(<span class="id">compose_total_right</span> <span class="id">a</span> <span class="id">b</span>) (<span class="tactic">at</span> <span class="id">level</span> 50, <span class="id">left</span> <span class="id">associativity</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">compose_total_right</span>' (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span> <span class="id">D</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id">A</span> -&gt; <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>) (<span class="id">g</span>: <span class="id">C</span> -&gt; <span class="id">D</span>) : <span class="id">A</span> -&gt; <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">D</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">a</span> <span class="id">b</span> =&gt; (<span class="id">f</span> <span class="id">a</span> <span class="id">b</span>) @@ <span class="id">g</span>.<br/>
+<br/>
+<span class="kwd">Notation</span> "<span class="id">a</span> '&lt;&lt;&lt;' <span class="id">b</span>" :=<br/>
+&nbsp;&nbsp;(<span class="id">compose_total_right</span>' <span class="id">a</span> <span class="id">b</span>) (<span class="tactic">at</span> <span class="id">level</span> 50, <span class="id">left</span> <span class="id">associativity</span>).<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Transf_partial2_compose_total_right</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variables</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>) (<span class="id">ab</span>: <span class="id">ident</span> -&gt; <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) (<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">U</span> <span class="id">V</span>: <span class="kwd">Type</span>) (<span class="id">uv</span>: <span class="id">ident</span> -&gt; <span class="id">U</span> -&gt; <span class="id">res</span> <span class="id">V</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">ctr_rew</span>: (<span class="id">ab</span> &lt;&lt;&lt; <span class="id">bc</span>) = (<span class="id">ab</span> &gt;&gt; (<span class="kwd">fun</span> <span class="id">b</span> <span class="id">c</span> =&gt; <span class="id">OK</span> (<span class="id">bc</span> <span class="id">c</span>))).<br/>
+&nbsp;&nbsp;<span class="kwd">Proof</span> <span class="id">eq_refl</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">id_compose_partial</span>': <span class="id">uv</span> = (<span class="id">uv</span> &gt;&gt; (<span class="kwd">fun</span> <span class="id">a</span> <span class="id">b</span> =&gt; <span class="id">OK</span> <span class="id">b</span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7657')">Proof.</div>
+<div class="proofscript" id="proof7657">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">FunctionalExtensionality.functional_extensionality</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span>; <span class="tactic">apply</span> <span class="id">FunctionalExtensionality.functional_extensionality</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>', <span class="id">apply_partial</span>. <span class="id">destr</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id">transform_partial_program2_compose_right</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">pau</span> <span class="id">pbv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> <span class="id">ab</span> <span class="id">uv</span> <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> (<span class="id">ab</span> &lt;&lt;&lt; <span class="id">bc</span>) <span class="id">uv</span> <span class="id">pau</span> = <span class="id">OK</span> (<span class="id">transform_program</span> <span class="id">bc</span> <span class="id">pbv</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7658')">Proof.</div>
+<div class="proofscript" id="proof7658">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">ctr_rew</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">id_compose_partial</span>'.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">transform_partial_program2_compose</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">transform_program_partial_program</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id">transform_partial_program2_compose_right_error</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">pau</span> <span class="id">msg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> <span class="id">ab</span> <span class="id">uv</span> <span class="id">pau</span> = <span class="id">Error</span> <span class="id">msg</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">msg</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> (<span class="id">ab</span> &lt;&lt;&lt; <span class="id">bc</span>) <span class="id">uv</span> <span class="id">pau</span> = <span class="id">Error</span> <span class="id">msg</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7659')">Proof.</div>
+<div class="proofscript" id="proof7659">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">ctr_rew</span>, <span class="id">id_compose_partial</span>'.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transform_partial_program2_compose_error</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Transf_partial2_compose_total_right</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compose_partial_intro</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">bc</span>:  <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a</span> <span class="id">b</span>, <span class="id">ab</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c</span>, <span class="id">bc</span> <span class="id">b</span> = <span class="id">OK</span> <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span> ;;; <span class="id">bc</span>) <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7660')">Proof.</div>
+<div class="proofscript" id="proof7660">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>. <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">rewrite</span> <span class="id">H</span>. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compose_partial_elim</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a</span> <span class="id">c</span>, (<span class="id">ab</span> ;;; <span class="id">bc</span>) <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">b</span> | <span class="id">ab</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">b</span> /\ <span class="id">bc</span> <span class="id">b</span> = <span class="id">OK</span> <span class="id">c</span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7661')">Proof.</div>
+<div class="proofscript" id="proof7661">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">c</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">ab</span> <span class="id">a</span>); <span class="tactic">simpl</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compose_total_left_elim</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">B</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a</span> <span class="id">c</span>, (<span class="id">ab</span> &lt;; <span class="id">bc</span>) <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">bc</span> (<span class="id">ab</span> <span class="id">a</span>) = <span class="id">OK</span> <span class="id">c</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7662')">Proof.</div>
+<div class="proofscript" id="proof7662">
+&nbsp;&nbsp;<span class="tactic">tauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compose_total_left_intro</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a</span> (<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">B</span>) <span class="id">b</span> <span class="id">c</span> (<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ab</span> <span class="id">a</span> = <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">bc</span> <span class="id">b</span> = <span class="id">OK</span> <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span> &lt;; <span class="id">bc</span>) <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7663')">Proof.</div>
+<div class="proofscript" id="proof7663">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_total_left</span>. <span class="tactic">simpl</span>. <span class="tactic">intros</span>; <span class="tactic">subst</span>. <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compose_total_right_elim</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a</span> <span class="id">c</span>, (<span class="id">ab</span> ;&gt; <span class="id">bc</span>) <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">b</span> | <span class="id">ab</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">b</span> /\ <span class="id">bc</span> <span class="id">b</span> = <span class="id">c</span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7664')">Proof.</div>
+<div class="proofscript" id="proof7664">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_total_right</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">c</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">ab</span> <span class="id">a</span>); <span class="tactic">simpl</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compose_total_right_intro</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a</span> (<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) <span class="id">b</span> <span class="id">c</span> (<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">C</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ab</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">bc</span> <span class="id">b</span> = <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span> ;&gt; <span class="id">bc</span>) <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7665')">Proof.</div>
+<div class="proofscript" id="proof7665">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_total_right</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">bc</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compose_partial_intro</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span>: <span class="id">ident</span> -&gt; <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">bc</span>: <span class="id">ident</span> -&gt; <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span> <span class="id">a</span> <span class="id">b</span>, <span class="id">ab</span> <span class="id">i</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c</span>, <span class="id">bc</span> <span class="id">i</span> <span class="id">b</span> = <span class="id">OK</span> <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span> &gt;&gt; <span class="id">bc</span>) <span class="id">i</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7666')">Proof.</div>
+<div class="proofscript" id="proof7666">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>'. <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H</span>. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compose_partial_elim</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span>: <span class="id">ident</span> -&gt; <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">bc</span>: <span class="id">ident</span> -&gt; <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span> <span class="id">a</span> <span class="id">c</span>, (<span class="id">ab</span> &gt;&gt; <span class="id">bc</span>) <span class="id">i</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">b</span> | <span class="id">ab</span> <span class="id">i</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">b</span> /\ <span class="id">bc</span> <span class="id">i</span> <span class="id">b</span> = <span class="id">OK</span> <span class="id">c</span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7667')">Proof.</div>
+<div class="proofscript" id="proof7667">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>'; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">c</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">ab</span> <span class="id">i</span> <span class="id">a</span>); <span class="tactic">simpl</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compose_total_left_elim</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">B</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">bc</span>: <span class="id">ident</span> -&gt; <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span> <span class="id">a</span> <span class="id">c</span>, (<span class="id">ab</span> &gt;&gt;&gt; <span class="id">bc</span>) <span class="id">i</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">bc</span> <span class="id">i</span> (<span class="id">ab</span> <span class="id">a</span>) = <span class="id">OK</span> <span class="id">c</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7668')">Proof.</div>
+<div class="proofscript" id="proof7668">
+&nbsp;&nbsp;<span class="tactic">tauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compose_total_left_intro</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a</span> (<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">B</span>) <span class="id">b</span> <span class="id">c</span> (<span class="id">bc</span>: <span class="id">ident</span> -&gt; <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>) <span class="id">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ab</span> <span class="id">a</span> = <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">bc</span> <span class="id">i</span> <span class="id">b</span> = <span class="id">OK</span> <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span> &gt;&gt;&gt; <span class="id">bc</span>) <span class="id">i</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7669')">Proof.</div>
+<div class="proofscript" id="proof7669">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_total_left</span>'. <span class="tactic">simpl</span>. <span class="tactic">intros</span>; <span class="tactic">subst</span>. <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compose_total_right_elim</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span>: <span class="id">ident</span> -&gt; <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span> <span class="id">a</span> <span class="id">c</span>, (<span class="id">ab</span> &lt;&lt;&lt; <span class="id">bc</span>) <span class="id">i</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">b</span> | <span class="id">ab</span> <span class="id">i</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">b</span> /\ <span class="id">bc</span> <span class="id">b</span> = <span class="id">c</span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7670')">Proof.</div>
+<div class="proofscript" id="proof7670">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_total_right</span>'; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">c</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">ab</span> <span class="id">i</span> <span class="id">a</span>); <span class="tactic">simpl</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compose_total_right_intro</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a</span> (<span class="id">ab</span>: <span class="id">ident</span> -&gt; <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) <span class="id">b</span> <span class="id">c</span> (<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">C</span>) <span class="id">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ab</span> <span class="id">i</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">bc</span> <span class="id">b</span> = <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span> &lt;&lt;&lt; <span class="id">bc</span>) <span class="id">i</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7671')">Proof.</div>
+<div class="proofscript" id="proof7671">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_total_right</span>'; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">bc</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">compose_elim</span> <span class="id">t</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span> : (?<span class="id">ab</span> ;;; ?<span class="id">bc</span>) ?<span class="id">a</span> = <span class="id">OK</span> ?<span class="id">c</span> |- <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">compose_partial_elim</span> <span class="kwd">in</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">b</span> := <span class="tactic">fresh</span> "<span class="id">b</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Hab</span> := <span class="tactic">fresh</span> "<span class="id">Hab</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Hbc</span> := <span class="tactic">fresh</span> "<span class="id">Hbc</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> [<span class="id">b</span> [<span class="id">Hab</span> <span class="id">Hbc</span>]]; <span class="id">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span> : (?<span class="id">ab</span> &lt;; ?<span class="id">bc</span>) ?<span class="id">a</span> = <span class="id">OK</span> ?<span class="id">c</span> |- <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">compose_total_left_elim</span> <span class="kwd">in</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span> : (?<span class="id">ab</span> ;&gt; ?<span class="id">bc</span>) ?<span class="id">a</span> = <span class="id">OK</span> ?<span class="id">c</span> |- <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">compose_total_right_elim</span> <span class="kwd">in</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">b</span> := <span class="tactic">fresh</span> "<span class="id">b</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Hab</span> := <span class="tactic">fresh</span> "<span class="id">Hab</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Hbc</span> := <span class="tactic">fresh</span> "<span class="id">Hbc</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> [<span class="id">b</span> [<span class="id">Hab</span> <span class="id">Hbc</span>]]; <span class="tactic">subst</span>; <span class="id">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span> : (?<span class="id">ab</span> &gt;&gt; ?<span class="id">bc</span>) ?<span class="id">i</span> ?<span class="id">a</span> = <span class="id">OK</span> ?<span class="id">c</span> |- <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">compose_partial_elim</span>' <span class="kwd">in</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">b</span> := <span class="tactic">fresh</span> "<span class="id">b</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Hab</span> := <span class="tactic">fresh</span> "<span class="id">Hab</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Hbc</span> := <span class="tactic">fresh</span> "<span class="id">Hbc</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> [<span class="id">b</span> [<span class="id">Hab</span> <span class="id">Hbc</span>]]; <span class="id">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span> : (?<span class="id">ab</span> &gt;&gt;&gt; ?<span class="id">bc</span>) ?<span class="id">i</span> ?<span class="id">a</span> = <span class="id">OK</span> ?<span class="id">c</span> |- <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">compose_total_left_elim</span>' <span class="kwd">in</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span> : (?<span class="id">ab</span> &lt;&lt;&lt; ?<span class="id">bc</span>) ?<span class="id">i</span> ?<span class="id">a</span> = <span class="id">OK</span> ?<span class="id">c</span> |- <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">compose_total_right_elim</span>' <span class="kwd">in</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">b</span> := <span class="tactic">fresh</span> "<span class="id">b</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Hab</span> := <span class="tactic">fresh</span> "<span class="id">Hab</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Hbc</span> := <span class="tactic">fresh</span> "<span class="id">Hbc</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> [<span class="id">b</span> [<span class="id">Hab</span> <span class="id">Hbc</span>]]; <span class="tactic">subst</span>; <span class="id">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span> : <span class="id">OK</span> ?<span class="id">a</span> = <span class="id">OK</span> ?<span class="id">b</span> |- <span class="id">_</span>] =&gt; <span class="id">inv</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">apply_partial_elim</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">oa</span>: <span class="id">res</span> <span class="id">A</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">b</span>: <span class="id">B</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">oa</span> @@@ <span class="id">ab</span> = <span class="id">OK</span> <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">a</span> | <span class="id">oa</span> = <span class="id">OK</span> <span class="id">a</span> /\ <span class="id">ab</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">b</span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7672')">Proof.</div>
+<div class="proofscript" id="proof7672">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">apply_partial</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">oa</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">apply_total_elim</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">oa</span>: <span class="id">res</span> <span class="id">A</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">B</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">b</span>: <span class="id">B</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">oa</span> @@ <span class="id">ab</span> = <span class="id">OK</span> <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">a</span> | <span class="id">oa</span> = <span class="id">OK</span> <span class="id">a</span> /\ <span class="id">ab</span> <span class="id">a</span> = <span class="id">b</span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7673')">Proof.</div>
+<div class="proofscript" id="proof7673">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">apply_total</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">oa</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">apply_elim</span> <span class="id">t</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span> : ?<span class="id">oa</span> @@@ ?<span class="id">ab</span> = <span class="id">OK</span> ?<span class="id">b</span> |- <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">apply_partial_elim</span> <span class="kwd">in</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">a</span> := <span class="tactic">fresh</span> "<span class="id">a</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Hal</span> := <span class="tactic">fresh</span> "<span class="id">Hal</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Har</span> := <span class="tactic">fresh</span> "<span class="id">Har</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> [<span class="id">a</span> [<span class="id">Hal</span> <span class="id">Har</span>]]; <span class="id">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span> : ?<span class="id">oa</span> @@ ?<span class="id">ab</span> = <span class="id">OK</span> ?<span class="id">b</span> |- <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">apply_total_elim</span> <span class="kwd">in</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">a</span> := <span class="tactic">fresh</span> "<span class="id">a</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Hal</span> := <span class="tactic">fresh</span> "<span class="id">Hal</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Har</span> := <span class="tactic">fresh</span> "<span class="id">Har</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> [<span class="id">a</span> [<span class="id">Hal</span> <span class="id">Har</span>]]; <span class="tactic">subst</span>; <span class="id">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span> : <span class="id">OK</span> ?<span class="id">a</span> = <span class="id">OK</span> ?<span class="id">b</span> |- <span class="id">_</span>] =&gt; <span class="id">inv</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">apply_partial_intro</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">oa</span>: <span class="id">res</span> <span class="id">A</span>) (<span class="id">a</span>: <span class="id">A</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">oa</span> = <span class="id">OK</span> <span class="id">a</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">B</span>: <span class="kwd">Type</span>) (<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) (<span class="id">b</span>: <span class="id">B</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ab</span> <span class="id">a</span> = <span class="id">OK</span> <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">oa</span> @@@ <span class="id">ab</span> = <span class="id">OK</span> <span class="id">b</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7674')">Proof.</div>
+<div class="proofscript" id="proof7674">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">apply_partial</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">oa</span>; <span class="tactic">simpl</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">apply_total_intro</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">oa</span>: <span class="id">res</span> <span class="id">A</span>) (<span class="id">a</span>: <span class="id">A</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">oa</span> = <span class="id">OK</span> <span class="id">a</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">B</span>: <span class="kwd">Type</span>) (<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">B</span>) (<span class="id">b</span>: <span class="id">B</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ab</span> <span class="id">a</span> = <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">oa</span> @@ <span class="id">ab</span> = <span class="id">OK</span> <span class="id">b</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7675')">Proof.</div>
+<div class="proofscript" id="proof7675">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">apply_partial</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">oa</span>; <span class="tactic">simpl</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">compose</span> {<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>} (<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">B</span>) (<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">C</span>): <span class="id">A</span> -&gt; <span class="id">C</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7676')">Proof.</div>
+<div class="proofscript" id="proof7676">
+ <span class="tactic">tauto</span>. Defined.</div>
+<br/>
+<span class="kwd">Notation</span> " <span class="id">ab</span> '|&gt;' <span class="id">bc</span>" := (<span class="id">compose</span> <span class="id">ab</span> <span class="id">bc</span>) (<span class="tactic">at</span> <span class="id">level</span> 50, <span class="id">left</span> <span class="id">associativity</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transf_program_compose</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span> <span class="id">V</span>: <span class="kwd">Type</span>) (<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">B</span>) (<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">C</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_program</span> (<span class="id">ab</span> |&gt; <span class="id">bc</span>) = (<span class="id">transform_program</span> <span class="id">ab</span>) |&gt; (<span class="id">transform_program</span> (<span class="id">V</span> := <span class="id">V</span>) <span class="id">bc</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7677')">Proof.</div>
+<div class="proofscript" id="proof7677">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transform_program</span>, <span class="id">compose</span>. <span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id">FunctionalExtensionality.functional_extensionality</span>. <span class="tactic">destruct</span> <span class="id">x</span>; <span class="tactic">simpl</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">prog_defs</span>; <span class="tactic">simpl</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">f_equal</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transform_program_globdef</span>. <span class="tactic">destruct</span> <span class="id">a</span>; <span class="tactic">simpl</span>. <span class="tactic">destruct</span> <span class="id">o</span>; <span class="tactic">simpl</span>; <span class="tactic">auto</span>. <span class="tactic">destruct</span> <span class="id">g</span>; <span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transform_partial_program15_compose_out_in</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span> <span class="id">B</span> <span class="id">C</span> <span class="id">U</span> <span class="id">V</span>: <span class="kwd">Type</span>} (<span class="id">ab</span>: <span class="id">ident</span> -&gt; <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) (<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>) (<span class="id">uv</span>: <span class="id">ident</span> -&gt; <span class="id">U</span> -&gt; <span class="id">res</span> <span class="id">V</span>),<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">pau</span> <span class="id">pbv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">transform_partial_program2</span> <span class="id">ab</span> <span class="id">uv</span>) ;;; (<span class="id">transform_partial_program</span> <span class="id">bc</span>)) <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> (<span class="id">ab</span> &gt;&gt; (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">bc</span>)) <span class="id">uv</span> <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7678')">Proof.</div>
+<div class="proofscript" id="proof7678">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">pbv</span>. <span class="tactic">unfold</span> <span class="id">transform_partial_program</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="kwd">fun</span> <span class="id">p</span> : <span class="id">AST.program</span> <span class="id">B</span> <span class="id">V</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">f</span> =&gt; <span class="id">bc</span> <span class="id">f</span>) (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">v</span> =&gt; <span class="id">OK</span> <span class="id">v</span>) <span class="id">p</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">with</span> (<span class="id">transform_partial_program2</span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">bc</span>) (<span class="kwd">fun</span> <span class="id">_</span> =&gt; @<span class="id">OK</span> <span class="id">V</span>)) <span class="tactic">by</span> <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> (<span class="id">id_compose_partial</span> <span class="id">uv</span>).<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">transform_partial_program2_compose_out_in</span>. 2: <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>'. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">FunctionalExtensionality.functional_extensionality</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.   <span class="tactic">apply</span> <span class="id">FunctionalExtensionality.functional_extensionality</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="id">des</span> (<span class="id">uv</span> <span class="id">x</span> <span class="id">x0</span>).<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transform_partial_program15_compose_in_out</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span> <span class="id">B</span> <span class="id">C</span> <span class="id">U</span> <span class="id">V</span>: <span class="kwd">Type</span>} (<span class="id">ab</span>: <span class="id">ident</span> -&gt; <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) (<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>) (<span class="id">uv</span>: <span class="id">ident</span> -&gt; <span class="id">U</span> -&gt; <span class="id">res</span> <span class="id">V</span>),<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">pau</span> <span class="id">pbv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> (<span class="id">ab</span> &gt;&gt; (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">bc</span>)) <span class="id">uv</span> <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">transform_partial_program2</span> <span class="id">ab</span> <span class="id">uv</span>) ;;; (<span class="id">transform_partial_program</span> <span class="id">bc</span>)) <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7679')">Proof.</div>
+<div class="proofscript" id="proof7679">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">pbv</span>. <span class="tactic">unfold</span> <span class="id">transform_partial_program</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="kwd">fun</span> <span class="id">p</span> : <span class="id">AST.program</span> <span class="id">B</span> <span class="id">V</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program2</span> (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">f</span> =&gt; <span class="id">bc</span> <span class="id">f</span>) (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">v</span> =&gt; <span class="id">OK</span> <span class="id">v</span>) <span class="id">p</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">with</span> (<span class="id">transform_partial_program2</span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">bc</span>) (<span class="kwd">fun</span> <span class="id">_</span> =&gt; @<span class="id">OK</span> <span class="id">V</span>)) <span class="tactic">by</span> <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> (<span class="id">id_compose_partial</span> <span class="id">uv</span>) <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transform_partial_program2_compose_in_out</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">H</span>; <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compose_partial</span>'. <span class="tactic">simpl</span>. <span class="tactic">apply</span> <span class="id">FunctionalExtensionality.functional_extensionality</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">apply</span> <span class="id">FunctionalExtensionality.functional_extensionality</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">x0</span>; <span class="tactic">destruct</span> (<span class="id">uv</span> <span class="id">x</span> <span class="id">x0</span>); <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transform_partial_program_compose_out_in</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span> <span class="id">B</span> <span class="id">C</span> <span class="id">U</span>: <span class="kwd">Type</span>} (<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) (<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>),<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">pau</span> <span class="id">pbv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">transform_partial_program</span> <span class="id">ab</span>) ;;; (<span class="id">transform_partial_program</span> <span class="id">bc</span> (<span class="id">V</span> := <span class="id">U</span>))) <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program</span> (<span class="id">ab</span> ;;; <span class="id">bc</span>) <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7680')">Proof.</div>
+<div class="proofscript" id="proof7680">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">pbv</span>. <span class="tactic">unfold</span> <span class="id">transform_partial_program</span> <span class="tactic">at</span> 1 3.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transform_partial_program15_compose_out_in</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transform_partial_program_compose_in_out</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span> <span class="id">B</span> <span class="id">C</span> <span class="id">U</span>: <span class="kwd">Type</span>} (<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) (<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">res</span> <span class="id">C</span>),<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">pau</span> <span class="id">pbv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program</span> (<span class="id">V</span> := <span class="id">U</span>) (<span class="id">ab</span> ;;; <span class="id">bc</span>) <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">transform_partial_program</span> <span class="id">ab</span>) ;;; (<span class="id">transform_partial_program</span> <span class="id">bc</span>)) <span class="id">pau</span> = <span class="id">OK</span> <span class="id">pbv</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7681')">Proof.</div>
+<div class="proofscript" id="proof7681">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">pbv</span>. <span class="tactic">unfold</span> <span class="id">transform_partial_program</span> <span class="tactic">at</span> 1 2.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transform_partial_program15_compose_in_out</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transform_partial_program_compose_right_out_in</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span> <span class="id">U</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a</span> <span class="id">c</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">transform_partial_program</span> <span class="id">ab</span>) ;&gt; (<span class="id">transform_program</span> (<span class="id">V</span> := <span class="id">U</span>) <span class="id">bc</span>)) <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program</span> (<span class="id">ab</span> ;&gt; <span class="id">bc</span>) <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7682')">Proof.</div>
+<div class="proofscript" id="proof7682">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transform_partial_program</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">c</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;<span class="id">compose_elim</span> <span class="id">idtac</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">transform_partial_program2_compose_right</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">comp_total_right_eq</span> {<span class="id">A</span> <span class="id">B</span> <span class="id">C</span> : <span class="kwd">Type</span>} (<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) (<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">C</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> (<span class="id">_</span>: <span class="id">ident</span>) <span class="id">f</span> =&gt; (<span class="id">ab</span> ;&gt; <span class="id">bc</span>) <span class="id">f</span>) = ((<span class="kwd">fun</span> (<span class="id">_</span>:<span class="id">ident</span>) =&gt; <span class="id">ab</span>) &lt;&lt;&lt; <span class="id">bc</span>).<br/>
+<span class="kwd">Proof</span> <span class="id">eq_refl</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transform_partial_program_compose_right_in_out</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span> <span class="id">U</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ab</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">bc</span>: <span class="id">B</span> -&gt; <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a</span> <span class="id">c</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">transform_partial_program</span> (<span class="id">ab</span> ;&gt; <span class="id">bc</span>) <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">transform_partial_program</span> <span class="id">ab</span>) ;&gt; (<span class="id">transform_program</span> (<span class="id">V</span> := <span class="id">U</span>) <span class="id">bc</span>)) <span class="id">a</span> = <span class="id">OK</span> <span class="id">c</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7683')">Proof.</div>
+<div class="proofscript" id="proof7683">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transform_partial_program</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">c</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;<span class="id">case_eq</span> (<span class="id">transform_partial_program2</span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">ab</span>) (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">v</span> =&gt; <span class="id">OK</span> <span class="id">v</span>) <span class="id">a</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">compose_total_right_intro</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">comp_total_right_eq</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">transform_partial_program2_compose_right</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">exfalso</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">comp_total_right_eq</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">edestruct</span> (<span class="id">transform_partial_program2_compose_right_error</span>) <span class="kwd">with</span> (<span class="id">bc</span>:=<span class="id">bc</span>). <span class="tactic">apply</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">genv_next_apply_total</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span> <span class="id">U</span> <span class="id">B</span> <span class="id">V</span>: <span class="kwd">Type</span>} (<span class="id">tr</span>: <span class="id">AST.program</span> <span class="id">A</span> <span class="id">U</span> -&gt; <span class="id">AST.program</span> <span class="id">B</span> <span class="id">V</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">p</span>, <span class="id">Genv.genv_next</span> (<span class="id">Genv.globalenv</span> (<span class="id">tr</span> <span class="id">p</span>)) = <span class="id">Genv.genv_next</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> (<span class="id">r</span>: <span class="id">res</span> (<span class="id">AST.program</span> <span class="id">A</span> <span class="id">U</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">p</span>, <span class="id">r</span> = <span class="id">OK</span> <span class="id">p</span> -&gt; <span class="id">Genv.genv_next</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) = <span class="id">n</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span>, <span class="id">r</span> @@ <span class="id">tr</span> = <span class="id">OK</span> <span class="id">p</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.genv_next</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) = <span class="id">n</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7684')">Proof.</div>
+<div class="proofscript" id="proof7684">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id">apply_total</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="tactic">destruct</span> <span class="id">r</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>. <span class="id">inv</span> <span class="id">H1</span>. <span class="id">erewrite</span> <span class="id">H</span>. <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">genv_next_apply_partial</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span> <span class="id">U</span> <span class="id">B</span> <span class="id">V</span>: <span class="kwd">Type</span>} (<span class="id">tr</span>: <span class="id">AST.program</span> <span class="id">A</span> <span class="id">U</span> -&gt; <span class="id">res</span> (<span class="id">AST.program</span> <span class="id">B</span> <span class="id">V</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">p</span> <span class="id">p</span>', <span class="id">tr</span> <span class="id">p</span> = <span class="id">OK</span> <span class="id">p</span>' -&gt; <span class="id">Genv.genv_next</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>') = <span class="id">Genv.genv_next</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> (<span class="id">r</span>: <span class="id">res</span> (<span class="id">AST.program</span> <span class="id">A</span> <span class="id">U</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">p</span>, <span class="id">r</span> = <span class="id">OK</span> <span class="id">p</span> -&gt; <span class="id">Genv.genv_next</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) = <span class="id">n</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span>, <span class="id">r</span> @@@ <span class="id">tr</span> = <span class="id">OK</span> <span class="id">p</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.genv_next</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) = <span class="id">n</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7685')">Proof.</div>
+<div class="proofscript" id="proof7685">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id">apply_partial</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="tactic">destruct</span> <span class="id">r</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>. <span class="id">erewrite</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module MemoryX</title>
+<meta name="description" content="Documentation of Coq module MemoryX" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module MemoryX</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id">compcert.common.Memory</span>.<br/>
+<br/>
+<span class="kwd">Import</span> <span class="id">Coqlib</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Values</span>.<br/>
+<span class="kwd">Export</span> <span class="id">Memory</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">Mem</span>.<br/>
+<span class="kwd">Export</span> <span class="id">Memtype.Mem</span>.<br/>
+<br/>
+<div class="doc">General-purpose properties on the existing memory model </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">val_inject_flat_inj_lessdef</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> <span class="id">v1</span> <span class="id">v2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> (<span class="id">flat_inj</span> <span class="id">n</span>) <span class="id">v1</span> <span class="id">v2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.lessdef</span> <span class="id">v1</span> <span class="id">v2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7771')">Proof.</div>
+<div class="proofscript" id="proof7771">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">try</span> (<span class="id">constructor</span>; <span class="tactic">fail</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">flat_inj</span> <span class="kwd">in</span> <span class="id">H0</span>. <span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b1</span> <span class="id">n</span>); <span class="tactic">try</span> <span class="tactic">discriminate</span>. <span class="id">inv</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Integers.Ptrofs.add_zero</span>. <span class="id">constructor</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHMEM</span>.<br/>
+<span class="kwd">Context</span> `{<span class="id">memory_model</span>: <span class="id">MemoryModel</span>}.<br/>
+<br/>
+<span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">inject_perm_all</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">load_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.inject_neutral</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>) <span class="id">m</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">chunk</span> <span class="id">b</span> <span class="id">o</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.load</span> <span class="id">chunk</span> <span class="id">m</span> <span class="id">b</span> <span class="id">o</span> = <span class="id">Some</span> <span class="id">v</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) <span class="id">v</span> <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7772')">Proof.</div>
+<div class="proofscript" id="proof7772">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Mem.neutral_inject</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>) <span class="id">b</span> = <span class="id">Some</span> (<span class="id">b</span>, 0)).<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mem.flat_inj</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">n</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.valid_access_valid_block</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.valid_access_implies</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.load_valid_access</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Mem.load_inject</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">o</span> + 0) <span class="kwd">with</span> <span class="id">o</span> <span class="tactic">by</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> 1 <span class="kwd">as</span> [? [? ?]].<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">loadv_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.inject_neutral</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>) <span class="id">m</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">chunk</span> <span class="id">a</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.loadv</span> <span class="id">chunk</span> <span class="id">m</span> <span class="id">a</span> = <span class="id">Some</span> <span class="id">v</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) <span class="id">v</span> <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7773')">Proof.</div>
+<div class="proofscript" id="proof7773">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">load_inject_neutral</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">loadbytes_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.inject_neutral</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>) <span class="id">m</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">o</span> <span class="id">n</span> <span class="id">l</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.loadbytes</span> <span class="id">m</span> <span class="id">b</span> <span class="id">o</span> <span class="id">n</span> = <span class="id">Some</span> <span class="id">l</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.valid_block</span> <span class="id">m</span> <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_forall2</span> (<span class="id">memval_inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>))) <span class="id">l</span> <span class="id">l</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7774')">Proof.</div>
+<div class="proofscript" id="proof7774">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Mem.neutral_inject</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Mem.loadbytes_inject</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">flat_inj</span>. <span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b</span> (<span class="id">nextblock</span> <span class="id">m</span>)); <span class="tactic">try</span> <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="id">contradiction</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> 1 <span class="kwd">as</span> (<span class="id">bytes2</span> &amp; <span class="id">LOAD2</span> &amp; <span class="id">INJ</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">o</span> + 0) <span class="kwd">with</span> <span class="id">o</span> <span class="kwd">in</span> * <span class="tactic">by</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHMEM</span>.<br/>
+<br/>
+<div class="doc">Additional properties on the memory model required by CompCertX </div>
+<br/>
+<span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">inject_perm_all</span>.<br/>
+<br/>
+<span class="kwd">Class</span> <span class="id">MemoryModelX</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">mem</span>: <span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">memory_model_ops</span>: <span class="id">MemoryModelOps</span> <span class="id">mem</span>}<br/>
+: <span class="kwd">Prop</span> :=<br/>
+{<br/>
+&nbsp;&nbsp;<span class="id">memory_model_x_memory_model</span> :&gt; <span class="id">MemoryModel</span> <span class="id">mem</span>;<br/>
+<br/>
+<div class="doc">The following are needed by <span class="bracket"><span class="id">SmallstepX</span></span> </div>
+&nbsp;&nbsp;<span class="id">extends_extends_compose</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">m3</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extends</span> <span class="id">m1</span> <span class="id">m2</span> -&gt; <span class="id">extends</span> <span class="id">m2</span> <span class="id">m3</span> -&gt; <span class="id">extends</span> <span class="id">m1</span> <span class="id">m3</span><br/>
+&nbsp;&nbsp;;<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">inject_extends_compose</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">g</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">m3</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inject</span> <span class="id">f</span> <span class="id">g</span> <span class="id">m1</span> <span class="id">m2</span> -&gt; <span class="id">extends</span> <span class="id">m2</span> <span class="id">m3</span> -&gt; <span class="id">inject</span> <span class="id">f</span> <span class="id">g</span> <span class="id">m1</span> <span class="id">m3</span><br/>
+&nbsp;&nbsp;;<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">inject_compose</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">f</span>' <span class="id">g</span> <span class="id">g</span>' <span class="id">m1</span> <span class="id">m2</span> <span class="id">m3</span> <span class="id">g3</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inject</span> <span class="id">f</span> <span class="id">g</span> <span class="id">m1</span> <span class="id">m2</span> -&gt; <span class="id">inject</span> <span class="id">f</span>' <span class="id">g</span>' <span class="id">m2</span> <span class="id">m3</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">compose_frameinj</span> <span class="id">g</span> <span class="id">g</span>') = <span class="id">Some</span> <span class="id">g3</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inject</span> (<span class="id">compose_meminj</span> <span class="id">f</span> <span class="id">f</span>') <span class="id">g3</span> <span class="id">m1</span> <span class="id">m3</span><br/>
+&nbsp;&nbsp;;<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">extends_inject_compose</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">g</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">m3</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extends</span> <span class="id">m1</span> <span class="id">m2</span> -&gt; <span class="id">inject</span> <span class="id">f</span> <span class="id">g</span> <span class="id">m2</span> <span class="id">m3</span> -&gt; <span class="id">inject</span> <span class="id">f</span> <span class="id">g</span> <span class="id">m1</span> <span class="id">m3</span><br/>
+&nbsp;&nbsp;;<br/>
+<br/>
+<div class="doc">The following are needed by <span class="bracket"><span class="id">AsmX</span></span>, to prove the preservation of <span class="bracket"><span class="id">inject_neutral_invariant</span></span> </div>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<span class="id">inject_neutral_incr</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span> <span class="id">thr</span>, <span class="id">inject_neutral</span> <span class="id">thr</span> <span class="id">m</span> -&gt; <span class="kwd">forall</span> <span class="id">thr</span>', <span class="id">Ple</span> <span class="id">thr</span> <span class="id">thr</span>' -&gt; <span class="id">inject_neutral</span> <span class="id">thr</span>' <span class="id">m</span><br/>
+&nbsp;&nbsp;;<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">free_inject_neutral</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span> <span class="id">b</span> <span class="id">lo</span> <span class="id">hi</span> <span class="id">m</span>' <span class="id">thr</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">free</span> <span class="id">m</span> <span class="id">b</span> <span class="id">lo</span> <span class="id">hi</span> = <span class="id">Some</span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inject_neutral</span> <span class="id">thr</span> <span class="id">m</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Plt</span> <span class="id">b</span> <span class="id">thr</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inject_neutral</span> <span class="id">thr</span> <span class="id">m</span>'<br/>
+&nbsp;&nbsp;;<br/>
+<br/>
+<div class="doc">The following are needed by <span class="bracket"><span class="id">CertiKOS</span></span>, to prove Mem.extends between initial memories </div>
+<br/>
+&nbsp;&nbsp;<span class="id">drop_perm_right_extends</span> `{<span class="id">injperm</span>: <span class="id">InjectPerm</span>}:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">b</span> <span class="id">lo</span> <span class="id">hi</span> <span class="id">p</span> <span class="id">m2</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extends</span> <span class="id">m1</span> <span class="id">m2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">drop_perm</span> <span class="id">m2</span> <span class="id">b</span> <span class="id">lo</span> <span class="id">hi</span> <span class="id">p</span> = <span class="id">Some</span> <span class="id">m2</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">ofs</span> <span class="id">k</span> <span class="id">p</span>, <span class="id">perm</span> <span class="id">m1</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">k</span> <span class="id">p</span> -&gt; <span class="id">lo</span> &lt;= <span class="id">ofs</span> &lt; <span class="id">hi</span> -&gt; <span class="id">False</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extends</span> <span class="id">m1</span> <span class="id">m2</span>'<br/>
+&nbsp;&nbsp;;<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">drop_perm_parallel_extends</span> `{<span class="id">injperm</span>: <span class="id">InjectPerm</span>}:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">b</span> <span class="id">lo</span> <span class="id">hi</span> <span class="id">p</span> <span class="id">m1</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extends</span> <span class="id">m1</span> <span class="id">m2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inject_perm_condition</span> <span class="id">Freeable</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">drop_perm</span> <span class="id">m1</span> <span class="id">b</span> <span class="id">lo</span> <span class="id">hi</span> <span class="id">p</span> = <span class="id">Some</span> <span class="id">m1</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">m2</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">drop_perm</span> <span class="id">m2</span> <span class="id">b</span> <span class="id">lo</span> <span class="id">hi</span> <span class="id">p</span> = <span class="id">Some</span> <span class="id">m2</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ <span class="id">extends</span> <span class="id">m1</span>' <span class="id">m2</span>'<br/>
+&nbsp;&nbsp;;<br/>
+<br/>
+<div class="doc">The following is needed by <span class="bracket"><span class="id">CertiKOS</span></span>, to prove that LAsm preserves <span class="bracket"><span class="id">inject_neutral</span></span> for <span class="bracket"><span class="id">memcpy</span></span> </div>
+&nbsp;&nbsp;<span class="id">storebytes_inject_neutral</span> `{<span class="id">injperm</span>: <span class="id">InjectPerm</span>}:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span> <span class="id">b</span> <span class="id">o</span> <span class="id">l</span> <span class="id">m</span>' <span class="id">thr</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">storebytes</span> <span class="id">m</span> <span class="id">b</span> <span class="id">o</span> <span class="id">l</span> = <span class="id">Some</span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_forall2</span> (<span class="id">memval_inject</span> (<span class="id">Mem.flat_inj</span> <span class="id">thr</span>)) <span class="id">l</span> <span class="id">l</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Plt</span> <span class="id">b</span> <span class="id">thr</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inject_neutral</span> <span class="id">thr</span> <span class="id">m</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inject_neutral</span> <span class="id">thr</span> <span class="id">m</span>'<br/>
+&nbsp;&nbsp;;<br/>
+<br/>
+<div class="doc">The following is needed by <span class="bracket"><span class="id">CertiKOS</span></span>, to prove LAsm.exec_instr </div>
+&nbsp;&nbsp;<span class="id">free_range</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m1</span> <span class="id">m1</span>' <span class="id">b</span> <span class="id">lo</span> <span class="id">hi</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">free</span> <span class="id">m1</span> <span class="id">b</span> <span class="id">lo</span> <span class="id">hi</span> = <span class="id">Some</span> <span class="id">m1</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">lo</span> &lt; <span class="id">hi</span>)%<span class="id">Z</span> \/ <span class="id">m1</span>' = <span class="id">m1</span><br/>
+&nbsp;&nbsp;;<br/>
+<br/>
+<div class="doc">Idem </div>
+&nbsp;&nbsp;<span class="id">storebytes_empty</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">m</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">storebytes</span> <span class="id">m</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">nil</span> = <span class="id">Some</span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m</span>' = <span class="id">m</span><br/>
+&nbsp;&nbsp;;<br/>
+<br/>
+<div class="doc">The following is needed by LayerLib, to prove transitivity of
+      ec_mem_extends </div>
+&nbsp;&nbsp;<span class="id">unchanged_on_trans_strong</span> (<span class="id">P</span> <span class="id">Q</span>: <span class="id">_</span> -&gt; <span class="id">_</span> -&gt; <span class="kwd">Prop</span>) <span class="id">m1</span> <span class="id">m2</span> <span class="id">m3</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">b</span>, <span class="id">Mem.valid_block</span> <span class="id">m1</span> <span class="id">b</span> -&gt; <span class="kwd">forall</span> <span class="id">o</span>, <span class="id">P</span> <span class="id">b</span> <span class="id">o</span> -&gt; <span class="id">Q</span> <span class="id">b</span> <span class="id">o</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">unchanged_on</span> <span class="id">P</span> <span class="id">m1</span> <span class="id">m2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">unchanged_on</span> <span class="id">Q</span> <span class="id">m2</span> <span class="id">m3</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">unchanged_on</span> <span class="id">P</span> <span class="id">m1</span> <span class="id">m3</span><br/>
+}.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">Mem</span>.<br/>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

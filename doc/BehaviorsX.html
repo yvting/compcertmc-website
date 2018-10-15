@@ -1,0 +1,195 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module BehaviorsX</title>
+<meta name="description" content="Documentation of Coq module BehaviorsX" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module BehaviorsX</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id">compcertx.common.SmallstepX</span>.<br/>
+<span class="kwd">Require</span> <span class="id">compcert.common.Behaviors</span>.<br/>
+<br/>
+<span class="kwd">Import</span> <span class="id">Classical</span>.<br/>
+<span class="kwd">Import</span> <span class="id">ClassicalEpsilon</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Coqlib</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Import</span> <span class="id">SmallstepX</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Export</span> <span class="id">Behaviors</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">semantics_without_retval_state_goes_wrong_intro</span> {<span class="id">RETVAL</span>: <span class="kwd">Type</span>} (<span class="id">S</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>) (<span class="id">s</span>: <span class="id">Smallstep.state</span> <span class="id">S</span>) (<span class="id">t</span>: <span class="id">trace</span>):<br/>
+&nbsp;&nbsp;<span class="id">state_behaves</span> <span class="id">S</span> <span class="id">s</span> (<span class="id">Goes_wrong</span> <span class="id">t</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="id">state_behaves</span> (<span class="id">semantics_without_retval</span> <span class="id">S</span>) <span class="id">s</span> (<span class="id">Goes_wrong</span> <span class="id">t</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7686')">Proof.</div>
+<div class="proofscript" id="proof7686">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">r</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">ABSURD</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">ABSURD</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">firstorder</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">semantics_without_retval_state_goes_wrong_elim</span> {<span class="id">RETVAL</span>: <span class="kwd">Type</span>} (<span class="id">S</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>) (<span class="id">s</span>: <span class="id">Smallstep.state</span> <span class="id">S</span>) (<span class="id">t</span>: <span class="id">trace</span>):<br/>
+&nbsp;&nbsp;<span class="id">state_behaves</span> (<span class="id">semantics_without_retval</span> <span class="id">S</span>) <span class="id">s</span> (<span class="id">Goes_wrong</span> <span class="id">t</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="id">state_behaves</span> <span class="id">S</span> <span class="id">s</span> (<span class="id">Goes_wrong</span> <span class="id">t</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7687')">Proof.</div>
+<div class="proofscript" id="proof7687">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">r</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">ABSURD</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id">H3</span> <span class="id">tt</span>).<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHRETVAL</span>.<br/>
+<span class="kwd">Context</span> {<span class="id">RETVAL</span>: <span class="kwd">Type</span>}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">strongly_safe_state</span> (<span class="id">S</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>) (<span class="id">s</span>: <span class="id">Smallstep.state</span> <span class="id">S</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t1</span> <span class="id">s1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Smallstep.star</span> (<span class="id">Smallstep.step</span> <span class="id">S</span>) (<span class="id">Smallstep.globalenv</span> <span class="id">S</span>) <span class="id">s</span> <span class="id">t1</span> <span class="id">s1</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">exists</span> <span class="id">r</span>, <span class="id">Smallstep.final_state</span> <span class="id">S</span> <span class="id">s1</span> <span class="id">r</span>) \/<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">exists</span> <span class="id">t2</span> <span class="id">s2</span>, <span class="id">Smallstep.step</span> <span class="id">S</span> (<span class="id">Smallstep.globalenv</span> <span class="id">S</span>) <span class="id">s1</span> <span class="id">t2</span> <span class="id">s2</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">strongly_safe_state_beh</span> (<span class="id">S</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>) (<span class="id">s</span>: <span class="id">Smallstep.state</span> <span class="id">S</span>) :=<br/>
+&nbsp;&nbsp;~ <span class="id">exists</span> <span class="id">t</span>, <span class="id">state_behaves</span> <span class="id">S</span> <span class="id">s</span> (<span class="id">Goes_wrong</span> <span class="id">t</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">strongly_safe_state_beh_intro</span> (<span class="id">S</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>) (<span class="id">s</span>: <span class="id">Smallstep.state</span> <span class="id">S</span>):<br/>
+&nbsp;&nbsp;<span class="id">strongly_safe_state</span> <span class="id">S</span> <span class="id">s</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">strongly_safe_state_beh</span> <span class="id">S</span> <span class="id">s</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7688')">Proof.</div>
+<div class="proofscript" id="proof7688">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">strongly_safe_state</span>, <span class="id">strongly_safe_state_beh</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">ABSURD</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ABSURD</span> <span class="kwd">as</span> (<span class="id">t</span> &amp; <span class="id">Ht</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">Ht</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">nostep</span> <span class="kwd">in</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H</span> <span class="kwd">in</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">firstorder</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">strongly_safe_state_beh_elim</span> (<span class="id">S</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>) (<span class="id">s</span>: <span class="id">Smallstep.state</span> <span class="id">S</span>):<br/>
+&nbsp;&nbsp;<span class="id">strongly_safe_state_beh</span> <span class="id">S</span> <span class="id">s</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">strongly_safe_state</span> <span class="id">S</span> <span class="id">s</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7689')">Proof.</div>
+<div class="proofscript" id="proof7689">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">strongly_safe_state</span>, <span class="id">strongly_safe_state_beh</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">H</span> <span class="id">t1</span> <span class="id">s1</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Classical_Prop.classic</span> (<span class="id">exists</span> <span class="id">r</span>, <span class="id">Smallstep.final_state</span> <span class="id">S</span> <span class="id">s1</span> <span class="id">r</span>)); <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">right</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Classical_Prop.classic</span> (<span class="id">exists</span> <span class="id">t2</span> <span class="id">s2</span>, <span class="id">Step</span> <span class="id">S</span> <span class="id">s1</span> <span class="id">t2</span> <span class="id">s2</span>)); <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">t1</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">nostep</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">firstorder</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">strongly_safe</span> (<span class="id">S</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>) :=<br/>
+&nbsp;&nbsp;~ <span class="id">exists</span> <span class="id">t</span>, <span class="id">program_behaves</span> <span class="id">S</span> (<span class="id">Goes_wrong</span> <span class="id">t</span>).<br/>
+<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHRETVAL</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">strongly_safe_without_retval</span> {<span class="id">RETVAL</span>: <span class="kwd">Type</span>} (<span class="id">S</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>):<br/>
+&nbsp;&nbsp;<span class="id">strongly_safe</span> (<span class="id">semantics_without_retval</span> <span class="id">S</span>) &lt;-&gt; <span class="id">strongly_safe</span> <span class="id">S</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7690')">Proof.</div>
+<div class="proofscript" id="proof7690">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">strongly_safe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">intros</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">ABSURD</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H</span>; <span class="tactic">clear</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ABSURD</span> <span class="kwd">as</span> (<span class="id">t</span> &amp; <span class="id">Ht</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">Ht</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exists</span> <span class="id">t</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">semantics_without_retval_state_goes_wrong_intro</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exists</span> <span class="id">E0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">right</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">intros</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">ABSURD</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ABSURD</span> <span class="kwd">as</span> (<span class="id">t</span> &amp; <span class="id">Ht</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H</span>; <span class="tactic">clear</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">Ht</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exists</span> <span class="id">t</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">semantics_without_retval_state_goes_wrong_elim</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exists</span> <span class="id">E0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">right</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">forward_simulation_strongly_safe</span> {<span class="id">RETVAL</span>: <span class="kwd">Type</span>} (<span class="id">S1</span> <span class="id">S2</span>: <span class="id">Smallstep.semantics</span> <span class="id">RETVAL</span>):<br/>
+&nbsp;&nbsp;<span class="id">receptive</span> <span class="id">S1</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">weak_determ</span> <span class="id">S2</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">forward_simulation</span> <span class="id">S1</span> <span class="id">S2</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">strongly_safe</span> <span class="id">S1</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">strongly_safe</span> <span class="id">S2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7691')">Proof.</div>
+<div class="proofscript" id="proof7691">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">H</span> <span class="id">H0</span> <span class="id">X</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">strongly_safe_without_retval</span> <span class="kwd">in</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">strongly_safe_without_retval</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">semantics_without_retval_forward_to_backward</span> <span class="kwd">in</span> <span class="id">X</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">strongly_safe</span> <span class="kwd">in</span> <span class="id">H1</span> |- * .<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">ABSURD</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ABSURD</span> <span class="kwd">as</span> (<span class="id">t</span> &amp; <span class="id">BEH</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id">backward_simulation_same_safe_behavior</span> <span class="id">X</span>) <span class="kwd">in</span> <span class="id">BEH</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">firstorder</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">unfold</span> <span class="id">not_wrong</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">beh</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">beh</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">firstorder</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHMEMORYMODELOPS</span>.<br/>
+<span class="kwd">Context</span> `{<span class="id">memory_model_ops</span>: <span class="id">Mem.MemoryModelOps</span>}.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">strongly_safe_with_inject_elim</span> <span class="id">val</span> `{<span class="id">VLIO</span>: <span class="id">ValLessdefInjectOps</span> <span class="id">val</span>} (<span class="id">S</span>: <span class="id">semantics</span> (<span class="id">val</span> * <span class="id">mem</span>)) <span class="id">m</span>:<br/>
+&nbsp;&nbsp;<span class="id">strongly_safe</span> (<span class="id">semantics_with_inject</span> <span class="id">S</span> <span class="id">m</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="id">strongly_safe</span> <span class="id">S</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7692')">Proof.</div>
+<div class="proofscript" id="proof7692">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">strongly_safe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">ABSURD</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ABSURD</span> <span class="kwd">as</span> (<span class="id">t</span> &amp; <span class="id">ABSURD</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H</span>; <span class="tactic">clear</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">ABSURD</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplit</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eleft</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">r</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">ABSURD</span>' .<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">ABSURD</span>' .<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">H4</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="id">esplit</span>.<br/>
+&nbsp;&nbsp;<span class="id">eright</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHMEMORYMODELOPS</span>.<br/>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

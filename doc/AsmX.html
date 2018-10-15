@@ -1,0 +1,694 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module AsmX</title>
+<meta name="description" content="Documentation of Coq module AsmX" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module AsmX</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id">Asm</span>.<br/>
+<span class="kwd">Require</span> <span class="id">MemoryX</span>.<br/>
+<br/>
+<span class="kwd">Import</span> <span class="id">Coqlib</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Floats</span>.<br/>
+<span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Values</span>.<br/>
+<span class="kwd">Import</span> <span class="id">MemoryX</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Smallstep</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Locations</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Conventions</span>.<br/>
+<span class="kwd">Export</span> <span class="id">Asm</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LocationsX</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHCONFIG</span>.<br/>
+<span class="kwd">Context</span> `{<span class="id">external_calls_prf</span>: <span class="id">ExternalCalls</span>}.<br/>
+<br/>
+<div class="doc">Execution of Asm functions with Asm-style arguments (long long 64-bit integers NOT allowed) </div>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">initial_state</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">lm</span>: <span class="id">regset</span>) (<span class="id">p</span>: <span class="id">Asm.program</span>) (<span class="id">i</span>: <span class="id">ident</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">sg</span>: <span class="id">signature</span>) (<span class="id">args</span>: <span class="id">list</span> <span class="id">val</span>) (<span class="id">m</span>: <span class="id">mem</span>): <span class="id">state</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id">initial_state</span>'<span class="id">_intro</span>    <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">b</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hb</span>: <span class="id">Genv.find_symbol</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) <span class="id">i</span> = <span class="id">Some</span> <span class="id">b</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hpc</span>: <span class="id">lm</span> <span class="id">PC</span> = <span class="id">Vptr</span> <span class="id">b</span> <span class="id">Ptrofs.zero</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hargs</span>: <span class="id">extcall_arguments</span> <span class="id">lm</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">initial_state</span> <span class="id">lm</span> <span class="id">p</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">m</span> (<span class="id">State</span> <span class="id">lm</span> (<span class="id">Mem.push_new_stage</span> <span class="id">m</span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">get_pair</span> (<span class="id">p</span>: <span class="id">rpair</span> <span class="id">preg</span>) (<span class="id">rs</span>:<span class="id">regset</span>) : <span class="id">val</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">p</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">One</span> <span class="id">l</span> =&gt; <span class="id">rs</span> <span class="id">l</span><br/>
+&nbsp;&nbsp;| <span class="id">Twolong</span> <span class="id">l1</span> <span class="id">l2</span> =&gt; <span class="id">Val.longofwords</span> (<span class="id">rs</span> <span class="id">l1</span>) (<span class="id">rs</span> <span class="id">l2</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">final_state</span> (<span class="id">lm</span>: <span class="id">regset</span>) (<span class="id">sg</span>: <span class="id">signature</span>) : <span class="id">state</span> -&gt; (<span class="id">val</span> * <span class="id">mem</span>) -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">final_state_intro</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eq</span> (<span class="id">lm</span> # <span class="id">RA</span>) (<span class="id">rs</span> # <span class="id">PC</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eq</span> (<span class="id">lm</span> # <span class="id">RSP</span>) (<span class="id">rs</span> # <span class="id">RSP</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> = <span class="id">get_pair</span> (<span class="id">loc_external_result</span> <span class="id">sg</span>) <span class="id">rs</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RA_VUNDEF</span>: <span class="id">rs</span> # <span class="id">RA</span> = <span class="id">Vundef</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALLEE_SAVE</span>: <span class="kwd">forall</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~ <span class="id">In</span> <span class="id">r</span> <span class="id">destroyed_at_call</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.lessdef</span> (<span class="id">lm</span> (<span class="id">preg_of</span> <span class="id">r</span>)) (<span class="id">rs</span> (<span class="id">preg_of</span> <span class="id">r</span>))),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m_</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_state</span> <span class="id">lm</span> <span class="id">sg</span> (<span class="id">State</span> <span class="id">rs</span> <span class="id">m_</span>) (<span class="id">v</span>, <span class="id">m_</span>).<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITH_MEM_ACCESSORS_DEFAULT</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">mem_accessors_default</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">semantics</span> (<span class="id">lm</span>: <span class="id">regset</span>) (<span class="id">p</span>: <span class="id">Asm.program</span>) (<span class="id">i</span>: <span class="id">ident</span>) (<span class="id">sg</span>: <span class="id">signature</span>) (<span class="id">args</span>: <span class="id">list</span> <span class="id">val</span>) (<span class="id">m</span>: <span class="id">mem</span>) :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Semantics</span> (<span class="id">step</span> (<span class="id">Mem.stack</span> <span class="id">m</span>)) (<span class="id">initial_state</span> <span class="id">lm</span> <span class="id">p</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">m</span>) (<span class="id">final_state</span> <span class="id">lm</span> <span class="id">sg</span>) (<span class="id">Genv.globalenv</span> <span class="id">p</span>).<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">WITH_MEM_ACCESSORS_DEFAULT</span>.<br/>
+<br/>
+<div class="doc">Properties of arguments </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">extcall_args_64_inject_neutral</span> `{<span class="id">Hmem</span>: !<span class="id">Mem.MemoryModel</span> <span class="id">mem</span>}:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rs</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.inject_neutral</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>) <span class="id">m</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">Hinj_reg</span>: <span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) (<span class="id">rs</span> <span class="id">r</span>) (<span class="id">rs</span> <span class="id">r</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">tl</span> <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span> <span class="id">vl</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_forall2</span> (<span class="id">Asm.extcall_arg_pair</span> <span class="id">rs</span> <span class="id">m</span>) (<span class="id">loc_arguments_64</span> <span class="id">tl</span> <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span>) <span class="id">vl</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject_list</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) <span class="id">vl</span> <span class="id">vl</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7608')">Proof.</div>
+<div class="proofscript" id="proof7608">
+&nbsp;&nbsp;<span class="id">Opaque</span> <span class="id">int_param_regs</span> <span class="id">float_param_regs</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">tl</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">inversion</span> 4; <span class="tactic">subst</span>. <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;-<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> ( <span class="kwd">forall</span> <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span> (<span class="id">vl</span> : <span class="id">list</span> <span class="id">val</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_forall2</span> (<span class="id">extcall_arg_pair</span> <span class="id">rs</span> <span class="id">m</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">One</span> (<span class="id">S</span> <span class="id">Outgoing</span> <span class="id">ofs</span> <span class="id">a</span>) :: <span class="id">loc_arguments_64</span> <span class="id">tl</span> <span class="id">ir</span> <span class="id">fr</span> (<span class="id">ofs</span> + <span class="id">typesize</span> <span class="id">a</span>)) <span class="id">vl</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject_list</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) <span class="id">vl</span> <span class="id">vl</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H3</span>. <span class="id">inv</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.loadv_inject_neutral</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> ( <span class="kwd">forall</span> <span class="id">ty</span> (<span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span> : <span class="id">Z</span>) (<span class="id">vl</span> : <span class="id">list</span> <span class="id">val</span>),<br/>
+&nbsp;&nbsp;<span class="id">list_forall2</span> (<span class="id">extcall_arg_pair</span> <span class="id">rs</span> <span class="id">m</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">list_nth_z</span> <span class="id">int_param_regs</span> <span class="id">ir</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">ireg</span> =&gt; <span class="id">One</span> (<span class="id">R</span> <span class="id">ireg</span>) :: <span class="id">loc_arguments_64</span> <span class="id">tl</span> (<span class="id">ir</span> + 1) <span class="id">fr</span> <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">One</span> (<span class="id">S</span> <span class="id">Outgoing</span> <span class="id">ofs</span> <span class="id">ty</span>) :: <span class="id">loc_arguments_64</span> <span class="id">tl</span> <span class="id">ir</span> <span class="id">fr</span> (<span class="id">ofs</span> + 2)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span> <span class="id">vl</span> -&gt; <span class="id">Val.inject_list</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) <span class="id">vl</span> <span class="id">vl</span>). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H5</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id">list_nth_z</span> <span class="id">int_param_regs</span> <span class="id">ir</span>); <span class="id">inv</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">constructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id">list_nth_z</span> <span class="id">int_param_regs</span> <span class="id">ir</span>); <span class="id">inv</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">constructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.loadv_inject_neutral</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">destruct</span> (<span class="id">list_nth_z</span> <span class="id">int_param_regs</span> <span class="id">ir</span>); <span class="id">inv</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="kwd">forall</span> <span class="id">ty</span> (<span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span> : <span class="id">Z</span>) (<span class="id">vl</span> : <span class="id">list</span> <span class="id">val</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_forall2</span> (<span class="id">extcall_arg_pair</span> <span class="id">rs</span> <span class="id">m</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">list_nth_z</span> <span class="id">float_param_regs</span> <span class="id">fr</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">freg</span> =&gt; <span class="id">One</span> (<span class="id">R</span> <span class="id">freg</span>) :: <span class="id">loc_arguments_64</span> <span class="id">tl</span> <span class="id">ir</span> (<span class="id">fr</span> + 1) <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">One</span> (<span class="id">S</span> <span class="id">Outgoing</span> <span class="id">ofs</span> <span class="id">ty</span>) :: <span class="id">loc_arguments_64</span> <span class="id">tl</span> <span class="id">ir</span> <span class="id">fr</span> (<span class="id">ofs</span> + 2)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span> <span class="id">vl</span> -&gt; <span class="id">Val.inject_list</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) <span class="id">vl</span> <span class="id">vl</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H4</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H6</span>. <span class="id">constructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id">list_nth_z</span> <span class="id">float_param_regs</span> <span class="id">fr</span>); <span class="id">inv</span> <span class="id">H3</span>. <span class="tactic">eauto</span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id">list_nth_z</span> <span class="id">float_param_regs</span> <span class="id">fr</span>); <span class="id">inv</span> <span class="id">H3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H2</span>. <span class="id">constructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.loadv_inject_neutral</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">destruct</span> (<span class="id">list_nth_z</span> <span class="id">float_param_regs</span> <span class="id">fr</span>); <span class="id">inv</span> <span class="id">H3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">extcall_args_32_inject_neutral</span> `{<span class="id">Hmem</span>: !<span class="id">Mem.MemoryModel</span> <span class="id">mem</span>}:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rs</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.inject_neutral</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>) <span class="id">m</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">Hinj_reg</span>: <span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) (<span class="id">rs</span> <span class="id">r</span>) (<span class="id">rs</span> <span class="id">r</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">tl</span> <span class="id">ofs</span> <span class="id">vl</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_forall2</span> (<span class="id">Asm.extcall_arg_pair</span> <span class="id">rs</span> <span class="id">m</span>) (<span class="id">loc_arguments_32</span> <span class="id">tl</span> <span class="id">ofs</span>) <span class="id">vl</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject_list</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) <span class="id">vl</span> <span class="id">vl</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7609')">Proof.</div>
+<div class="proofscript" id="proof7609">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">tl</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">inversion</span> 2; <span class="tactic">subst</span>. <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;-<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> ( <span class="kwd">forall</span> <span class="id">ofs</span> (<span class="id">vl</span> : <span class="id">list</span> <span class="id">val</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_forall2</span> (<span class="id">extcall_arg_pair</span> <span class="id">rs</span> <span class="id">m</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">One</span> (<span class="id">S</span> <span class="id">Outgoing</span> <span class="id">ofs</span> <span class="id">a</span>) :: <span class="id">loc_arguments_32</span> <span class="id">tl</span> (<span class="id">ofs</span> + <span class="id">typesize</span> <span class="id">a</span>)) <span class="id">vl</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject_list</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) <span class="id">vl</span> <span class="id">vl</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H3</span>. <span class="id">inv</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.loadv_inject_neutral</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> ( <span class="kwd">forall</span> <span class="id">ty</span> (<span class="id">ofs</span> : <span class="id">Z</span>) (<span class="id">vl</span> : <span class="id">list</span> <span class="id">val</span>),<br/>
+&nbsp;&nbsp;<span class="id">list_forall2</span> (<span class="id">extcall_arg_pair</span> <span class="id">rs</span> <span class="id">m</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">One</span> (<span class="id">S</span> <span class="id">Outgoing</span> <span class="id">ofs</span> <span class="id">ty</span>) :: <span class="id">loc_arguments_32</span> <span class="id">tl</span> (<span class="id">ofs</span> + <span class="id">typesize</span> <span class="id">ty</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">vl</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Val.inject_list</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) <span class="id">vl</span> <span class="id">vl</span>). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H4</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.loadv_inject_neutral</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H2</span>. <span class="id">constructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H5</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Val.longofwords_inject</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H4</span>. <span class="tactic">eapply</span> <span class="id">Mem.loadv_inject_neutral</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H8</span>. <span class="tactic">eapply</span> <span class="id">Mem.loadv_inject_neutral</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">extcall_args_inject_neutral</span> `{<span class="id">Gmem</span>: !<span class="id">Mem.MemoryModel</span> <span class="id">mem</span>}:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rs</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.inject_neutral</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>) <span class="id">m</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">Hinj_reg</span>: <span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) (<span class="id">rs</span> <span class="id">r</span>) (<span class="id">rs</span> <span class="id">r</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">tl</span> <span class="id">vl</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_forall2</span> (<span class="id">Asm.extcall_arg_pair</span> <span class="id">rs</span> <span class="id">m</span>) (<span class="id">loc_arguments</span> <span class="id">tl</span>) <span class="id">vl</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject_list</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) <span class="id">vl</span> <span class="id">vl</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7610')">Proof.</div>
+<div class="proofscript" id="proof7610">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">MINJ</span> <span class="id">Hinj_reg</span> <span class="id">tl</span> <span class="id">vl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">loc_arguments</span>. <span class="tactic">destruct</span> <span class="id">Archi.ptr64</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">extcall_args_64_inject_neutral</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">extcall_args_32_inject_neutral</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Invariants </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">mreg_of</span> (<span class="id">r</span>: <span class="id">preg</span>) : <span class="id">option</span> <span class="id">mreg</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">r</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">RAX</span> =&gt; <span class="id">Some</span> <span class="id">AX</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">RBX</span> =&gt; <span class="id">Some</span> <span class="id">BX</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">RCX</span> =&gt; <span class="id">Some</span> <span class="id">CX</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">RDX</span> =&gt; <span class="id">Some</span> <span class="id">DX</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">RSI</span> =&gt; <span class="id">Some</span> <span class="id">SI</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">RDI</span> =&gt; <span class="id">Some</span> <span class="id">DI</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">RBP</span> =&gt; <span class="id">Some</span> <span class="id">BP</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">R8</span> =&gt; <span class="id">Some</span> <span class="id">Machregs.R8</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">R9</span> =&gt; <span class="id">Some</span> <span class="id">Machregs.R9</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">R10</span> =&gt; <span class="id">Some</span> <span class="id">Machregs.R10</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">R11</span> =&gt; <span class="id">Some</span> <span class="id">Machregs.R11</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">R12</span> =&gt; <span class="id">Some</span> <span class="id">Machregs.R12</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">R13</span> =&gt; <span class="id">Some</span> <span class="id">Machregs.R13</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">R14</span> =&gt; <span class="id">Some</span> <span class="id">Machregs.R14</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">R15</span> =&gt; <span class="id">Some</span> <span class="id">Machregs.R15</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM0</span> =&gt; <span class="id">Some</span> <span class="id">X0</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM1</span> =&gt; <span class="id">Some</span> <span class="id">X1</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM2</span> =&gt; <span class="id">Some</span> <span class="id">X2</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM3</span> =&gt; <span class="id">Some</span> <span class="id">X3</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM4</span> =&gt; <span class="id">Some</span> <span class="id">X4</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM5</span> =&gt; <span class="id">Some</span> <span class="id">X5</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM6</span> =&gt; <span class="id">Some</span> <span class="id">X6</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM7</span> =&gt; <span class="id">Some</span> <span class="id">X7</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM8</span> =&gt; <span class="id">Some</span> <span class="id">X8</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM9</span> =&gt; <span class="id">Some</span> <span class="id">X9</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM10</span> =&gt; <span class="id">Some</span> <span class="id">X10</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM11</span> =&gt; <span class="id">Some</span> <span class="id">X11</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM12</span> =&gt; <span class="id">Some</span> <span class="id">X12</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM13</span> =&gt; <span class="id">Some</span> <span class="id">X13</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM14</span> =&gt; <span class="id">Some</span> <span class="id">X14</span><br/>
+&nbsp;&nbsp;| <span class="id">FR</span> <span class="id">XMM15</span> =&gt; <span class="id">Some</span> <span class="id">X15</span><br/>
+&nbsp;&nbsp;| <span class="id">ST0</span> =&gt; <span class="id">Some</span> <span class="id">FP0</span><br/>
+&nbsp;&nbsp;| <span class="id">PC</span><br/>
+&nbsp;&nbsp;| <span class="id">IR</span> <span class="id">RSP</span><br/>
+&nbsp;&nbsp;| <span class="id">CR</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;| <span class="id">RA</span> =&gt; <span class="id">None</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">mreg_of_complete</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">mreg_of</span> (<span class="id">preg_of</span> <span class="id">r</span>) = <span class="id">Some</span> <span class="id">r</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7611')">Proof.</div>
+<div class="proofscript" id="proof7611">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">r</span>; <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">mreg_of_correct</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">mreg_of</span> <span class="id">r</span> = <span class="id">Some</span> <span class="id">m</span> -&gt; <span class="id">preg_of</span> <span class="id">m</span> = <span class="id">r</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7612')">Proof.</div>
+<div class="proofscript" id="proof7612">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">r</span> <span class="id">m</span> <span class="id">MO</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">r</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">MO</span>; <span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">MO</span>; <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">typ_of_preg</span> (<span class="id">r</span>: <span class="id">preg</span>): <span class="id">typ</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">mreg_of</span> <span class="id">r</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Some</span> <span class="id">m</span> =&gt; <span class="id">Machregs.mreg_type</span> <span class="id">m</span><br/>
+&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="kwd">match</span> <span class="id">r</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">PC</span> | <span class="id">IR</span> <span class="id">RSP</span> | <span class="id">RA</span> =&gt; <span class="id">Tptr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">Tany64</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">wt_regset</span> (<span class="id">rs</span>: <span class="id">regset</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.has_type</span> (<span class="id">rs</span> # <span class="id">r</span>) (<span class="id">typ_of_preg</span> <span class="id">r</span>).<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id">inject_neutral_invariant</span> {<span class="id">F</span> <span class="id">V</span>: <span class="kwd">Type</span>} (<span class="id">ge</span>: <span class="id">Genv.t</span> <span class="id">F</span> <span class="id">V</span>) (<span class="id">rs</span>: <span class="id">regset</span>) (<span class="id">m</span>: <span class="id">mem</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv_mem_valid</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Genv.genv_next</span> <span class="id">ge</span> &lt;= <span class="id">Mem.nextblock</span> <span class="id">m</span>)%<span class="id">positive</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv_mem_inject_neutral</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.inject_neutral</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>) <span class="id">m</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv_reg_inject_neutral</span> <span class="id">r</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) (<span class="id">rs</span> # <span class="id">r</span>) (<span class="id">rs</span> # <span class="id">r</span>)<br/>
+&nbsp;&nbsp;}.<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id">asm_invariant</span> {<span class="id">F</span> <span class="id">V</span>: <span class="kwd">Type</span>} (<span class="id">ge</span>: <span class="id">Genv.t</span> <span class="id">F</span> <span class="id">V</span>) (<span class="id">rs</span>: <span class="id">regset</span>) (<span class="id">m</span>: <span class="id">mem</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv_inject_neutral</span> :&gt; <span class="id">inject_neutral_invariant</span> <span class="id">ge</span> <span class="id">rs</span> <span class="id">m</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv_reg_wt</span>: <span class="id">wt_regset</span> <span class="id">rs</span><br/>
+&nbsp;&nbsp;}.<br/>
+<br/>
+<div class="doc">Proof that the invariants are preserved by Asm steps. </div>
+<br/>
+<div class="doc">For the proof of <span class="bracket"><span class="id">exec_instr_inject_neutral</span></span> below, we need
+<span class="bracket"><span class="id">MemoryX.inject_neutral_incr</span></span> for <span class="bracket"><span class="id">Pallocframe</span></span>. </div>
+<span class="kwd">Context</span> `{<span class="id">memory_model_x</span>: !<span class="id">Mem.MemoryModelX</span> <span class="id">mem</span>}.<br/>
+<br/>
+<br/>
+<div class="doc">Typing invariant on registers </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">set_reg_wt</span>: <br/>
+&nbsp;<span class="kwd">forall</span> <span class="id">v</span> <span class="id">r</span>',<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">Val.has_type</span> <span class="id">v</span> (<span class="id">typ_of_preg</span> <span class="id">r</span>') -&gt;<br/>
+&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wt_regset</span> <span class="id">rs</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wt_regset</span> (<span class="id">rs</span> # <span class="id">r</span>' &lt;- <span class="id">v</span>)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7613')">Proof.</div>
+<div class="proofscript" id="proof7613">
+&nbsp;&nbsp;<span class="tactic">red</span>. <span class="tactic">intros</span>. <span class="tactic">destruct</span> (<span class="id">preg_eq</span> <span class="id">r</span> <span class="id">r</span>').<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>. <span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">Pregmap.gss</span>. <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">Pregmap.gso</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">undef_reg_wt</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wt_regset</span> <span class="id">rs</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wt_regset</span> (<span class="id">rs</span> # <span class="id">r</span>' &lt;- <span class="id">Vundef</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7614')">Proof.</div>
+<div class="proofscript" id="proof7614">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">eapply</span> <span class="id">set_reg_wt</span>; <span class="tactic">simpl</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">undef_regs_wt</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wt_regset</span> <span class="id">rs</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">l</span>, <span class="id">wt_regset</span> (<span class="id">undef_regs</span> <span class="id">l</span> <span class="id">rs</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7615')">Proof.</div>
+<div class="proofscript" id="proof7615">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">l</span>. <span class="id">revert</span> <span class="id">rs</span> <span class="id">H</span>. <span class="tactic">induction</span> <span class="id">l</span>; <span class="tactic">simpl</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">undef_reg_wt</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">nextinstr_wt</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rs</span> <span class="id">sz</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wt_regset</span> <span class="id">rs</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wt_regset</span> (<span class="id">nextinstr</span> <span class="id">rs</span> <span class="id">sz</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7616')">Proof.</div>
+<div class="proofscript" id="proof7616">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">nextinstr</span>.  <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">set_reg_wt</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">generalize</span> (<span class="id">H</span> <span class="id">PC</span>); <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">rs</span> <span class="id">PC</span>); <span class="tactic">simpl</span>; <span class="tactic">clear</span>; <span class="tactic">tauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">nextinstr_nf_wt</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rs</span> <span class="id">sz</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wt_regset</span> <span class="id">rs</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wt_regset</span> (<span class="id">nextinstr_nf</span> <span class="id">rs</span> <span class="id">sz</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7617')">Proof.</div>
+<div class="proofscript" id="proof7617">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">nextinstr_nf</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">nextinstr_wt</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">undef_regs_wt</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<div class="doc">Inject_neutral </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">set_reg_inject</span>: <br/>
+&nbsp;<span class="kwd">forall</span> <span class="id">j</span> <span class="id">v</span> <span class="id">v</span>',<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">j</span> <span class="id">v</span> <span class="id">v</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rs</span> <span class="id">rs</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> <span class="id">j</span> (<span class="id">rs</span>#<span class="id">r</span>) (<span class="id">rs</span>'#<span class="id">r</span>)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span>' <span class="id">r</span>, <span class="id">Val.inject</span> <span class="id">j</span> ((<span class="id">rs</span>#<span class="id">r</span>' &lt;- <span class="id">v</span>)#<span class="id">r</span>) ((<span class="id">rs</span>'#<span class="id">r</span>' &lt;- <span class="id">v</span>')#<span class="id">r</span>)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7618')">Proof.</div>
+<div class="proofscript" id="proof7618">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">destruct</span> (<span class="id">preg_eq</span> <span class="id">r</span> <span class="id">r</span>').<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>. <span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">Pregmap.gss</span>. <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">Pregmap.gso</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">undef_reg_inject</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">j</span> <span class="id">rs</span> <span class="id">rs</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> <span class="id">j</span> (<span class="id">rs</span>#<span class="id">r</span>) (<span class="id">rs</span>'#<span class="id">r</span>)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span>' <span class="id">r</span>, <span class="id">Val.inject</span> <span class="id">j</span> ((<span class="id">rs</span>#<span class="id">r</span>' &lt;- <span class="id">Vundef</span>)#<span class="id">r</span>) ((<span class="id">rs</span>'#<span class="id">r</span>' &lt;- <span class="id">Vundef</span>)#<span class="id">r</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7619')">Proof.</div>
+<div class="proofscript" id="proof7619">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">apply</span> <span class="id">set_reg_inject</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">undef_regs_inject</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">j</span> <span class="id">rs</span> <span class="id">rs</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> <span class="id">j</span> (<span class="id">rs</span>#<span class="id">r</span>) (<span class="id">rs</span>'#<span class="id">r</span>)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">l</span> <span class="id">r</span>, <span class="id">Val.inject</span> <span class="id">j</span> ((<span class="id">undef_regs</span> <span class="id">l</span> <span class="id">rs</span>)#<span class="id">r</span>) ((<span class="id">undef_regs</span> <span class="id">l</span> <span class="id">rs</span>')#<span class="id">r</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7620')">Proof.</div>
+<div class="proofscript" id="proof7620">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">l</span>. <span class="id">revert</span> <span class="id">rs</span> <span class="id">rs</span>' <span class="id">H</span>. <span class="tactic">induction</span> <span class="id">l</span>; <span class="tactic">simpl</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">undef_reg_inject</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">nextinstr_inject</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">j</span> <span class="id">rs</span> <span class="id">rs</span>' <span class="id">sz</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> <span class="id">j</span> (<span class="id">rs</span>#<span class="id">r</span>) (<span class="id">rs</span>'#<span class="id">r</span>)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> <span class="id">j</span> ((<span class="id">nextinstr</span> <span class="id">rs</span> <span class="id">sz</span>)#<span class="id">r</span>) ((<span class="id">nextinstr</span> <span class="id">rs</span>' <span class="id">sz</span>)#<span class="id">r</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7621')">Proof.</div>
+<div class="proofscript" id="proof7621">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">nextinstr</span>.  <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">set_reg_inject</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Val.offset_ptr_inject</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">nextinstr_nf_inject</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">j</span> <span class="id">rs</span> <span class="id">rs</span>' <span class="id">sz</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> <span class="id">j</span> (<span class="id">rs</span>#<span class="id">r</span>) (<span class="id">rs</span>'#<span class="id">r</span>)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> <span class="id">j</span> ((<span class="id">nextinstr_nf</span> <span class="id">rs</span> <span class="id">sz</span>)#<span class="id">r</span>) ((<span class="id">nextinstr_nf</span> <span class="id">rs</span>' <span class="id">sz</span>)#<span class="id">r</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7622')">Proof.</div>
+<div class="proofscript" id="proof7622">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">nextinstr_nf</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">nextinstr_inject</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">undef_regs_inject</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">regs_inject_map</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">j</span> <span class="id">rs</span> <span class="id">rs</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">r</span>: <span class="id">preg</span>, <span class="id">Val.inject</span> <span class="id">j</span> (<span class="id">rs</span>#<span class="id">r</span>) (<span class="id">rs</span>'#<span class="id">r</span>)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">args</span>,<br/>
+&nbsp;&nbsp;<span class="id">list_forall2</span> (<span class="id">Val.inject</span> <span class="id">j</span>) (<span class="id">map</span> <span class="id">rs</span> <span class="id">args</span>) (<span class="id">map</span> <span class="id">rs</span>' <span class="id">args</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7623')">Proof.</div>
+<div class="proofscript" id="proof7623">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">args</span>; <span class="tactic">simpl</span>; <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">val_inject_neutral_incr</span>: <span class="kwd">forall</span> <span class="id">thr</span> <span class="id">v</span>, <span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> <span class="id">thr</span>) <span class="id">v</span> <span class="id">v</span> -&gt; <span class="kwd">forall</span> <span class="id">thr</span>', <span class="id">Ple</span> <span class="id">thr</span> <span class="id">thr</span>' -&gt; <span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> <span class="id">thr</span>') <span class="id">v</span> <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7624')">Proof.</div>
+<div class="proofscript" id="proof7624">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">try</span> <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">H4</span>. <span class="tactic">subst</span>. <span class="tactic">unfold</span> <span class="id">Mem.flat_inj</span> <span class="kwd">in</span> *. <span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b1</span> <span class="id">thr</span>); <span class="tactic">try</span> <span class="tactic">discriminate</span>. <span class="id">inv</span> <span class="id">H3</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>. <span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b1</span> <span class="id">thr</span>'); <span class="tactic">try</span> <span class="id">xomega</span>. <span class="tactic">reflexivity</span>. <span class="tactic">rewrite</span> <span class="id">Ptrofs.add_zero</span>. <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">extcall_arg_inject_neutral</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span> <span class="id">rs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hinj_reg</span>: <span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) (<span class="id">rs</span> <span class="id">r</span>) (<span class="id">rs</span> <span class="id">r</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hinj_mem</span>: <span class="id">Mem.inject_neutral</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>) <span class="id">m</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">l</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extcall_arg</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">l</span> <span class="id">v</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) <span class="id">v</span> <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7625')">Proof.</div>
+<div class="proofscript" id="proof7625">
+&nbsp;&nbsp;<span class="tactic">induction</span> 3; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="id">H0</span>. <span class="tactic">unfold</span> <span class="id">Mem.loadv</span>. <span class="id">case_eq</span> (<span class="id">rs</span> <span class="id">RSP</span>); <span class="tactic">try</span> <span class="tactic">discriminate</span>. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id">Mem.loadv_inject_neutral</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">extcall_arg_pair_inject_neutral</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span> <span class="id">rs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hinj_reg</span>: <span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) (<span class="id">rs</span> <span class="id">r</span>) (<span class="id">rs</span> <span class="id">r</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hinj_mem</span>: <span class="id">Mem.inject_neutral</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>) <span class="id">m</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">l</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extcall_arg_pair</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">l</span> <span class="id">v</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) <span class="id">v</span> <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7626')">Proof.</div>
+<div class="proofscript" id="proof7626">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">l</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span> <span class="id">v</span> <span class="id">H</span>; <span class="id">inv</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">H</span>: <span class="id">extcall_arg</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> |- <span class="id">_</span> =&gt; <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">extcall_arg_inject_neutral</span>' <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">eauto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Val.longofwords_inject</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">extcall_args_inject_neutral</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span> <span class="id">rs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hinj_reg</span>: <span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) (<span class="id">rs</span> <span class="id">r</span>) (<span class="id">rs</span> <span class="id">r</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hinj_mem</span>: <span class="id">Mem.inject_neutral</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>) <span class="id">m</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sg</span> <span class="id">args</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extcall_arguments</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_forall2</span> (<span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>))) <span class="id">args</span> <span class="id">args</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7627')">Proof.</div>
+<div class="proofscript" id="proof7627">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">extcall_arguments</span>. <span class="tactic">intros</span> <span class="id">until</span> <span class="id">sg</span>. <span class="tactic">generalize</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>). <span class="tactic">clear</span> <span class="id">sg</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="id">constructor</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">extcall_arg_pair_inject_neutral</span>'.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">shl_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">v1</span> <span class="id">v2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">f</span> (<span class="id">Val.shl</span> <span class="id">v1</span> <span class="id">v2</span>) (<span class="id">Val.shl</span> <span class="id">v1</span> <span class="id">v2</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7628')">Proof.</div>
+<div class="proofscript" id="proof7628">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">v1</span>; <span class="tactic">destruct</span> <span class="id">v2</span>; <span class="tactic">try</span> <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Int.ltu</span> <span class="id">i0</span> <span class="id">Int.iwordsize</span>); <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">shr_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">v1</span> <span class="id">v2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">f</span> (<span class="id">Val.shr</span> <span class="id">v1</span> <span class="id">v2</span>) (<span class="id">Val.shr</span> <span class="id">v1</span> <span class="id">v2</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7629')">Proof.</div>
+<div class="proofscript" id="proof7629">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">v1</span>; <span class="tactic">destruct</span> <span class="id">v2</span>; <span class="tactic">try</span> <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Int.ltu</span> <span class="id">i0</span> <span class="id">Int.iwordsize</span>); <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">shru_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">v1</span> <span class="id">v2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">f</span> (<span class="id">Val.shru</span> <span class="id">v1</span> <span class="id">v2</span>) (<span class="id">Val.shru</span> <span class="id">v1</span> <span class="id">v2</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7630')">Proof.</div>
+<div class="proofscript" id="proof7630">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">v1</span>; <span class="tactic">destruct</span> <span class="id">v2</span>; <span class="tactic">try</span> <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Int.ltu</span> <span class="id">i0</span> <span class="id">Int.iwordsize</span>); <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">ror_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">v1</span> <span class="id">v2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">f</span> (<span class="id">Val.ror</span> <span class="id">v1</span> <span class="id">v2</span>) (<span class="id">Val.ror</span> <span class="id">v1</span> <span class="id">v2</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7631')">Proof.</div>
+<div class="proofscript" id="proof7631">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">v1</span>; <span class="tactic">destruct</span> <span class="id">v2</span>; <span class="tactic">try</span> <span class="id">constructor</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">of_bool_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">f</span> (<span class="id">Val.of_bool</span> <span class="id">b</span>) (<span class="id">Val.of_bool</span> <span class="id">b</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7632')">Proof.</div>
+<div class="proofscript" id="proof7632">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">b</span>; <span class="tactic">simpl</span>; <span class="id">constructor</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compare_floats_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">rs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">r</span>: <span class="id">preg</span>, <span class="id">Val.inject</span> <span class="id">f</span> (<span class="id">rs</span> <span class="id">r</span>) (<span class="id">rs</span> <span class="id">r</span>)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">f</span> (<span class="id">compare_floats</span> <span class="id">a</span> <span class="id">b</span> <span class="id">rs</span> <span class="id">r</span>) (<span class="id">compare_floats</span> <span class="id">a</span> <span class="id">b</span> <span class="id">rs</span> <span class="id">r</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7633')">Proof with</div>
+<div class="proofscript" id="proof7633">
+ (<span class="tactic">simpl</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">apply</span> <span class="id">undef_reg_inject</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">auto</span> <span class="kwd">using</span> <span class="id">of_bool_inject_neutral</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id">compare_floats</span>. <span class="tactic">destruct</span> <span class="id">a</span>...<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">b</span>...<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">apply</span> <span class="id">set_reg_inject</span>...<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">cmpu_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">p</span> <span class="id">c</span> <span class="id">a</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">f</span> (<span class="id">Val.cmpu</span> <span class="id">p</span> <span class="id">c</span> <span class="id">a</span> <span class="id">b</span>) (<span class="id">Val.cmpu</span> <span class="id">p</span> <span class="id">c</span> <span class="id">a</span> <span class="id">b</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7634')">Proof.</div>
+<div class="proofscript" id="proof7634">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Val.cmpu</span>. <span class="tactic">destruct</span> (<span class="id">Val.cmpu_bool</span> <span class="id">p</span> <span class="id">c</span> <span class="id">a</span> <span class="id">b</span>); <span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">b0</span>; <span class="id">constructor</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">cmp_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">p</span> <span class="id">c</span> <span class="id">a</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">f</span> (<span class="id">Val.cmp</span> <span class="id">p</span> <span class="id">c</span> <span class="id">a</span>) (<span class="id">Val.cmp</span> <span class="id">p</span> <span class="id">c</span> <span class="id">a</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7635')">Proof.</div>
+<div class="proofscript" id="proof7635">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Val.cmp</span>. <span class="tactic">destruct</span> (<span class="id">Val.cmp_bool</span> <span class="id">p</span> <span class="id">c</span> <span class="id">a</span>); <span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">b</span>; <span class="id">constructor</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sub_overflow_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">a</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">f</span> (<span class="id">Val.sub_overflow</span> <span class="id">a</span> <span class="id">b</span>) (<span class="id">Val.sub_overflow</span> <span class="id">a</span> <span class="id">b</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7636')">Proof.</div>
+<div class="proofscript" id="proof7636">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Val.sub_overflow</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="tactic">destruct</span> <span class="id">b</span>; <span class="id">constructor</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">negative_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">a</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">f</span> (<span class="id">Val.negative</span> <span class="id">a</span>) (<span class="id">Val.negative</span> <span class="id">a</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7637')">Proof.</div>
+<div class="proofscript" id="proof7637">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Val.negative</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">constructor</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compare_ints_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">rs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">r</span>: <span class="id">preg</span>, <span class="id">Val.inject</span> <span class="id">f</span> (<span class="id">rs</span> <span class="id">r</span>) (<span class="id">rs</span> <span class="id">r</span>)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span> <span class="id">m</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">f</span> (<span class="id">compare_ints</span> <span class="id">a</span> <span class="id">b</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">r</span>) (<span class="id">compare_ints</span> <span class="id">a</span> <span class="id">b</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">r</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7638')">Proof.</div>
+<div class="proofscript" id="proof7638">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compare_ints</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">undef_reg_inject</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">set_reg_inject</span>, <span class="id">cmpu_inject_neutral</span>, <span class="id">undef_reg_inject</span>, <span class="id">negative_inject_neutral</span>, <span class="id">sub_overflow_inject_neutral</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">symbol_address_inject_neutral_gen</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">se</span> <span class="id">i</span> <span class="id">ofs</span> <span class="id">j</span>:<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> (<span class="id">id</span> : <span class="id">ident</span>) (<span class="id">b</span> : <span class="id">block</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Senv.find_symbol</span> <span class="id">se</span> <span class="id">id</span> = <span class="id">Some</span> <span class="id">b</span> -&gt; <span class="id">j</span> <span class="id">b</span> = <span class="id">Some</span> (<span class="id">b</span>, 0)) -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">j</span> (<span class="id">Senv.symbol_address</span> <span class="id">se</span> <span class="id">i</span> <span class="id">ofs</span>) (<span class="id">Senv.symbol_address</span> <span class="id">se</span> <span class="id">i</span> <span class="id">ofs</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7639')">Proof.</div>
+<div class="proofscript" id="proof7639">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Senv.symbol_address</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Senv.find_symbol</span> <span class="id">se</span> <span class="id">i</span>) <span class="id">eqn</span>:<span class="id">SYMB</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Ptrofs.add_zero</span>. <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">symbol_address_inject_neutral_preserves_global</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">F</span> <span class="id">V</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ge</span> <span class="id">i</span> <span class="id">ofs</span> <span class="id">j</span>:<br/>
+&nbsp;&nbsp;<span class="id">meminj_preserves_globals</span> (<span class="id">F</span> := <span class="id">F</span>) (<span class="id">V</span> := <span class="id">V</span>) <span class="id">ge</span> <span class="id">j</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Val.inject</span> <span class="id">j</span> (<span class="id">Senv.symbol_address</span> <span class="id">ge</span> <span class="id">i</span> <span class="id">ofs</span>) (<span class="id">Senv.symbol_address</span> <span class="id">ge</span> <span class="id">i</span> <span class="id">ofs</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7640')">Proof.</div>
+<div class="proofscript" id="proof7640">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">meminj_preserves_globals</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> 1 <span class="kwd">as</span> (<span class="id">H</span> &amp; <span class="id">_</span> &amp; <span class="id">_</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">symbol_address_inject_neutral_gen</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">symbol_address_inject_neutral_le_nextblock</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">se</span> <span class="id">n</span> <span class="id">i</span> <span class="id">ofs</span>:<br/>
+&nbsp;&nbsp;<span class="id">Ple</span> (<span class="id">Senv.nextblock</span> <span class="id">se</span>) <span class="id">n</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> <span class="id">n</span>) (<span class="id">Senv.symbol_address</span> <span class="id">se</span> <span class="id">i</span> <span class="id">ofs</span>) (<span class="id">Senv.symbol_address</span> <span class="id">se</span> <span class="id">i</span> <span class="id">ofs</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7641')">Proof.</div>
+<div class="proofscript" id="proof7641">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">symbol_address_inject_neutral_gen</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">id0</span> <span class="id">b</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mem.flat_inj</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">_</span> <span class="id">_</span>) <span class="kwd">as</span> [ | <span class="id">N</span> ] ; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">N</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Senv.find_symbol_below</span> <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="id">xomega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">symbol_address_inject_neutral_le_nextblock_genv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">F</span> <span class="id">V</span>} (<span class="id">ge</span>: <span class="id">Genv.t</span> <span class="id">F</span> <span class="id">V</span>) <span class="id">n</span> <span class="id">i</span> <span class="id">ofs</span>:<br/>
+&nbsp;&nbsp;<span class="id">Ple</span> (<span class="id">Genv.genv_next</span> <span class="id">ge</span>) <span class="id">n</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> <span class="id">n</span>) (<span class="id">Genv.symbol_address</span> <span class="id">ge</span> <span class="id">i</span> <span class="id">ofs</span>) (<span class="id">Genv.symbol_address</span> <span class="id">ge</span> <span class="id">i</span> <span class="id">ofs</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7642')">Proof.</div>
+<div class="proofscript" id="proof7642">
+&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">Genv.symbol_address</span> <span class="id">ge</span>) <span class="kwd">with</span> (<span class="id">Senv.symbol_address</span> <span class="id">ge</span>) <span class="tactic">by</span> <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">symbol_address_inject_neutral_le_nextblock</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">eval_addrmode_inject_neutral</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">F</span> <span class="id">V</span>} (<span class="id">ge</span>: <span class="id">Genv.t</span> <span class="id">F</span> <span class="id">V</span>) <span class="id">m</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Ple</span> (<span class="id">Genv.genv_next</span> <span class="id">ge</span>) (<span class="id">Mem.nextblock</span> <span class="id">m</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) (<span class="id">rs</span> <span class="id">r</span>) (<span class="id">rs</span> <span class="id">r</span>)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) (<span class="id">eval_addrmode</span> <span class="id">ge</span> <span class="id">a</span> <span class="id">rs</span>) (<span class="id">eval_addrmode</span> <span class="id">ge</span> <span class="id">a</span> <span class="id">rs</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7643')">Proof.</div>
+<div class="proofscript" id="proof7643">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">eval_addrmode</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Archi.ptr64</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">a</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">apply</span> <span class="id">Val.addl_inject</span>. <span class="tactic">destruct</span> <span class="id">base</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Val.addl_inject</span>. <span class="tactic">destruct</span> <span class="id">ofs</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">p</span>; <span class="tactic">auto</span>. <span class="tactic">destruct</span> <span class="id">zeq</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">rs</span> <span class="id">i</span>) <span class="id">eqn</span>:?; <span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">const</span>; <span class="tactic">auto</span>. <span class="tactic">destruct</span> <span class="id">p</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">symbol_address_inject_neutral_le_nextblock_genv</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">a</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">apply</span> <span class="id">Val.add_inject</span>. <span class="tactic">destruct</span> <span class="id">base</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Val.add_inject</span>. <span class="tactic">destruct</span> <span class="id">ofs</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">p</span>; <span class="tactic">auto</span>. <span class="tactic">destruct</span> <span class="id">zeq</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">rs</span> <span class="id">i</span>) <span class="id">eqn</span>:?; <span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">const</span>; <span class="tactic">auto</span>. <span class="tactic">destruct</span> <span class="id">p</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">symbol_address_inject_neutral_le_nextblock_genv</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">destr_all</span> :=<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|- <span class="id">context</span> [<span class="kwd">match</span> ?<span class="id">g</span> <span class="kwd">with</span> <span class="id">_</span> =&gt; <span class="id">_</span> <span class="kwd">end</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="tactic">destruct</span> <span class="id">g</span> <span class="id">eqn</span>:?; <span class="tactic">try</span> <span class="tactic">discriminate</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| |- <span class="id">context</span> [<span class="kwd">if</span> ?<span class="id">g</span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="tactic">destruct</span> <span class="id">g</span> <span class="id">eqn</span>:?; <span class="tactic">try</span> <span class="tactic">discriminate</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Ltac</span> <span class="id">solve_reg_inj</span> :=<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| |- <span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> <span class="id">_</span> (<span class="id">nextinstr_nf</span> <span class="id">_</span> <span class="id">_</span>) (<span class="id">nextinstr_nf</span> <span class="id">_</span> <span class="id">_</span>) =&gt; <span class="tactic">apply</span> <span class="id">set_reg_inject</span>; <span class="tactic">auto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| |- <span class="kwd">forall</span> <span class="id">r</span>, <span class="id">Val.inject</span> <span class="id">_</span> (<span class="id">_</span> # <span class="id">_</span> &lt;- <span class="id">_</span> <span class="id">_</span>) (<span class="id">_</span> # <span class="id">_</span> &lt;- <span class="id">_</span> <span class="id">_</span>) =&gt; <span class="tactic">apply</span> <span class="id">set_reg_inject</span>; <span class="tactic">auto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| |- <span class="id">Val.inject</span> <span class="id">_</span> (<span class="id">Val.offset_ptr</span> <span class="id">_</span> <span class="id">_</span>) (<span class="id">Val.offset_ptr</span> <span class="id">_</span> <span class="id">_</span>) =&gt; <span class="tactic">apply</span> <span class="id">Val.offset_ptr_inject</span>; <span class="tactic">auto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| |- <span class="id">Val.inject</span> <span class="id">_</span> (<span class="id">undef_regs</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) (<span class="id">undef_regs</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) =&gt; <span class="tactic">apply</span> <span class="id">undef_regs_inject</span>; <span class="tactic">auto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| |- <span class="id">_</span> =&gt; <span class="tactic">intros</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHCONFIG</span>.<br/>
+<br/>
+<br/>
+<br/>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

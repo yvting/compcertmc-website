@@ -1,0 +1,259 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module PseudoInstructions</title>
+<meta name="description" content="Documentation of Coq module PseudoInstructions" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module PseudoInstructions</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Coqlib.html">Coqlib</a></span> <span class="id"><a href="Integers.html">Integers</a></span> <span class="id"><a href="AST.html">AST</a></span> <span class="id"><a href="Memdata.html">Memdata</a></span> <span class="id"><a href="Maps.html">Maps</a></span> <span class="id"><a href="StackADT.html">StackADT</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Asm.html">Asm</a></span> <span class="id"><a href="Asmgen.html">Asmgen</a></span> <span class="id"><a href="RealAsm.html">RealAsm</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Errors.html">Errors</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Memtype.html">Memtype</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">error_monad_scope</span>.<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">nat_scope</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="linear_addr">linear_addr</a></span> <span class="id">reg</span> <span class="id">ofs</span> := <br/>
+&nbsp;&nbsp;<span class="id"><a href="Asm.html#Addrmode">Addrmode</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="PseudoInstructions.html#reg">reg</a></span>) <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span> <span class="id"><a href="PseudoInstructions.html#ofs">ofs</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Plea">Plea</a></span> := <span class="kwd">if</span> <span class="id"><a href="Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> <span class="id"><a href="Asm.html#Pleaq">Pleaq</a></span> <span class="kwd">else</span> <span class="id"><a href="Asm.html#Pleal">Pleal</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Padd">Padd</a></span> <span class="id">dst</span> <span class="id">src</span> <span class="id">z</span> := <span class="id"><a href="PseudoInstructions.html#Plea">Plea</a></span> <span class="id"><a href="PseudoInstructions.html#dst">dst</a></span> (<span class="id"><a href="PseudoInstructions.html#linear_addr">linear_addr</a></span> <span class="id"><a href="PseudoInstructions.html#src">src</a></span> <span class="id"><a href="PseudoInstructions.html#z">z</a></span>).<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Psub">Psub</a></span> <span class="id">dst</span> <span class="id">src</span> <span class="id">z</span> := <span class="id"><a href="PseudoInstructions.html#Padd">Padd</a></span> <span class="id"><a href="PseudoInstructions.html#dst">dst</a></span> <span class="id"><a href="PseudoInstructions.html#src">src</a></span> (- <span class="id"><a href="PseudoInstructions.html#z">z</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_instr">transf_instr</a></span> (<span class="id">i</span>: <span class="id"><a href="Asm.html#instruction">instruction</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="Asm.html#instruction">instruction</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="PseudoInstructions.html#i">i</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="Asm.html#Pallocframe">Pallocframe</a></span> <span class="id">sz</span> <span class="id">pubrange</span> <span class="id">ofs_ra</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">sz</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> <span class="id">sz</span> 8 - <span class="id"><a href="Memdata.html#size_chunk">size_chunk</a></span> <span class="id"><a href="AST.html#Mptr">Mptr</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">addr1</span> := <span class="id"><a href="PseudoInstructions.html#linear_addr">linear_addr</a></span> <span class="id"><a href="Asm.html#RSP">RSP</a></span> (<span class="id"><a href="Memdata.html#size_chunk">size_chunk</a></span> <span class="id"><a href="AST.html#Mptr">Mptr</a></span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="id"><a href="PseudoInstructions.html#Padd">Padd</a></span> <span class="id"><a href="Asm.html#RAX">RAX</a></span> <span class="id"><a href="Asm.html#RSP">RSP</a></span> (<span class="id"><a href="Memdata.html#size_chunk">size_chunk</a></span> <span class="id"><a href="AST.html#Mptr">Mptr</a></span>); <span class="id"><a href="PseudoInstructions.html#Psub">Psub</a></span> <span class="id"><a href="Asm.html#RSP">RSP</a></span> <span class="id"><a href="Asm.html#RSP">RSP</a></span> <span class="id"><a href="PseudoInstructions.html#sz">sz</a></span> ]<br/>
+&nbsp;&nbsp;| <span class="id"><a href="Asm.html#Pfreeframe">Pfreeframe</a></span> <span class="id">fsz</span> <span class="id">ofs_ra</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">sz</span> := <span class="id"><a href="Coqlib.html#align">align</a></span> <span class="id">fsz</span> 8 - <span class="id"><a href="Memdata.html#size_chunk">size_chunk</a></span> <span class="id"><a href="AST.html#Mptr">Mptr</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="id"><a href="PseudoInstructions.html#Padd">Padd</a></span> <span class="id"><a href="Asm.html#RSP">RSP</a></span> <span class="id"><a href="Asm.html#RSP">RSP</a></span> <span class="id"><a href="PseudoInstructions.html#sz">sz</a></span> ]<br/>
+&nbsp;&nbsp;| <span class="id"><a href="Asm.html#Pload_parent_pointer">Pload_parent_pointer</a></span> <span class="id">rd</span> <span class="id">z</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="id"><a href="PseudoInstructions.html#Padd">Padd</a></span> <span class="id">rd</span> <span class="id"><a href="Asm.html#RSP">RSP</a></span> (<span class="id"><a href="Coqlib.html#align">align</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.max">Z.max</a></span> 0 <span class="id">z</span>) 8) ]<br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; [ <span class="id"><a href="PseudoInstructions.html#i">i</a></span> ]<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_code">transf_code</a></span> (<span class="id">c</span>: <span class="id"><a href="Asm.html#code">code</a></span>) : <span class="id"><a href="Asm.html#code">code</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#concat">concat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="PseudoInstructions.html#transf_instr">transf_instr</a></span> <span class="id"><a href="PseudoInstructions.html#c">c</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_function">transf_function</a></span> (<span class="id">f</span>: <span class="id"><a href="Asm.html#function">function</a></span>) : <span class="id"><a href="Asm.html#function">function</a></span> :=<br/>
+&nbsp;&nbsp;{|<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Asm.html#mkfunction">fn_sig</a></span> := <span class="id"><a href="Asm.html#fn_sig">fn_sig</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fn_code</span> := <span class="id"><a href="PseudoInstructions.html#transf_code">transf_code</a></span> (<span class="id"><a href="Asm.html#fn_code">fn_code</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fn_stacksize</span> := <span class="id"><a href="Asm.html#fn_stacksize">fn_stacksize</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fn_pubrange</span> := <span class="id"><a href="Asm.html#fn_pubrange">fn_pubrange</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span>;<br/>
+&nbsp;&nbsp;|}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_fundef">transf_fundef</a></span> := <span class="id"><a href="AST.html#transf_fundef">AST.transf_fundef</a></span> <span class="id"><a href="PseudoInstructions.html#transf_function">transf_function</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_program">transf_program</a></span> (<span class="id">p</span>: <span class="id"><a href="Asm.html#program">Asm.program</a></span>) : <span class="id"><a href="Asm.html#program">Asm.program</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="AST.html#transform_program">AST.transform_program</a></span> <span class="id"><a href="PseudoInstructions.html#transf_fundef">transf_fundef</a></span> <span class="id"><a href="PseudoInstructions.html#p">p</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="check_function">check_function</a></span> (<span class="id">f</span>: <span class="id"><a href="Asm.html#function">Asm.function</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="RealAsm.html#wf_asm_function_check">wf_asm_function_check</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span> &amp;&amp; <span class="id"><a href="AsmFacts.html#check_asm_code_no_rsp">AsmFacts.check_asm_code_no_rsp</a></span> (<span class="id"><a href="Asm.html#fn_code">fn_code</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_check_function">transf_check_function</a></span> <span class="id">f</span> := <br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="PseudoInstructions.html#check_function">check_function</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span> <span class="kwd">then</span> <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span> <br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="id"><a href="Errors.html#Error">Error</a></span> (<span class="id"><a href="Errors.html#MSG">MSG</a></span> "<span class="id">Precondition</span> <span class="id">of</span> <span class="id">pseudo</span> <span class="id">instruction</span> <span class="id">elimination</span> <span class="id">fails</span>" :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_check_fundef">transf_check_fundef</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="AST.html#transf_partial_fundef">AST.transf_partial_fundef</a></span> (<span class="id"><a href="PseudoInstructions.html#transf_check_function">transf_check_function</a></span>).<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Globalenvs.html">Globalenvs</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="check_program">check_program</a></span> <span class="id">p</span> : <span class="id"><a href="Errors.html#res">res</a></span> (<span class="id"><a href="Asm.html#program">Asm.program</a></span>) :=<br/>
+ <span class="id"><a href="AST.html#transform_partial_program">AST.transform_partial_program</a></span> <span class="id"><a href="PseudoInstructions.html#transf_check_fundef">transf_check_fundef</a></span> <span class="id"><a href="PseudoInstructions.html#p">p</a></span><br/>
+.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="check_program_id">check_program_id</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p1</span> <span class="id">p2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="PseudoInstructions.html#check_program">check_program</a></span> <span class="id"><a href="PseudoInstructions.html#p1">p1</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="PseudoInstructions.html#p2">p2</a></span> -&gt; <span class="id"><a href="PseudoInstructions.html#p1">p1</a></span> = <span class="id"><a href="PseudoInstructions.html#p2">p2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5166')">Proof.</div>
+<div class="proofscript" id="proof5166">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="PseudoInstructions.html#check_program">check_program</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="AST.html#transform_partial_program">transform_partial_program</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="AST.html#transform_partial_program2">transform_partial_program2</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">monadInv</span> <span class="id">H</span>. <span class="tactic">destruct</span> <span class="id">p1</span>. <span class="tactic">simpl</span> <span class="kwd">in</span> *. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">EQ</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="PseudoInstructions.html#transf_check_fundef">transf_check_fundef</a></span>, <span class="id"><a href="AST.html#transf_partial_fundef">transf_partial_fundef</a></span>, <span class="id"><a href="PseudoInstructions.html#transf_check_function">transf_check_function</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">x</span>; <span class="tactic">induction</span> <span class="id">prog_defs</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>. <span class="id">inv</span> <span class="id">EQ</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">destr_in</span> <span class="id">EQ</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">EQ</span>; <span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">Heqr</span>; <span class="id">monadInv</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">f_equal</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">f_equal</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">f_equal</span>; <span class="tactic">eauto</span>. <span class="tactic">f_equal</span>. <span class="tactic">f_equal</span>. <span class="tactic">f_equal</span>. <span class="tactic">destruct</span> <span class="id">v</span>; <span class="tactic">simpl</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">f_equal</span>. <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="match_check_prog">match_check_prog</a></span> (<span class="id">p</span>: <span class="id"><a href="Asm.html#program">Asm.program</a></span>) (<span class="id">tp</span>: <span class="id"><a href="Asm.html#program">Asm.program</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="Linking.html#match_program">Linking.match_program</a></span> (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">f</span> <span class="id">tf</span> =&gt; <span class="id"><a href="PseudoInstructions.html#transf_check_fundef">transf_check_fundef</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="PseudoInstructions.html#tf">tf</a></span>) <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span> <span class="id"><a href="PseudoInstructions.html#p">p</a></span> <span class="id"><a href="PseudoInstructions.html#tp">tp</a></span> <br/>
+.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="check_program_match">check_program_match</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>, <span class="id"><a href="PseudoInstructions.html#check_program">check_program</a></span> <span class="id"><a href="PseudoInstructions.html#p">p</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="PseudoInstructions.html#tp">tp</a></span> -&gt; <span class="id"><a href="PseudoInstructions.html#match_check_prog">match_check_prog</a></span> <span class="id"><a href="PseudoInstructions.html#p">p</a></span> <span class="id"><a href="PseudoInstructions.html#tp">tp</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5167')">Proof.</div>
+<div class="proofscript" id="proof5167">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id"><a href="PseudoInstructions.html#check_program">check_program</a></span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">destr_in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="Linking.html#match_transform_partial_program">Linking.match_transform_partial_program</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="check_wf">check_wf</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="PseudoInstructions.html#match_check_prog">match_check_prog</a></span> <span class="id"><a href="PseudoInstructions.html#p">p</a></span> <span class="id"><a href="PseudoInstructions.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="RealAsm.html#wf_asm_prog">RealAsm.wf_asm_prog</a></span> (<span class="id"><a href="Globalenvs.html#Genv.globalenv">Globalenvs.Genv.globalenv</a></span> <span class="id"><a href="PseudoInstructions.html#p">p</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5168')">Proof.</div>
+<div class="proofscript" id="proof5168">
+&nbsp;&nbsp;<span class="tactic">red</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">A</span> &amp; <span class="id">B</span> &amp; <span class="id">C</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="Globalenvs.html#Genv.find_funct_ptr_prop">Globalenvs.Genv.find_funct_ptr_prop</a></span> <span class="kwd">with</span> (<span class="id">P</span> := <span class="kwd">fun</span> <span class="id">f</span> =&gt; <span class="kwd">match</span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span> <span class="kwd">with</span> <span class="id"><a href="AST.html#Internal">Internal</a></span> <span class="id">f</span> =&gt; <span class="id">_</span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span> | <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#True">True</a></span> <span class="kwd">end</span>) <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">edestruct</span> <span class="id"><a href="Coqlib.html#list_forall2_in_left">list_forall2_in_left</a></span> <span class="kwd">as</span> (<span class="id">v2</span> &amp; <span class="id">IN2</span> &amp; <span class="id">P2</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">P2</span>. <span class="tactic">simpl</span> <span class="kwd">in</span> *. <span class="tactic">subst</span>. <span class="id">inv</span> <span class="id">H2</span>. <span class="id">inv</span> <span class="id">H4</span>.<br/>
+&nbsp;&nbsp;<span class="id">destr</span>. <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H5</span>. <span class="id">monadInv</span> <span class="id">H5</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="PseudoInstructions.html#transf_check_function">transf_check_function</a></span> <span class="kwd">in</span> <span class="id">EQ</span>. <span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">EQ</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="PseudoInstructions.html#check_function">check_function</a></span> <span class="kwd">in</span> <span class="id">Heqb0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_iff">andb_true_iff</a></span> <span class="kwd">in</span> <span class="id">Heqb0</span>; <span class="tactic">destruct</span> <span class="id">Heqb0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="RealAsm.html#wf_asm_function_check_correct">wf_asm_function_check_correct</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="check_no_rsp">check_no_rsp</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="PseudoInstructions.html#match_check_prog">match_check_prog</a></span> <span class="id"><a href="PseudoInstructions.html#p">p</a></span> <span class="id"><a href="PseudoInstructions.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">f</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Globalenvs.html#Genv.find_funct_ptr">Globalenvs.Genv.find_funct_ptr</a></span> (<span class="id"><a href="Globalenvs.html#Genv.globalenv">Globalenvs.Genv.globalenv</a></span> <span class="id"><a href="PseudoInstructions.html#p">p</a></span>) <span class="id"><a href="PseudoInstructions.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="AST.html#Internal">Internal</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="AsmFacts.html#check_asm_code_no_rsp">AsmFacts.check_asm_code_no_rsp</a></span> (<span class="id"><a href="Asm.html#fn_code">fn_code</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5169')">Proof.</div>
+<div class="proofscript" id="proof5169">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">A</span> &amp; <span class="id">B</span> &amp; <span class="id">C</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="Globalenvs.html#Genv.find_funct_ptr_prop">Globalenvs.Genv.find_funct_ptr_prop</a></span> <span class="kwd">with</span> (<span class="id">P</span> := <span class="kwd">fun</span> <span class="id">f</span> =&gt; <span class="kwd">match</span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span> <span class="kwd">with</span> <span class="id"><a href="AST.html#Internal">Internal</a></span> <span class="id">f</span> =&gt; <span class="id">_</span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span> | <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#True">True</a></span> <span class="kwd">end</span>) <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">pattern</span> <span class="id">f</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intros</span>. <span class="id">edestruct</span> <span class="id"><a href="Coqlib.html#list_forall2_in_left">list_forall2_in_left</a></span> <span class="kwd">as</span> (<span class="id">v2</span> &amp; <span class="id">IN2</span> &amp; <span class="id">P2</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">P2</span>. <span class="tactic">simpl</span> <span class="kwd">in</span> *. <span class="tactic">subst</span>. <span class="id">inv</span> <span class="id">H2</span>. <span class="id">inv</span> <span class="id">H4</span>.<br/>
+&nbsp;&nbsp;<span class="id">destr</span>. <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H5</span>. <span class="id">monadInv</span> <span class="id">H5</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="PseudoInstructions.html#transf_check_function">transf_check_function</a></span> <span class="kwd">in</span> <span class="id">EQ</span>. <span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">EQ</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="PseudoInstructions.html#check_function">check_function</a></span> <span class="kwd">in</span> <span class="id">Heqb0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_iff">andb_true_iff</a></span> <span class="kwd">in</span> <span class="id">Heqb0</span>; <span class="tactic">destruct</span> <span class="id">Heqb0</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="CHECKSIMU">CHECKSIMU</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Events.html">Events</a></span> <span class="id"><a href="Globalenvs.html">Globalenvs</a></span> <span class="id"><a href="Smallstep.html">Smallstep</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> `{<span class="id">memory_model</span>: <span class="id"><a href="Memtype.html#Mem.MemoryModel">Mem.MemoryModel</a></span> }.<br/>
+&nbsp;&nbsp;<span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">inject_perm_upto_writable</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> `{<span class="id">external_calls_ops</span> : !<span class="id"><a href="Events.html#ExternalCallsOps">ExternalCallsOps</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.mem">mem</a></span> }.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> `{!<span class="id"><a href="Events.html#EnableBuiltins">EnableBuiltins</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.mem">mem</a></span>}.<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">mem_accessors_default</span>.<br/>
+&nbsp;&nbsp;<span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">symbols_inject_instance</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> `{<span class="id">external_calls_props</span> : !<span class="id"><a href="Events.html#ExternalCallsProps">ExternalCallsProps</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.mem">mem</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">memory_model_ops</span> := <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.memory_model_ops">memory_model_ops</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="CHECKSIMU.rs">rs</a></span>: <span class="id"><a href="Asm.html#regset">regset</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variables</span> <span class="id"><a name="CHECKSIMU.p">p</a></span> <span class="id"><a name="CHECKSIMU.tp">tp</a></span>: <span class="id"><a href="Asm.html#program">program</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="CHECKSIMU.TRANSF">TRANSF</a></span>: <span class="id"><a href="PseudoInstructions.html#match_check_prog">match_check_prog</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.p">p</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.tp">tp</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id"><a name="CHECKSIMU.ge">ge</a></span> := <span class="id"><a href="Globalenvs.html#Genv.globalenv">Genv.globalenv</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.p">p</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id"><a name="CHECKSIMU.tge">tge</a></span> := <span class="id"><a href="Globalenvs.html#Genv.globalenv">Genv.globalenv</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.tp">tp</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="symbols_preserved">symbols_preserved</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">s</span>: <span class="id"><a href="AST.html#ident">ident</a></span>), <span class="id"><a href="Globalenvs.html#Genv.find_symbol">Genv.find_symbol</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.tge">tge</a></span> <span class="id"><a href="PseudoInstructions.html#s">s</a></span> = <span class="id"><a href="Globalenvs.html#Genv.find_symbol">Genv.find_symbol</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.ge">ge</a></span> <span class="id"><a href="PseudoInstructions.html#s">s</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Proof</span> (<span class="id"><a href="Globalenvs.html#Genv.find_symbol_match">Genv.find_symbol_match</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.TRANSF">TRANSF</a></span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="senv_preserved">senv_preserved</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Globalenvs.html#Senv.equiv">Senv.equiv</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.ge">ge</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.tge">tge</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Proof</span> (<span class="id"><a href="Globalenvs.html#Genv.senv_match">Genv.senv_match</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.TRANSF">TRANSF</a></span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="genv_next_preserved">genv_next_preserved</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Globalenvs.html#Genv.genv_next">Genv.genv_next</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.tge">tge</a></span> = <span class="id"><a href="Globalenvs.html#Genv.genv_next">Genv.genv_next</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.ge">ge</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5170')">Proof.</div>
+<div class="proofscript" id="proof5170">
+ <span class="tactic">apply</span> <span class="id"><a href="PseudoInstructions.html#senv_preserved">senv_preserved</a></span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="functions_translated">functions_translated</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v</span> <span class="id">f</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Globalenvs.html#Genv.find_funct">Genv.find_funct</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.ge">ge</a></span> <span class="id"><a href="PseudoInstructions.html#v">v</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">tf</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Globalenvs.html#Genv.find_funct">Genv.find_funct</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.tge">tge</a></span> <span class="id"><a href="PseudoInstructions.html#v">v</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="PseudoInstructions.html#tf">tf</a></span> /\ <span class="id"><a href="PseudoInstructions.html#transf_check_fundef">transf_check_fundef</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="PseudoInstructions.html#tf">tf</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Proof</span> (<span class="id"><a href="Globalenvs.html#Genv.find_funct_transf_partial">Genv.find_funct_transf_partial</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.TRANSF">TRANSF</a></span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="function_ptr_translated">function_ptr_translated</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">f</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Globalenvs.html#Genv.find_funct_ptr">Genv.find_funct_ptr</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.ge">ge</a></span> <span class="id"><a href="PseudoInstructions.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">tf</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Globalenvs.html#Genv.find_funct_ptr">Genv.find_funct_ptr</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.tge">tge</a></span> <span class="id"><a href="PseudoInstructions.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="PseudoInstructions.html#tf">tf</a></span> /\ <span class="id"><a href="PseudoInstructions.html#transf_check_fundef">transf_check_fundef</a></span> <span class="id"><a href="PseudoInstructions.html#f">f</a></span> = <span class="id"><a href="Errors.html#OK">OK</a></span> <span class="id"><a href="PseudoInstructions.html#tf">tf</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Proof</span> (<span class="id"><a href="Globalenvs.html#Genv.find_funct_ptr_transf_partial">Genv.find_funct_ptr_transf_partial</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.TRANSF">TRANSF</a></span>).<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="globalenv_eq">globalenv_eq</a></span>:<br/>
+&nbsp;&nbsp;<span class="id"><a href="PseudoInstructions.html#CHECKSIMU.ge">ge</a></span> = <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.tge">tge</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5171')">Proof.</div>
+<div class="proofscript" id="proof5171">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="PseudoInstructions.html#ge">ge</a></span>, <span class="id"><a href="PseudoInstructions.html#tge">tge</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="Globalenvs.html#Genv.globalenv">Genv.globalenv</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.TRANSF">TRANSF</a></span> <span class="kwd">as</span> (<span class="id">A</span> &amp; <span class="id">B</span> &amp; <span class="id">C</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">setoid_rewrite</span> <span class="id">C</span>.<br/>
+&nbsp;&nbsp;<span class="id">fold</span> <span class="id"><a href="Asm.html#fundef">fundef</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="Globalenvs.html#Genv.empty_genv">Genv.empty_genv</a></span> <span class="id"><a href="Asm.html#fundef">fundef</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#unit">unit</a></span> (<span class="id"><a href="AST.html#prog_public">prog_public</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.p">p</a></span>)).<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">A</span>.<br/>
+&nbsp;&nbsp;<span class="id">fold</span> <span class="id"><a href="Asm.html#fundef">fundef</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="AST.html#prog_defs">prog_defs</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.p">p</a></span>) (<span class="id"><a href="AST.html#prog_defs">prog_defs</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.tp">tp</a></span>).<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H</span>. <span class="tactic">destruct</span> <span class="id">a1</span>, <span class="id">b1</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> *. <span class="tactic">subst</span>. <span class="id">inv</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">IHA</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H</span>. <span class="tactic">unfold</span> <span class="id"><a href="PseudoInstructions.html#transf_check_fundef">transf_check_fundef</a></span>, <span class="id"><a href="AST.html#transf_partial_fundef">transf_partial_fundef</a></span> <span class="kwd">in</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">H1</span>. <span class="tactic">unfold</span> <span class="id"><a href="Errors.html#bind">bind</a></span> <span class="kwd">in</span> <span class="id">H2</span>. <span class="id">destr_in</span> <span class="id">H2</span>. <span class="id">inv</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="PseudoInstructions.html#transf_check_function">transf_check_function</a></span> <span class="kwd">in</span> <span class="id">Heqr</span>. <span class="tactic">repeat</span> <span class="id">destr_in</span> <span class="id">Heqr</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H0</span>. <span class="tactic">apply</span> <span class="id">IHA</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="transf_initial_states">transf_initial_states</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="RealAsm.html#initial_state">RealAsm.initial_state</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.p">p</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.rs">rs</a></span> <span class="id"><a href="PseudoInstructions.html#s">s</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="RealAsm.html#initial_state">RealAsm.initial_state</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.tp">tp</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.rs">rs</a></span> <span class="id"><a href="PseudoInstructions.html#s">s</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5172')">Proof.</div>
+<div class="proofscript" id="proof5172">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> (<span class="id"><a href="Globalenvs.html#Genv.init_mem_transf_partial">Genv.init_mem_transf_partial</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.TRANSF">TRANSF</a></span>). <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">TINIT</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">rs0</span>, <span class="id">ge0</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">setoid_rewrite</span> (<span class="id"><a href="Linking.html#match_program_main">Linking.match_program_main</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.TRANSF">TRANSF</a></span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="PseudoInstructions.html#symbols_preserved">symbols_preserved</a></span>. <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id"><a name="check_simulation">check_simulation</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Smallstep.html#forward_simulation">forward_simulation</a></span> (<span class="id"><a href="RealAsm.html#semantics">RealAsm.semantics</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.p">p</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.rs">rs</a></span>) (<span class="id"><a href="RealAsm.html#semantics">RealAsm.semantics</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.tp">tp</a></span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.rs">rs</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5173')">Proof.</div>
+<div class="proofscript" id="proof5173">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="PseudoInstructions.html#match_check_prog">match_check_prog</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="Smallstep.html#forward_simulation_step">forward_simulation_step</a></span> <span class="kwd">with</span> (<span class="id">match_states</span> := <span class="kwd">fun</span> <span class="id">s1</span> <span class="id">s2</span> : <span class="id"><a href="Asm.html#state">Asm.state</a></span> =&gt; <span class="id"><a href="PseudoInstructions.html#s1">s1</a></span> = <span class="id"><a href="PseudoInstructions.html#s2">s2</a></span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">simpl</span>. <span class="tactic">apply</span> <span class="id"><a href="PseudoInstructions.html#senv_preserved">senv_preserved</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">simpl</span>; <span class="tactic">intros</span>. <span class="id">eexists</span>; <span class="tactic">split</span>. <span class="tactic">eapply</span> <span class="id"><a href="PseudoInstructions.html#transf_initial_states">transf_initial_states</a></span>; <span class="tactic">eauto</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">simpl</span>; <span class="tactic">intros</span>. <span class="tactic">subst</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">subst</span>. <span class="id">fold</span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.tge">tge</a></span>. <span class="id">fold</span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU.ge">ge</a></span> <span class="kwd">in</span> <span class="id">H</span>. <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="PseudoInstructions.html#globalenv_eq">globalenv_eq</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eexists</span>; <span class="tactic">split</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="PseudoInstructions.html#CHECKSIMU">CHECKSIMU</a></span>.<br/>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

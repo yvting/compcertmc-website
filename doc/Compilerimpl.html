@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Compilerimpl</title>
+<meta name="description" content="Documentation of Coq module Compilerimpl" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Compilerimpl</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id"><a href="Compiler.html">Compiler</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="Memimpl.html">Memimpl</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="Unusedglobproofimpl.html">Unusedglobproofimpl</a></span>.<br/>
+<br/>
+<h1> Instantiate the compiler correctness proofs
+      with a memory model and external functions.
+   NOTE: This file poses axioms that differ from <span class="bracket"><span class="id">Cexecimpl</span></span>.
+   The axioms posed here are valid only for the verified compiler,
+   not for the C interpreter.
+   Anyway, since the verified compiler defined in <span class="bracket"><span class="id">Compiler</span></span> itself does
+   not depend on the memory model or the external functions, this file
+   does not need to be extracted.
+ </h1>
+<br/>
+<div class="doc">Instantiate the memory model. </div>
+<br/>
+<span class="kwd">Local</span> <span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">Memimpl.Mem.memory_model_ops</span>.<br/>
+<span class="kwd">Local</span> <span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">Memimpl.Mem.memory_model_prf</span>.<br/>
+<span class="kwd">Local</span> <span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">Unusedglobproofimpl.Mem.memory_model_x_prf</span>.<br/>
+<br/>
+<div class="doc">Axiomatize over external function calls. </div>
+<br/>
+<span class="kwd">Local</span> <span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">Events.symbols_inject_instance</span>.<br/>
+<span class="kwd">Parameter</span> <span class="id"><a name="external_calls_ops">external_calls_ops</a></span>: <span class="id"><a href="Events.html#ExternalCallsOps">Events.ExternalCallsOps</a></span> <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>.<br/>
+<span class="kwd">Axiom</span> <span class="id"><a name="external_calls_props">external_calls_props</a></span>: <span class="id"><a href="Events.html#ExternalCallsProps">Events.ExternalCallsProps</a></span> <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>.<br/>
+<span class="kwd">Axiom</span> <span class="id"><a name="enable_builtins_instance">enable_builtins_instance</a></span>: <span class="id"><a href="Events.html#EnableBuiltins">Events.EnableBuiltins</a></span> <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>.<br/>
+<span class="kwd">Axiom</span> <span class="id"><a name="external_calls_prf">external_calls_prf</a></span>: <span class="id"><a href="Events.html#ExternalCalls">Events.ExternalCalls</a></span> <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>.<br/>
+<span class="kwd">Axiom</span> <span class="id"><a name="i64_helpers_correct_prf">i64_helpers_correct_prf</a></span>:<br/>
+&nbsp;&nbsp;<span class="id"><a href="SplitLongproof.html#I64HelpersCorrect">SplitLongproof.I64HelpersCorrect</a></span> <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>.<br/>
+<br/>
+<h1> Correctness of the CompCert compiler </h1>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="transf_c_program_correct">transf_c_program_correct</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="Compiler.html#transf_c_program">Compiler.transf_c_program</a></span> <span class="id"><a href="Compilerimpl.html#p">p</a></span> = <span class="id"><a href="Errors.html#OK">Errors.OK</a></span> <span class="id"><a href="Compilerimpl.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">init_stk</span> := <span class="id"><a href="Compiler.html#mk_init_stk">Compiler.mk_init_stk</a></span> <span class="id"><a href="Compilerimpl.html#tp">tp</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="Smallstep.html#backward_simulation">Smallstep.backward_simulation</a></span> (<span class="id"><a href="Csem.html#semantics">Csem.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">Compiler.fn_stack_requirements</a></span> <span class="id"><a href="Compilerimpl.html#tp">tp</a></span>) <span class="id"><a href="Compilerimpl.html#p">p</a></span>) (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Compilerimpl.html#tp">tp</a></span> <span class="id"><a href="Compilerimpl.html#init_stk">init_stk</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6459')">Proof.</div>
+<div class="proofscript" id="proof6459">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Compiler.html#transf_c_program_correct">Compiler.transf_c_program_correct</a></span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Here is the separate compilation case.  Consider a nonempty list <span class="bracket"><span class="id">c_units</span></span>
+  of C source files (compilation units), <span class="bracket"><span class="id">C1</span> ,,, <span class="id">Cn</span></span>.  Assume that every
+  C compilation unit <span class="bracket"><span class="id">Ci</span></span> is successfully compiled by CompCert, obtaining
+  an Asm compilation unit <span class="bracket"><span class="id">Ai</span></span>.  Let <span class="bracket"><span class="id">asm_unit</span></span> be the nonempty list
+  <span class="bracket"><span class="id">A1</span> ... <span class="id">An</span></span>.  Further assume that the C units <span class="bracket"><span class="id">C1</span> ... <span class="id">Cn</span></span> can be linked
+  together to produce a whole C program <span class="bracket"><span class="id">c_program</span></span>.  Then, the generated
+  Asm units can be linked together, producing a whole Asm program
+  <span class="bracket"><span class="id">asm_program</span></span>.  Moreover, <span class="bracket"><span class="id">asm_program</span></span> preserves the semantics of
+  <span class="bracket"><span class="id">c_program</span></span>, in the sense that there exists a backward simulation of
+  the dynamic semantics of <span class="bracket"><span class="id">asm_program</span></span> by the dynamic semantics of <span class="bracket"><span class="id">c_program</span></span>.
+</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="separate_transf_c_program_correct">separate_transf_c_program_correct</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c_units</span> <span class="id">asm_units</span> <span class="id">c_program</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="Coqlib.html#nlist_forall2">Coqlib.nlist_forall2</a></span> (<span class="kwd">fun</span> <span class="id">cu</span> <span class="id">tcu</span> =&gt; <span class="id"><a href="Compiler.html#transf_c_program">Compiler.transf_c_program</a></span> <span class="id"><a href="Compilerimpl.html#cu">cu</a></span> = <span class="id"><a href="Errors.html#OK">Errors.OK</a></span> <span class="id"><a href="Compilerimpl.html#tcu">tcu</a></span>) <span class="id"><a href="Compilerimpl.html#c_units">c_units</a></span> <span class="id"><a href="Compilerimpl.html#asm_units">asm_units</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="Linking.html#link_list">Linking.link_list</a></span> <span class="id"><a href="Compilerimpl.html#c_units">c_units</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="Compilerimpl.html#c_program">c_program</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">asm_program</span>, <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Linking.html#link_list">Linking.link_list</a></span> <span class="id"><a href="Compilerimpl.html#asm_units">asm_units</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="Compilerimpl.html#asm_program">asm_program</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">init_stk</span> := <span class="id"><a href="Compiler.html#mk_init_stk">Compiler.mk_init_stk</a></span> <span class="id"><a href="Compilerimpl.html#asm_program">asm_program</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Smallstep.html#backward_simulation">Smallstep.backward_simulation</a></span> (<span class="id"><a href="Csem.html#semantics">Csem.semantics</a></span> (<span class="id"><a href="Compiler.html#fn_stack_requirements">Compiler.fn_stack_requirements</a></span> <span class="id"><a href="Compilerimpl.html#asm_program">asm_program</a></span>) <span class="id"><a href="Compilerimpl.html#c_program">c_program</a></span>) (<span class="id"><a href="Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="Compilerimpl.html#asm_program">asm_program</a></span> <span class="id"><a href="Compilerimpl.html#init_stk">init_stk</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6460')">Proof.</div>
+<div class="proofscript" id="proof6460">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Compiler.html#separate_transf_c_program_correct">Compiler.separate_transf_c_program_correct</a></span>.<br/>
+Qed.</div>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Segment</title>
+<meta name="description" content="Documentation of Coq module Segment" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Segment</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="Coqlib.html">Coqlib</a></span> <span class="id"><a href="Maps.html">Maps</a></span> <span class="id"><a href="Integers.html">Integers</a></span> <span class="id"><a href="Values.html">Values</a></span> <span class="id"><a href="AST.html">AST</a></span>.<br/>
+<br/>
+<h1> Segments </h1>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="segid_type">segid_type</a></span> := <span class="id"><a href="AST.html#ident">ident</a></span>.<br/>
+&nbsp;&nbsp;<br/>
+<div class="doc">A segment occupies a region of memory </div>
+<span class="kwd">Record</span> <span class="id"><a name="segment">segment</a></span> : <span class="kwd">Type</span> := <span class="id"><a name="mkSegment">mkSegment</a></span><br/>
+{<br/>
+&nbsp;&nbsp;<span class="id"><a name="segid">segid</a></span> : <span class="id"><a href="Segment.html#segid_type">segid_type</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="segsize">segsize</a></span> : <span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span>;<br/>
+}.<br/>
+<br/>
+<div class="doc">Label to an offset in a segment </div>
+<span class="kwd">Definition</span> <span class="id"><a name="seglabel">seglabel</a></span>: <span class="kwd">Type</span> := <span class="id"><a href="Segment.html#segid_type">segid_type</a></span> * <span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="offset_seglabel">offset_seglabel</a></span> (<span class="id">l</span>:<span class="id"><a href="Segment.html#seglabel">seglabel</a></span>) (<span class="id">ofs</span>:<span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span>) : <span class="id"><a href="Segment.html#seglabel">seglabel</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="Segment.html#l">l</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| (<span class="id">s</span>,<span class="id">o</span>) =&gt; (<span class="id">s</span>, <span class="id"><a href="Integers.html#Ptrofs.add">Ptrofs.add</a></span> <span class="id">o</span> <span class="id"><a href="Segment.html#ofs">ofs</a></span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="offset_seglabel_zero">offset_seglabel_zero</a></span> : <span class="kwd">forall</span> <span class="id">l</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="Segment.html#offset_seglabel">offset_seglabel</a></span> <span class="id"><a href="Segment.html#l">l</a></span> <span class="id"><a href="Integers.html#Ptrofs.zero">Ptrofs.zero</a></span> = <span class="id"><a href="Segment.html#l">l</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5204')">Proof.</div>
+<div class="proofscript" id="proof5204">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">l</span>. <span class="tactic">destruct</span> <span class="id">l</span>. <span class="tactic">simpl</span>. <span class="tactic">rewrite</span> <span class="id"><a href="Integers.html#Ptrofs.add_zero">Ptrofs.add_zero</a></span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+&nbsp;&nbsp;<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<h1> Blocks in a segment </h1>
+<br/>
+<span class="kwd">Record</span> <span class="id"><a name="segblock">segblock</a></span>:<span class="kwd">Type</span> := <span class="id"><a name="mkSegBlock">mkSegBlock</a></span><br/>
+{<br/>
+&nbsp;&nbsp;<span class="id"><a name="segblock_id">segblock_id</a></span>: <span class="id"><a href="Segment.html#segid_type">segid_type</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="segblock_start">segblock_start</a></span> : <span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span>;  <span class="docright">(* The begining of the block relative to the starting point of the segment  *)</span><br/>
+&nbsp;&nbsp;<span class="id"><a name="segblock_size">segblock_size</a></span> : <span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span>;<br/>
+}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="segblock_to_label">segblock_to_label</a></span> (<span class="id">sb</span>: <span class="id"><a href="Segment.html#segblock">segblock</a></span>) : <span class="id"><a href="Segment.html#seglabel">seglabel</a></span> :=<br/>
+&nbsp;&nbsp;(<span class="id"><a href="Segment.html#segblock_id">segblock_id</a></span> <span class="id"><a href="Segment.html#sb">sb</a></span>,  <span class="id"><a href="Segment.html#segblock_start">segblock_start</a></span> <span class="id"><a href="Segment.html#sb">sb</a></span>).<br/>
+<br/>
+<div class="doc">Get the offset of a block in a section </div>
+<span class="kwd">Definition</span> <span class="id"><a name="offset_segblock">offset_segblock</a></span> (<span class="id">sb</span>:<span class="id"><a href="Segment.html#segblock">segblock</a></span>) (<span class="id">ofs</span>:<span class="id"><a href="Integers.html#ptrofs">ptrofs</a></span>) : <span class="id"><a href="Segment.html#seglabel">seglabel</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="Segment.html#offset_seglabel">offset_seglabel</a></span> (<span class="id"><a href="Segment.html#segblock_to_label">segblock_to_label</a></span> <span class="id"><a href="Segment.html#sb">sb</a></span>) <span class="id"><a href="Segment.html#ofs">ofs</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+&nbsp;</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

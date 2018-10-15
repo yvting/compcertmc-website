@@ -1,0 +1,125 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SelectionproofX</title>
+<meta name="description" content="Documentation of Coq module SelectionproofX" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SelectionproofX</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id">compcert.backend.Selectionproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">CminorSelX</span>.<br/>
+<span class="kwd">Require</span> <span class="id">CminorX</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SmallstepX</span>.<br/>
+<span class="kwd">Require</span> <span class="id">EventsX</span>.<br/>
+<br/>
+<span class="kwd">Import</span> <span class="id">Coqlib</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Errors</span>.<br/>
+<span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Import</span> <span class="id">EventsX</span>.<br/>
+<span class="kwd">Import</span> <span class="id">SmallstepX</span>.<br/>
+<span class="kwd">Import</span> <span class="id">SelectLong</span>.<br/>
+<span class="kwd">Export</span> <span class="id">Selectionproof</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHCONFIG</span>.<br/>
+<span class="kwd">Context</span> `{ <span class="id">external_calls_prf</span>: <span class="id">ExternalCalls</span> }.<br/>
+<span class="kwd">Context</span> `{<span class="id">i64_helpers_correct</span>: !<span class="id">SplitLongproof.I64HelpersCorrect</span> <span class="id">mem</span>}.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">TRANSF</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">prog</span>: <span class="id">Cminor.program</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">tprog</span>: <span class="id">CminorSel.program</span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id">TRANF</span>: <span class="id">Selection.sel_program</span> <span class="id">prog</span> = <span class="id">OK</span> <span class="id">tprog</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">fn_stack_requirements</span>: <span class="id">ident</span> -&gt; <span class="id">Z</span>.<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id">MATCH_PROG</span>: <span class="id">match_prog</span> <span class="id">prog</span> <span class="id">tprog</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7552')">Proof.</div>
+<div class="proofscript" id="proof7552">
+ <span class="tactic">apply</span> <span class="id">transf_program_match</span>; <span class="tactic">auto</span>. Qed.</div>
+<br/>
+<span class="kwd">Let</span> <span class="id">ge</span> := <span class="id">Genv.globalenv</span> <span class="id">prog</span>.<br/>
+<span class="kwd">Let</span> <span class="id">tge</span> := <span class="id">Genv.globalenv</span> <span class="id">tprog</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">m</span>: <span class="id">mem</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sel_initial_states</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">S</span>, <span class="id">CminorX.initial_state</span> <span class="id">fn_stack_requirements</span> <span class="id">prog</span> <span class="id">i</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">S</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">R</span>, <span class="id">CminorSelX.initial_state</span> <span class="id">fn_stack_requirements</span> <span class="id">tprog</span> <span class="id">i</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">R</span> /\ <span class="id">match_states</span> <span class="id">prog</span> <span class="id">tprog</span> <span class="id">S</span> <span class="id">R</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7553')">Proof.</div>
+<div class="proofscript" id="proof7553">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">function_ptr_translated</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> 1 <span class="kwd">as</span> (? &amp; ? &amp; <span class="id">FIND</span> &amp; <span class="id">FMATCH</span> &amp; <span class="id">FLINK</span>).<br/>
+&nbsp;&nbsp;<span class="id">esplit</span>. <span class="tactic">split</span>. <span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">symbols_preserved</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">symmetry</span>. <span class="tactic">eapply</span> <span class="id">sig_function_translated</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">refine</span> (<span class="id">val_lessdef_refl</span> <span class="id">_</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Mem.extends_refl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">stack_equiv_refl</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sel_final_states</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">prog</span> <span class="id">tprog</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">CminorX.final_state</span> <span class="id">sg</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_extends</span> (<span class="id">CminorSelX.final_state</span> <span class="id">sg</span>) <span class="id">R</span> <span class="id">r</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7554')">Proof.</div>
+<div class="proofscript" id="proof7554">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="id">inv</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">match_call_cont_cont</span> <span class="kwd">in</span> <span class="id">MC</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">MC</span> <span class="kwd">as</span> (? &amp; ? &amp; <span class="id">MC</span>).<br/>
+&nbsp;&nbsp;<span class="id">edestruct</span> <span class="id">Mem.unrecord_stack_block_extends</span> <span class="kwd">as</span> (<span class="id">m2</span>' &amp; <span class="id">USB</span>' &amp; <span class="id">EXT</span>'); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MC</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">initial_stack_inv</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">CminorSelX.initial_state</span> <span class="id">fn_stack_requirements</span> <span class="id">tprog</span> <span class="id">i</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">s2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">CminorSel.stack_inv</span> <span class="id">s2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7555')">Proof.</div>
+<div class="proofscript" id="proof7555">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">s2</span> <span class="id">IS</span>; <span class="id">inv</span> <span class="id">IS</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">rewrite_stack_blocks</span>. <span class="id">constructor</span>. <span class="id">easy</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>; <span class="id">constructor</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">transf_program_correct</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span>,<br/>
+&nbsp;&nbsp;<span class="id">forward_simulation</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CminorX.semantics</span> <span class="id">fn_stack_requirements</span> <span class="id">prog</span> <span class="id">i</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">semantics_with_extends</span> (<span class="id">CminorSelX.semantics</span> <span class="id">fn_stack_requirements</span> <span class="id">tprog</span> <span class="id">i</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span>))<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7556')">Proof.</div>
+<div class="proofscript" id="proof7556">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">forward_simulation_opt</span> <span class="kwd">with</span> (<span class="id">match_states</span> := <span class="kwd">fun</span> <span class="id">s1</span> <span class="id">s2</span> =&gt; <span class="id">match_states</span> <span class="id">prog</span> <span class="id">tprog</span> <span class="id">s1</span> <span class="id">s2</span> /\ <span class="id">CminorSel.stack_inv</span> <span class="id">s2</span>) (<span class="kwd">measure</span> := <span class="kwd">measure</span>).<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">senv_preserved</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">simpl</span>. <span class="tactic">intros</span> <span class="id">s1</span> <span class="id">IS</span>. <span class="id">edestruct</span> <span class="id">sel_initial_states</span> <span class="kwd">as</span> (<span class="id">s2</span> &amp; <span class="id">IS2</span> &amp; <span class="id">MS2</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">s2</span>; <span class="tactic">split</span>; <span class="tactic">eauto</span>. <span class="tactic">split</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">initial_stack_inv</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">simpl</span>. <span class="tactic">intros</span> <span class="id">s1</span> <span class="id">s2</span> <span class="id">r</span> (<span class="id">MS</span> &amp; <span class="id">_</span>) <span class="id">FS</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">sel_final_states</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">simpl</span>; <span class="tactic">intros</span> <span class="id">s1</span> <span class="id">t</span> <span class="id">s1</span>' <span class="id">STEP</span> <span class="id">s2</span> (<span class="id">MS</span> &amp; <span class="id">IS</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">edestruct</span> <span class="id">sel_step_correct</span> <span class="kwd">as</span> [(<span class="id">s2</span>' &amp; <span class="id">STEP</span>' &amp; <span class="id">MS2</span>)|(<span class="id">DEC</span> &amp; <span class="id">NOTRACE</span> &amp; <span class="id">MS2</span>)]; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">left</span>; <span class="id">eexists</span>; <span class="tactic">split</span>; <span class="tactic">eauto</span>. <span class="tactic">split</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">CminorSel.stack_inv_inv</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">TRANSF</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHCONFIG</span>.<br/>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

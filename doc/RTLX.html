@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module RTLX</title>
+<meta name="description" content="Documentation of Coq module RTLX" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module RTLX</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id">compcert.backend.RTL</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SmallstepX</span>.<br/>
+<span class="kwd">Require</span> <span class="id">EventsX</span>.<br/>
+<br/>
+<span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Values</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Import</span> <span class="id">EventsX</span>.<br/>
+<span class="kwd">Import</span> <span class="id">SmallstepX</span>.<br/>
+<span class="kwd">Export</span> <span class="id">RTL</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ZArith</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHCONFIG</span>.<br/>
+<span class="kwd">Context</span> `{<span class="id">external_calls_prf</span>: <span class="id">ExternalCalls</span>}.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">fn_stack_requirements</span>: <span class="id">ident</span> -&gt; <span class="id">Z</span>.<br/>
+<br/>
+<div class="doc">Execution of RTL functions with C-style arguments (long long 64-bit integers allowed) </div>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">initial_state</span> (<span class="id">p</span>: <span class="id">RTL.program</span>) (<span class="id">i</span>: <span class="id">ident</span>) (<span class="id">m</span>: <span class="id">mem</span>) (<span class="id">sg</span>: <span class="id">signature</span>) (<span class="id">args</span>: <span class="id">list</span> <span class="id">val</span>): <span class="id">state</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id">initial_state_intro</span>    <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">b</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hb</span>: <span class="id">Genv.find_symbol</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) <span class="id">i</span> = <span class="id">Some</span> <span class="id">b</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">f</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hf</span>: <span class="id">Genv.find_funct_ptr</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) <span class="id">b</span> = <span class="id">Some</span> <span class="id">f</span>)<br/>
+<div class="doc">We need to keep the signature because it is required for lower-level languages </div>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hsig</span>: <span class="id">sg</span> = <span class="id">funsig</span> <span class="id">f</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">initial_state</span> <span class="id">p</span> <span class="id">i</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span> (<span class="id">Callstate</span> <span class="id">nil</span> <span class="id">f</span> <span class="id">args</span> (<span class="id">Mem.push_new_stage</span> <span class="id">m</span>) (<span class="id">fn_stack_requirements</span> <span class="id">i</span>))<br/>
+.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">final_state</span> (<span class="id">sg</span>: <span class="id">signature</span>): <span class="id">state</span> -&gt; (<span class="id">val</span> * <span class="id">mem</span>) -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id">final_state_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m</span> <span class="id">m</span>' (<span class="id">USB</span>: <span class="id">Mem.unrecord_stack_block</span> <span class="id">m</span> = <span class="id">Some</span> <span class="id">m</span>'):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_state</span> <span class="id">sg</span> (<span class="id">Returnstate</span> <span class="id">nil</span> <span class="id">v</span> <span class="id">m</span>) (<span class="id">v</span>, <span class="id">m</span>')<br/>
+.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">semantics</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">p</span>: <span class="id">RTL.program</span>) (<span class="id">i</span>: <span class="id">ident</span>) (<span class="id">m</span>: <span class="id">mem</span>) (<span class="id">sg</span>: <span class="id">signature</span>) (<span class="id">args</span>: <span class="id">list</span> <span class="id">val</span>) : <span class="id">Smallstep.semantics</span> <span class="id">_</span> :=<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">Semantics</span> (<span class="id">RTL.step</span> <span class="id">fn_stack_requirements</span>) (<span class="id">initial_state</span> <span class="id">p</span> <span class="id">i</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span>) (<span class="id">final_state</span> <span class="id">sg</span>) (<span class="id">Genv.globalenv</span> <span class="id">p</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">initial_stack_inv</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">i</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">s</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">initial_state</span> <span class="id">p</span> <span class="id">i</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">s</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">RTL.stack_inv</span> <span class="id">s</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7516')">Proof.</div>
+<div class="proofscript" id="proof7516">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">p</span> <span class="id">i</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">s</span> <span class="id">IS</span>; <span class="tactic">inversion</span> <span class="id">IS</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">rewrite_stack_blocks</span>. <span class="id">constructor</span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>; <span class="id">constructor</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHCONFIG</span>.<br/>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

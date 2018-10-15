@@ -1,0 +1,173 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module ValueDomainX</title>
+<meta name="description" content="Documentation of Coq module ValueDomainX" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module ValueDomainX</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id">compcert.backend.ValueDomain</span>.<br/>
+<br/>
+<span class="kwd">Import</span> <span class="id">Coqlib</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Maps</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Values</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Memory</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Import</span> <span class="id">RTL</span>.<br/>
+<span class="kwd">Export</span> <span class="id">ValueDomain</span>.<br/>
+<br/>
+<div class="doc">How to construct the initial memory abstraction for value analysis.
+CompCert assumes whole-program compilation, so the initial memory abstraction
+is related to <span class="bracket"><span class="id">Genv.init_mem</span> <span class="id">prog</span></span>, for a source program <span class="bracket"><span class="id">prog</span></span>. By contrast,
+here, in CompCertX, we need to consider any memory <span class="bracket"><span class="id">m</span></span> being passed to
+the function that we are compiling, and for which we consider the
+per-function/per-module semantics.
+Fortunately, we assume <span class="bracket"><span class="id">Mem.inject_neutral</span> <span class="id">m</span></span>. Thanks to this hypothesis,
+we can prove memory abstraction with some abstract memory state. However,
+we do not know anything else, so this abstract memory state will be <span class="bracket"><span class="id">mtop</span></span>.
+The practical performance impact on the produced code is not known so far.
+We also know that the memory has more blocks than the global environment. This is
+necessary as <span class="bracket"><span class="id">ValueAnalysis.sound_state</span></span> requires all blocks associated to global
+symbols to be mapped to BCglob.
+</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">init_bc</span> (<span class="id">ge</span>: <span class="id">RTL.genv</span>) (<span class="id">n</span>: <span class="id">block</span>) : <span class="id">block_classification</span> :=<br/>
+&nbsp;&nbsp;{|    <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">bc_img</span> <span class="id">b</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">Genv.invert_symbol</span> <span class="id">ge</span> <span class="id">b</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">s</span> =&gt; <span class="id">BCglob</span> <span class="id">s</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="kwd">if</span> <span class="id">plt</span> <span class="id">b</span> <span class="id">n</span> <span class="kwd">then</span> <span class="id">BCother</span> <span class="kwd">else</span> <span class="id">BCinvalid</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;|}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7566')">Next Obligation.</div>
+<div class="proofscript" id="proof7566">
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Genv.invert_symbol</span> <span class="id">ge</span> <span class="id">b1</span>) <span class="id">eqn</span>:?; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b1</span> <span class="id">n</span>); <span class="tactic">discriminate</span>.<br/>
+Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof7567')">Next Obligation.</div>
+<div class="proofscript" id="proof7567">
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Genv.invert_symbol</span> <span class="id">ge</span> <span class="id">b1</span>) <span class="id">eqn</span>:?.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Genv.invert_find_symbol</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Genv.invert_symbol</span> <span class="id">ge</span> <span class="id">b2</span>) <span class="id">eqn</span>:?.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Genv.invert_find_symbol</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b2</span> <span class="id">n</span>); <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b1</span> <span class="id">n</span>); <span class="tactic">discriminate</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHMEM</span>.<br/>
+<span class="kwd">Context</span> `{<span class="id">memory_model</span>: <span class="id">Mem.MemoryModel</span>}.<br/>
+<br/>
+<span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">inject_perm_all</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">mmatch_inject_neutral_top</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span> <span class="id">ge</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.inject_neutral</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>) <span class="id">m</span> -&gt; <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Ple</span> (<span class="id">Genv.genv_next</span> <span class="id">ge</span>) (<span class="id">Mem.nextblock</span> <span class="id">m</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">mmatch</span> (<span class="id">init_bc</span> <span class="id">ge</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)) <span class="id">m</span> <span class="id">mtop</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7568')">Proof.</div>
+<div class="proofscript" id="proof7568">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">mmatch_inj_top</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">inj_of_bc</span> (<span class="id">init_bc</span> <span class="id">ge</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">with</span> (<span class="id">Mem.flat_inj</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)).<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.neutral_inject</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">FunctionalExtensionality.functional_extensionality</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mem.flat_inj</span>, <span class="id">inj_of_bc</span>, <span class="id">init_bc</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">b</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Genv.invert_symbol</span> <span class="id">ge</span> <span class="id">b</span>) <span class="id">eqn</span>:?;<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>)); <br/>
+&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">reflexivity</span>.<br/>
+&nbsp;global&nbsp;variable&nbsp;*)</span>&nbsp;&nbsp;<span class="id">exfalso</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Genv.invert_find_symbol</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Genv.genv_symb_range</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">xomega</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">CompCert's whole-program value analysis is based on an abstraction
+    of read-only memory for `const' global variables to be propagated,
+    to avoid spurious memory reads.
+    In CompCertX, however, the caller is any arbitrary piece of
+    assembly code. We could have tried to prove that assembly code
+    also preserves the invariant that memory blocks corresponding to
+    `const' global variables have no write permissions and their
+    contents is always equal to their initial data. But this change
+    would be too invasive in the proofs of the clients of CompCertX.
+    For this reason, we do not consider any optimization on `const'
+    global variables, so the read-only memory abstraction will be
+    empty.
+</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">rmtop</span>: <span class="id">romem</span> := <span class="id">PTree.empty</span> <span class="id">_</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">romatch_top</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">bc</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">romatch</span> <span class="id">bc</span> <span class="id">m</span> <span class="id">rmtop</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7569')">Proof.</div>
+<div class="proofscript" id="proof7569">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">rmtop</span>, <span class="id">romatch</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">PTree.gempty</span> <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">discriminate</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHMEM</span>.<br/>
+<br/>
+<div class="doc">We also know that values inject into themselves, so we can also abstract them.
+    As we also know that arguments are well-typed with respect to the
+    signature of the function being compiled, we could also have taken
+    advantage of their type to construct a precise value abstraction.
+    However, <span class="bracket"><span class="id">ValueAnalysis.sound_state</span></span> does not require anything about the type
+    of the arguments, and only requires that they match Vtop.
+    NOTE: the following <span class="bracket"><span class="id">vmatch_inject_neutral_top</span></span> is slightly different from
+    <span class="bracket"><span class="id">ValueDomain.vmatch_inj_top</span></span>, because we have no proof that
+    <span class="bracket"><span class="id">inj_of_bc</span> (<span class="id">init_bc</span> <span class="id">ge</span> <span class="id">n</span>) = <span class="id">Mem.flat_inj</span> <span class="id">n</span></span>
+    if we do not know that <span class="bracket"><span class="id">Ple</span> (<span class="id">Genv.genv_next</span> <span class="id">ge</span>) <span class="id">n</span></span>.
+</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">vmatch_inject_neutral_top</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ge</span> <span class="id">v</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject</span> (<span class="id">Mem.flat_inj</span> <span class="id">n</span>) <span class="id">v</span> <span class="id">v</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">vmatch</span> (<span class="id">init_bc</span> <span class="id">ge</span> <span class="id">n</span>) <span class="id">v</span> <span class="id">Vtop</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7570')">Proof.</div>
+<div class="proofscript" id="proof7570">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">try</span> <span class="tactic">subst</span>; <span class="tactic">try</span> (<span class="id">econstructor</span>; <span class="tactic">fail</span>).<br/>
+&nbsp;case&nbsp;pointer&nbsp;*)</span>&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mem.flat_inj</span> <span class="kwd">in</span> <span class="id">H3</span>. <span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b1</span> <span class="id">n</span>); <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H3</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">delta</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Ptrofs.add_zero</span> <span class="kwd">in</span> <span class="id">H4</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">init_bc</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Genv.invert_symbol</span> <span class="id">ge</span> <span class="id">b1</span>); <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">plt</span> <span class="id">b1</span> <span class="id">n</span>); <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Corollary</span> <span class="id">vmatch_list_inject_neutral_top</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">l</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.inject_list</span> (<span class="id">Mem.flat_inj</span> <span class="id">n</span>) <span class="id">l</span> <span class="id">l</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v</span>, <span class="id">In</span> <span class="id">v</span> <span class="id">l</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ge</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">vmatch</span> (<span class="id">init_bc</span> <span class="id">ge</span> <span class="id">n</span>) <span class="id">v</span> <span class="id">Vtop</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7571')">Proof.</div>
+<div class="proofscript" id="proof7571">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">tauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> 1; <span class="tactic">subst</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">vmatch_inject_neutral_top</span>.<br/>
+Qed.</div>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

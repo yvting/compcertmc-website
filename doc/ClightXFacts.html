@@ -1,0 +1,1105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module ClightXFacts</title>
+<meta name="description" content="Documentation of Coq module ClightXFacts" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module ClightXFacts</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id">compcert.cfrontend.Clight</span>.<br/>
+<span class="kwd">Require</span> <span class="id">EventsX</span>.<br/>
+<br/>
+<span class="kwd">Import</span> <span class="id">Coqlib</span>.<br/>
+<span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Maps</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Memory</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Smallstep</span>.<br/>
+<span class="kwd">Export</span> <span class="id">Clight</span>.<br/>
+<br/>
+<div class="doc">Missing lemma from Smallstep </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">star_plus</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">genv</span> <span class="id">state</span>: <span class="kwd">Type</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">step</span>: <span class="id">genv</span> -&gt; <span class="id">state</span> -&gt; <span class="id">trace</span> -&gt; <span class="id">state</span> -&gt; <span class="kwd">Prop</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ge</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">star</span> <span class="id">step</span> <span class="id">ge</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">s</span> &lt;&gt; <span class="id">s</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">plus</span> <span class="id">step</span> <span class="id">ge</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7796')">Proof.</div>
+<div class="proofscript" id="proof7796">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> 1; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Missing lemma from Globalenvs. </div>
+<br/>
+<span class="kwd">Module</span> <span class="id">Genv</span>.<br/>
+<span class="kwd">Export</span> <span class="id">Globalenvs.Genv</span>.<br/>
+<span class="kwd">Theorem</span> <span class="id">find_funct_ptr_strong_inversion_aux</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">F</span> <span class="id">V</span>} <span class="id">l2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_norepet</span> (<span class="id">map</span> <span class="id">fst</span> <span class="id">l2</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">ge</span>: <span class="id">_</span> <span class="id">F</span> <span class="id">V</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">b</span> <span class="id">f</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">find_funct_ptr</span> <span class="id">ge</span> <span class="id">b</span> = <span class="id">Some</span> <span class="id">f</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">id</span>, <span class="id">find_symbol</span> <span class="id">ge</span> <span class="id">id</span> = <span class="id">Some</span> <span class="id">b</span> /\ ~ <span class="id">In</span> <span class="id">id</span> (<span class="id">map</span> <span class="id">fst</span> <span class="id">l2</span>)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">f</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">find_funct_ptr</span> (<span class="id">add_globals</span> <span class="id">ge</span> <span class="id">l2</span>) <span class="id">b</span> = <span class="id">Some</span> <span class="id">f</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">id</span>, <span class="id">find_symbol</span> (<span class="id">add_globals</span> <span class="id">ge</span> <span class="id">l2</span>) <span class="id">id</span> = <span class="id">Some</span> <span class="id">b</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7797')">Proof.</div>
+<div class="proofscript" id="proof7797">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l2</span>; <span class="tactic">simpl</span>; <span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id">H0</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="tactic">destruct</span> <span class="id">H1</span> <span class="kwd">as</span> [? [? ?]]; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">IHl2</span> <span class="kwd">in</span> <span class="id">H1</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">add_global</span>, <span class="id">find_funct_ptr</span>, <span class="id">find_symbol</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">o</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">destruct</span> <span class="id">g</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> ? ?.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">find_def</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">PTree.gsspec</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">peq</span> <span class="id">b0</span> (<span class="id">genv_next</span> <span class="id">ge</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplit</span>. <span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">PTree.gss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id">H0</span> <span class="kwd">in</span> <span class="id">H4</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H4</span> <span class="kwd">as</span> [? [? ?]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">x</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">PTree.gso</span>. <span class="tactic">assumption</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">tauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">unfold</span> <span class="id">find_def</span>; <span class="tactic">simpl</span>. <span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id">PTree.gso</span> <span class="kwd">in</span> <span class="id">H4</span>. <span class="tactic">apply</span> <span class="id">H0</span> <span class="kwd">in</span> <span class="id">H4</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H4</span> <span class="kwd">as</span> [? [? ?]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">x</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">PTree.gso</span>. <span class="tactic">assumption</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">tauto</span>. <span class="tactic">intro</span>; <span class="tactic">subst</span>. <span class="tactic">rewrite</span> <span class="id">PTree.gss</span> <span class="kwd">in</span> <span class="id">H4</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id">H0</span> <span class="kwd">in</span> <span class="id">H4</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H4</span> <span class="kwd">as</span> [? [? ?]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">x</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">PTree.gso</span>. <span class="tactic">assumption</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">tauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">find_funct_ptr_strong_inversion</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">F</span> <span class="id">V</span>} (<span class="id">p</span>: <span class="id">_</span> <span class="id">F</span> <span class="id">V</span>),<br/>
+&nbsp;&nbsp;<span class="id">list_norepet</span> (<span class="id">prog_defs_names</span> <span class="id">p</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">f</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">find_funct_ptr</span> (<span class="id">globalenv</span> <span class="id">p</span>) <span class="id">b</span> = <span class="id">Some</span> <span class="id">f</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">id</span>, <span class="id">find_symbol</span> (<span class="id">globalenv</span> <span class="id">p</span>) <span class="id">id</span> = <span class="id">Some</span> <span class="id">b</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7798')">Proof.</div>
+<div class="proofscript" id="proof7798">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">find_funct_ptr_strong_inversion_aux</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">unfold</span> <span class="id">find_funct_ptr</span>, <span class="id">find_def</span>; <span class="tactic">simpl</span>. <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">PTree.gempty</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;* <span class="id">eassumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Genv</span>.<br/>
+<br/>
+<div class="doc">Framing over a control stack </div>
+<br/>
+<span class="id">Function</span> <span class="id">frame_cont</span> (<span class="id">kframe</span>: <span class="id">cont</span>) (<span class="id">k</span>: <span class="id">cont</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">k</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Kstop</span> =&gt; <span class="id">kframe</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Kseq</span> <span class="id">s</span> <span class="id">k</span> =&gt; <span class="id">Kseq</span> <span class="id">s</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Kloop1</span> <span class="id">s1</span> <span class="id">s2</span> <span class="id">k</span> =&gt; <span class="id">Kloop1</span> <span class="id">s1</span> <span class="id">s2</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Kloop2</span> <span class="id">s1</span> <span class="id">s2</span> <span class="id">k</span> =&gt; <span class="id">Kloop2</span> <span class="id">s1</span> <span class="id">s2</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Kswitch</span> <span class="id">k</span> =&gt; <span class="id">Kswitch</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Kcall</span> <span class="id">oi</span> <span class="id">f</span> <span class="id">e</span> <span class="id">t</span> <span class="id">k</span> =&gt; <span class="id">Kcall</span> <span class="id">oi</span> <span class="id">f</span> <span class="id">e</span> <span class="id">t</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">call_cont_is_call_cont</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">kframe</span>, <span class="id">is_call_cont</span> <span class="id">kframe</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">call_cont</span> <span class="id">kframe</span> = <span class="id">kframe</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7799')">Proof.</div>
+<div class="proofscript" id="proof7799">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">kframe</span>; <span class="tactic">eauto</span>; <span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">call_cont_frame</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">kframe</span>, <span class="id">is_call_cont</span> <span class="id">kframe</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">k</span>, <span class="id">call_cont</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>) = <span class="id">frame_cont</span> <span class="id">kframe</span> (<span class="id">call_cont</span> <span class="id">k</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7800')">Proof.</div>
+<div class="proofscript" id="proof7800">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">k</span>; <span class="tactic">simpl</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">call_cont_is_call_cont</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">is_call_cont_frame</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">kframe</span>, <span class="id">is_call_cont</span> <span class="id">kframe</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">k</span>, <span class="id">is_call_cont</span> <span class="id">k</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_call_cont</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7801')">Proof.</div>
+<div class="proofscript" id="proof7801">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">k</span>; <span class="tactic">simpl</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHKFRAME</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variables</span> (<span class="id">kframe</span>: <span class="id">cont</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">find_label_frame</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">l</span> <span class="id">k</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">s</span>' <span class="id">k</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">find_label</span> <span class="id">l</span> <span class="id">s</span> <span class="id">k</span> = <span class="id">Some</span> (<span class="id">s</span>', <span class="id">k</span>') -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">find_label</span> <span class="id">l</span> <span class="id">s</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>) = <span class="id">Some</span> (<span class="id">s</span>', <span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>'))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;/\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">find_label</span> <span class="id">l</span> <span class="id">s</span> <span class="id">k</span> = <span class="id">None</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">find_label</span> <span class="id">l</span> <span class="id">s</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>) = <span class="id">None</span>)<br/>
+<span class="kwd">with</span> <span class="id">find_label_ls_frame</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ls</span> <span class="id">l</span> <span class="id">k</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">s</span>' <span class="id">k</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">find_label_ls</span> <span class="id">l</span> <span class="id">ls</span> <span class="id">k</span> = <span class="id">Some</span> (<span class="id">s</span>', <span class="id">k</span>') -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">find_label_ls</span> <span class="id">l</span> <span class="id">ls</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>) = <span class="id">Some</span> (<span class="id">s</span>', <span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>'))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;/\ (<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">find_label_ls</span> <span class="id">l</span> <span class="id">ls</span> <span class="id">k</span> = <span class="id">None</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">find_label_ls</span> <span class="id">l</span> <span class="id">ls</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>) = <span class="id">None</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7802')">Proof with</div>
+<div class="proofscript" id="proof7802">
+ (<span class="tactic">try</span> <span class="tactic">discriminate</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">apply</span> <span class="id">find_label_frame</span> <span class="kwd">in</span> <span class="id">Heqo</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">Heqo</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heqo</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">apply</span> <span class="id">find_label_ls_frame</span> <span class="kwd">in</span> <span class="id">Heqo</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">Heqo</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heqo</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">reflexivity</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">find_label_frame</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">find_label_ls_frame</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;).<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">s</span>; <span class="tactic">simpl</span>; <span class="tactic">split</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>; <span class="tactic">eauto</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">destruct</span> (<span class="id">find_label</span> <span class="id">l</span> <span class="id">s1</span> (<span class="id">Kseq</span> <span class="id">s2</span> <span class="id">k</span>)) <span class="id">eqn</span>:<span class="id">Heqo</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">destruct</span> (<span class="id">find_label</span> <span class="id">l</span> <span class="id">s1</span> (<span class="id">Kseq</span> <span class="id">s2</span> <span class="id">k</span>)) <span class="id">eqn</span>:<span class="id">Heqo</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">destruct</span> (<span class="id">find_label</span> <span class="id">l</span> <span class="id">s1</span> <span class="id">k</span>) <span class="id">eqn</span>:<span class="id">Heqo</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">destruct</span> (<span class="id">find_label</span> <span class="id">l</span> <span class="id">s1</span> <span class="id">k</span>) <span class="id">eqn</span>:<span class="id">Heqo</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">destruct</span> (<span class="id">find_label</span> <span class="id">l</span> <span class="id">s1</span> (<span class="id">Kloop1</span> <span class="id">s1</span> <span class="id">s2</span> <span class="id">k</span>)) <span class="id">eqn</span>:<span class="id">Heqo</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">destruct</span> (<span class="id">find_label</span> <span class="id">l</span> <span class="id">s1</span> (<span class="id">Kloop1</span> <span class="id">s1</span> <span class="id">s2</span> <span class="id">k</span>)) <span class="id">eqn</span>:<span class="id">Heqo</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">destruct</span> (<span class="id">AST.ident_eq</span> <span class="id">l0</span> <span class="id">l</span>); <span class="tactic">try</span> <span class="tactic">congruence</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">destruct</span> (<span class="id">AST.ident_eq</span> <span class="id">l0</span> <span class="id">l</span>); <span class="tactic">try</span> <span class="tactic">congruence</span>...<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ls</span>; <span class="tactic">simpl</span>; <span class="tactic">split</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">destruct</span> (<span class="id">find_label</span> <span class="id">l</span> <span class="id">s</span> (<span class="id">Kseq</span> (<span class="id">seq_of_labeled_statement</span> <span class="id">ls</span>) <span class="id">k</span>)) <span class="id">eqn</span>:<span class="id">Heqo</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>...<br/>
+&nbsp;&nbsp;* <span class="tactic">destruct</span> (<span class="id">find_label</span> <span class="id">l</span> <span class="id">s</span> (<span class="id">Kseq</span> (<span class="id">seq_of_labeled_statement</span> <span class="id">ls</span>) <span class="id">k</span>)) <span class="id">eqn</span>:<span class="id">Heqo</span>...<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHKFRAME</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHCONFIGOPS</span>.<br/>
+<br/>
+<span class="kwd">Context</span> `{<span class="id">external_calls_prf</span>:  <span class="id">EnableBuiltins</span>}.<br/>
+<br/>
+<span class="id">Function</span> <span class="id">state_cont</span> (<span class="id">s</span>: <span class="id">state</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">s</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">State</span> <span class="id">_</span> <span class="id">_</span> <span class="id">k</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">k</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Callstate</span> <span class="id">_</span> <span class="id">_</span> <span class="id">k</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">k</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Returnstate</span> <span class="id">_</span> <span class="id">k</span> <span class="id">_</span> =&gt; <span class="id">k</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="id">Function</span> <span class="id">frame_state_cont</span>  (<span class="id">kframe</span>: <span class="id">cont</span>) (<span class="id">s</span>: <span class="id">state</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">s</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">State</span> <span class="id">f</span> <span class="id">s</span> <span class="id">k</span> <span class="id">e</span> <span class="id">t</span> <span class="id">m</span> =&gt; <span class="id">State</span> <span class="id">f</span> <span class="id">s</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>) <span class="id">e</span> <span class="id">t</span> <span class="id">m</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Callstate</span> <span class="id">fd</span> <span class="id">args</span> <span class="id">k</span> <span class="id">m</span> <span class="id">z</span> =&gt; <span class="id">Callstate</span> <span class="id">fd</span> <span class="id">args</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>) <span class="id">m</span> <span class="id">z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Returnstate</span> <span class="id">v</span> <span class="id">k</span> <span class="id">m</span> =&gt; <span class="id">Returnstate</span> <span class="id">v</span> (<span class="id">frame_cont</span> <span class="id">kframe</span> <span class="id">k</span>) <span class="id">m</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">frame_state_cont_frame_cont</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">kframe</span> <span class="id">s</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state_cont</span> (<span class="id">frame_state_cont</span> <span class="id">kframe</span> <span class="id">s</span>) = <span class="id">frame_cont</span> <span class="id">kframe</span> (<span class="id">state_cont</span> <span class="id">s</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7803')">Proof.</div>
+<div class="proofscript" id="proof7803">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">s</span>; <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Variable</span> <span class="id">fn_stack_requirements</span>: <span class="id">ident</span> -&gt; <span class="id">Z</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">step_frame_cont</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">fsr</span> <span class="id">kframe</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_call_cont</span> <span class="id">kframe</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ge</span> <span class="id">fe</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>',<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">step</span> <span class="id">fsr</span> <span class="id">ge</span> <span class="id">fe</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">step</span> <span class="id">fsr</span> <span class="id">ge</span> <span class="id">fe</span> (<span class="id">frame_state_cont</span> <span class="id">kframe</span> <span class="id">s</span>) <span class="id">t</span> (<span class="id">frame_state_cont</span> <span class="id">kframe</span> <span class="id">s</span>').<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7804')">Proof.</div>
+<div class="proofscript" id="proof7804">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 2; <span class="tactic">subst</span>; <span class="tactic">simpl</span>; <span class="tactic">try</span> <span class="tactic">rewrite</span> &lt;- <span class="id">call_cont_frame</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> (<span class="id">econstructor</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">is_call_cont_frame</span>; <span class="tactic">fail</span>).<br/>
+&nbsp;goto&nbsp;*)</span>&nbsp;&nbsp;<span class="id">econstructor</span>. <span class="tactic">rewrite</span> <span class="id">call_cont_frame</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">find_label_frame</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Corollary</span> <span class="id">star2_frame_cont</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">kframe</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_call_cont</span> <span class="id">kframe</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">fsr</span> <span class="id">ge</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">star</span> (<span class="id">step2</span> <span class="id">fsr</span>) <span class="id">ge</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">star</span> (<span class="id">step2</span> <span class="id">fsr</span>) <span class="id">ge</span> (<span class="id">frame_state_cont</span> <span class="id">kframe</span> <span class="id">s</span>) <span class="id">t</span> (<span class="id">frame_state_cont</span> <span class="id">kframe</span> <span class="id">s</span>').<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7805')">Proof.</div>
+<div class="proofscript" id="proof7805">
+&nbsp;&nbsp;<span class="tactic">induction</span> 2; <span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">step_frame_cont</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHCONFIGOPS</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHMEMORYMODEL</span>.<br/>
+<br/>
+<span class="kwd">Context</span> <span class="id">mem</span> `{<span class="id">memory_model_prf</span>: <span class="id">Mem.MemoryModel</span> <span class="id">mem</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">external_calls_ops</span>: !<span class="id">ExternalCallsOps</span> <span class="id">mem</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">symbols_inject_instance</span>: <span class="id">SymbolsInject</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">enable_builtins_instance</span>: !<span class="id">EnableBuiltins</span> <span class="id">mem</span>}.<br/>
+<br/>
+<div class="doc">Now, we assume that we *do not* have <span class="bracket"><span class="id">ExternalCalls</span></span>, and that
+<span class="bracket"><span class="id">extcall_properties</span></span> only hold for builtin functions and inline
+assembly. </div>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">disable_external_as_builtin</span>:<br/>
+&nbsp;&nbsp;<span class="id">cc_enable_external_as_builtin</span> = <span class="id">false</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">builtin_functions_properties</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">name</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extcall_properties</span> (<span class="id">builtin_functions_sem</span> <span class="id">name</span> <span class="id">sg</span>) <span class="id">sg</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">runtime_functions_properties</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">name</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extcall_properties</span> (<span class="id">runtime_functions_sem</span> <span class="id">name</span> <span class="id">sg</span>) <span class="id">sg</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">inline_functions_properties</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">text</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extcall_properties</span> (<span class="id">inline_assembly_sem</span> <span class="id">text</span> <span class="id">sg</span>) <span class="id">sg</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">external_call_spec</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ef</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">builtin_enabled</span> <span class="id">ef</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extcall_properties</span> (<span class="id">external_call</span> <span class="id">ef</span>) (<span class="id">ef_sig</span> <span class="id">ef</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7806')">Proof.</div>
+<div class="proofscript" id="proof7806">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ef</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">rewrite</span> <span class="id">disable_external_as_builtin</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">contradiction</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">volatile_load_ok</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">volatile_store_ok</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">extcall_malloc_ok</span>.<br/>
+&nbsp;*&nbsp;apply&nbsp;extcall_free_ok.&nbsp;*)</span>&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">extcall_memcpy_ok</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">extcall_annot_ok</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">extcall_annot_val_ok</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">extcall_debug_ok</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">builtin_is_enabled</span> (<span class="id">ef</span>: <span class="id">external_function</span>) :<br/>
+&nbsp;&nbsp;{<span class="id">builtin_enabled</span> <span class="id">ef</span>} + {~ <span class="id">builtin_enabled</span> <span class="id">ef</span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7807')">Proof.</div>
+<div class="proofscript" id="proof7807">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">builtin_enabled</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ef</span>; <span class="tactic">try</span> (<span class="id">left</span>; <span class="tactic">exact</span> <span class="id">I</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">disable_external_as_builtin</span>.<br/>
+&nbsp;&nbsp;<span class="id">right</span>. <span class="tactic">clear</span>. <span class="tactic">tauto</span>.<br/>
+Defined.</div>
+<br/>
+<div class="doc">We first prove that <span class="bracket"><span class="id">valid_block</span></span> is preserved by the semantics of a Clight module,
+    provided its external functions also do. </div>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHVALIDBLOCK</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">external_functions_sem_valid_block</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">ge</span>: <span class="id">Senv.t</span>) <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_functions_sem</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">ge</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.valid_block</span> <span class="id">m1</span> <span class="id">b</span> -&gt; <span class="id">Mem.valid_block</span> <span class="id">m2</span> <span class="id">b</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">external_call_valid_block</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ef</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">ge</span>: <span class="id">Senv.t</span>) <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_call</span> <span class="id">ef</span> <span class="id">ge</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.valid_block</span> <span class="id">m1</span> <span class="id">b</span> -&gt; <span class="id">Mem.valid_block</span> <span class="id">m2</span> <span class="id">b</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7808')">Proof.</div>
+<div class="proofscript" id="proof7808">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">builtin_is_enabled</span> <span class="id">ef</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="comment">(*&nbsp;enabled&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">ec_valid_block</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">external_call_spec</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="comment">(*&nbsp;EF_external&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ef</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">n</span>; <span class="tactic">try</span> (<span class="tactic">destruct</span> <span class="id">n</span>; <span class="tactic">clear</span>; <span class="tactic">tauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">external_functions_sem_valid_block</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="id">Function</span> <span class="id">state_mem</span> (<span class="id">s</span>: <span class="id">state</span>): <span class="id">mem</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">s</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">State</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Callstate</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">m</span> <span class="id">_</span> =&gt; <span class="id">m</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Returnstate</span> <span class="id">_</span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">assign_loc_valid_block</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ge</span> <span class="id">ty</span> <span class="id">m</span> <span class="id">loc</span> <span class="id">ofs</span> <span class="id">v</span> <span class="id">m</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">assign_loc</span> <span class="id">ge</span> <span class="id">ty</span> <span class="id">m</span> <span class="id">loc</span> <span class="id">ofs</span> <span class="id">v</span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.valid_block</span> <span class="id">m</span> <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.valid_block</span> <span class="id">m</span>' <span class="id">b</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7809')">Proof.</div>
+<div class="proofscript" id="proof7809">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">Mem.storebytes_valid_block_1</span>, <span class="id">Mem.store_valid_block_1</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">valid_block_freelist</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">l</span> <span class="id">m</span> <span class="id">m</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.free_list</span> <span class="id">m</span> <span class="id">l</span> = <span class="id">Some</span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.valid_block</span> <span class="id">m</span> <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.valid_block</span> <span class="id">m</span>' <span class="id">b</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7810')">Proof.</div>
+<div class="proofscript" id="proof7810">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>. <span class="tactic">destruct</span> <span class="id">p</span>. <span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Mem.free</span> <span class="id">m</span> <span class="id">b</span> <span class="id">z0</span> <span class="id">z</span>) <span class="id">eqn</span>:?; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">Mem.valid_block_free_1</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">alloc_variables_valid_block</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ge</span> <span class="id">e</span> <span class="id">m</span> <span class="id">lv</span> <span class="id">e</span>' <span class="id">m</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">alloc_variables</span> <span class="id">ge</span> <span class="id">e</span> <span class="id">m</span> <span class="id">lv</span> <span class="id">e</span>' <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.valid_block</span> <span class="id">m</span> <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.valid_block</span> <span class="id">m</span>' <span class="id">b</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7811')">Proof.</div>
+<div class="proofscript" id="proof7811">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">Mem.valid_block_alloc</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">fn_stack_requirements</span>: <span class="id">ident</span> -&gt; <span class="id">Z</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id">step2_valid_block</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ge</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">step2</span> <span class="id">fn_stack_requirements</span> <span class="id">ge</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.valid_block</span> (<span class="id">state_mem</span> <span class="id">s</span>) <span class="id">b</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.valid_block</span> (<span class="id">state_mem</span> <span class="id">s</span>') <span class="id">b</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7812')">Proof.</div>
+<div class="proofscript" id="proof7812">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">simpl</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">assign_loc_valid_block</span>, <span class="id">external_call_valid_block</span>, <span class="id">valid_block_freelist</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mem.valid_block</span>; <span class="tactic">repeat</span> <span class="id">rewnb</span>; <span class="tactic">intros</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">external_call_valid_block</span>; <span class="tactic">eauto</span>. <span class="tactic">red</span>; <span class="id">rewnb</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H0</span>. <span class="id">rewnb</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">alloc_variables_valid_block</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Corollary</span> <span class="id">step2_nextblock</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ge</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">step2</span> <span class="id">fn_stack_requirements</span> <span class="id">ge</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Ple</span> (<span class="id">Mem.nextblock</span> (<span class="id">state_mem</span> <span class="id">s</span>)) (<span class="id">Mem.nextblock</span> (<span class="id">state_mem</span> <span class="id">s</span>')).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7813')">Proof.</div>
+<div class="proofscript" id="proof7813">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">step2_valid_block</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mem.valid_block</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">Mem.nextblock</span> (<span class="id">state_mem</span> <span class="id">s</span>)). <span class="tactic">intro</span> <span class="id">low</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">Mem.nextblock</span> (<span class="id">state_mem</span> <span class="id">s</span>')). <span class="tactic">intro</span> <span class="id">high</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Psucc_pred</span> <span class="id">low</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">subst</span>. <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">assert</span> (<span class="id">H2</span>: <span class="id">Plt</span> (<span class="id">Pos.pred</span> <span class="id">low</span>) <span class="id">low</span>) <span class="tactic">by</span> <span class="id">xomega</span>. <span class="tactic">apply</span> <span class="id">H0</span> <span class="kwd">in</span> <span class="id">H2</span>. <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHVALIDBLOCK</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHMEMORYMODEL</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHMEMORYMODELOPS</span>.<br/>
+<br/>
+<span class="kwd">Context</span> `{<span class="id">memory_model_ops</span>: <span class="id">Mem.MemoryModelOps</span>} .<br/>
+<br/>
+<span class="id">Function</span> <span class="id">is_external_state</span> (<span class="id">s</span>: <span class="id">state</span>): <span class="id">bool</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">s</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Callstate</span> (<span class="id">Ctypes.External</span> <span class="id">ef</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span>) <span class="id">args</span> <span class="id">k</span> <span class="id">m</span> <span class="id">z</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHMEMORYMODELOPS</span>.<br/>
+<br/>
+<div class="doc">Now, we are going to replace the semantics of external functions
+in a global environment <span class="bracket"><span class="id">ge1</span></span> with the execution of some Clight code
+in another global environment <span class="bracket"><span class="id">ge2</span></span>, and we are going to prove that
+code executing in <span class="bracket"><span class="id">ge1</span></span> can execute in <span class="bracket"><span class="id">ge2</span></span> as well. </div>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITH2CONFIGOPS</span>.<br/>
+<br/>
+<span class="kwd">Context</span> {<span class="id">mem</span>} `{<span class="id">compiler_config_ops1</span>: <span class="id">ExternalCalls</span> <span class="id">mem</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">external_calls_ops2</span>: !<span class="id">ExternalCallsOps</span> <span class="id">mem</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">compiler_config_ops2</span>: !<span class="id">EnableBuiltins</span> <span class="id">mem</span>}.<br/>
+<br/>
+<span class="kwd">Variables</span> (<span class="id">ge1</span> <span class="id">ge2</span>: <span class="id">genv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">senv_preserved</span>: <span class="id">Senv.equiv</span> <span class="id">ge1</span> <span class="id">ge2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">cenv_preserved</span>: <span class="kwd">forall</span> <span class="id">i</span>, (<span class="id">genv_cenv</span> <span class="id">ge2</span>) ! <span class="id">i</span> = (<span class="id">genv_cenv</span> <span class="id">ge1</span>) ! <span class="id">i</span>).<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">destr</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;|- <span class="id">context</span> [<span class="kwd">match</span> ?<span class="id">A</span> <span class="kwd">with</span> <span class="id">_</span> =&gt; <span class="id">_</span> <span class="kwd">end</span>] =&gt; <span class="tactic">destruct</span> <span class="id">A</span> <span class="id">eqn</span>:?; <span class="tactic">simpl</span> <span class="kwd">in</span> *<br/>
+&nbsp;&nbsp;| |- <span class="id">context</span> [<span class="kwd">if</span> ?<span class="id">A</span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span>] =&gt; <span class="tactic">destruct</span> <span class="id">A</span> <span class="id">eqn</span>:?; <span class="tactic">simpl</span> <span class="kwd">in</span> *<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Ltac</span> <span class="id">destr_in</span> <span class="id">H</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">type</span> <span class="id">of</span> <span class="id">H</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">context</span> [<span class="kwd">match</span> ?<span class="id">A</span> <span class="kwd">with</span> <span class="id">_</span> =&gt; <span class="id">_</span> <span class="kwd">end</span>] =&gt; <span class="tactic">destruct</span> <span class="id">A</span> <span class="id">eqn</span>:?; <span class="tactic">simpl</span> <span class="kwd">in</span> *<br/>
+&nbsp;&nbsp;| <span class="id">context</span> [<span class="kwd">if</span> ?<span class="id">A</span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span>] =&gt; <span class="tactic">destruct</span> <span class="id">A</span> <span class="id">eqn</span>:?; <span class="tactic">simpl</span> <span class="kwd">in</span> *<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">auto_inv</span> :=<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">H</span> : <span class="id">Some</span> <span class="id">_</span> = <span class="id">Some</span> <span class="id">_</span> |- <span class="id">_</span> =&gt; <span class="id">inv</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span> : <span class="id">None</span> = <span class="id">Some</span> <span class="id">_</span> |- <span class="id">_</span> =&gt; <span class="id">inv</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span> : <span class="id">Some</span> <span class="id">_</span> = <span class="id">None</span> |- <span class="id">_</span> =&gt; <span class="id">inv</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sizeof_symbols_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t</span>, <span class="id">Ctypes.sizeof</span> <span class="id">ge2</span> <span class="id">t</span> = <span class="id">Ctypes.sizeof</span> <span class="id">ge1</span> <span class="id">t</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7814')">Proof.</div>
+<div class="proofscript" id="proof7814">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">t</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">try</span> <span class="id">destr</span>; <span class="tactic">auto</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">cenv_preserved</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">Heqo</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">cenv_preserved</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">Heqo</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">cenv_preserved</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">Heqo</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">cenv_preserved</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">Heqo</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">alignof_symbols_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t</span>, <span class="id">Ctypes.alignof</span> <span class="id">ge2</span> <span class="id">t</span> = <span class="id">Ctypes.alignof</span> <span class="id">ge1</span> <span class="id">t</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7815')">Proof.</div>
+<div class="proofscript" id="proof7815">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">t</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">try</span> <span class="id">destr</span>; <span class="tactic">auto</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">cenv_preserved</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">Heqo</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">cenv_preserved</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">Heqo</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">cenv_preserved</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">Heqo</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">cenv_preserved</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">Heqo</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">field_offset_symbols_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t</span> <span class="id">m</span>, <span class="id">Ctypes.field_offset</span> <span class="id">ge2</span> <span class="id">t</span> <span class="id">m</span> = <span class="id">Ctypes.field_offset</span> <span class="id">ge1</span> <span class="id">t</span> <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7816')">Proof.</div>
+<div class="proofscript" id="proof7816">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Ctypes.field_offset</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">t</span> <span class="id">m</span>. <span class="tactic">generalize</span> 0.<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">m</span> <span class="id">t</span>; <span class="tactic">induction</span> <span class="id">m</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>. <span class="id">destr</span>. <span class="tactic">rewrite</span> <span class="id">alignof_symbols_preserved</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">alignof_symbols_preserved</span>, <span class="id">sizeof_symbols_preserved</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">cop_binary_operation_symbols_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">op</span> <span class="id">v1</span> <span class="id">a1</span> <span class="id">v2</span> <span class="id">a2</span> <span class="id">m</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Cop.sem_binary_operation</span> <span class="id">ge1</span> <span class="id">op</span> <span class="id">v1</span> <span class="id">a1</span> <span class="id">v2</span> <span class="id">a2</span> <span class="id">m</span> = <span class="id">Some</span> <span class="id">v</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Cop.sem_binary_operation</span> <span class="id">ge2</span> <span class="id">op</span> <span class="id">v1</span> <span class="id">a1</span> <span class="id">v2</span> <span class="id">a2</span> <span class="id">m</span> = <span class="id">Some</span> <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7817')">Proof.</div>
+<div class="proofscript" id="proof7817">
+&nbsp;&nbsp;<span class="kwd">Ltac</span> <span class="id">t</span> := <span class="tactic">repeat</span> <span class="id">destr</span>; <span class="tactic">subst</span>; <span class="id">auto_inv</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">sizeof_symbols_preserved</span> <span class="kwd">in</span> *; <span class="tactic">try</span> <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">op</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Cop.sem_add</span> <span class="kwd">in</span> *;<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Cop.sem_add_ptr_long</span> <span class="kwd">in</span> *;<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Cop.sem_add_ptr_int</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">destr</span>; <span class="tactic">subst</span>; <span class="id">auto_inv</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">sizeof_symbols_preserved</span> <span class="kwd">in</span> *; <span class="tactic">try</span> <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Cop.sem_sub</span> <span class="kwd">in</span> *;<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">destr</span>; <span class="tactic">subst</span>; <span class="id">auto_inv</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">sizeof_symbols_preserved</span> <span class="kwd">in</span> *; <span class="tactic">try</span> <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="id">destr_in</span> <span class="id">H</span>. <span class="tactic">eauto</span>. <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="id">destr_in</span> <span class="id">H</span>; <span class="tactic">eauto</span>. <span class="tactic">discriminate</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">eval_expr_lvalue_symbols_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">e</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eval_expr</span> <span class="id">ge1</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span> <span class="id">e</span> <span class="id">v</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eval_expr</span> <span class="id">ge2</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span> <span class="id">e</span> <span class="id">v</span>)<br/>
+&nbsp;&nbsp;/\<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">e</span> <span class="id">b</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eval_lvalue</span> <span class="id">ge1</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span> <span class="id">e</span> <span class="id">b</span> <span class="id">i</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eval_lvalue</span> <span class="id">ge2</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span> <span class="id">e</span> <span class="id">b</span> <span class="id">i</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7818')">Proof.</div>
+<div class="proofscript" id="proof7818">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">eval_expr_lvalue_ind</span>; <span class="tactic">try</span> (<span class="id">econstructor</span>; <span class="tactic">eauto</span>; <span class="tactic">fail</span>).<br/>
+&nbsp;&nbsp;- <span class="tactic">intros</span>. <span class="id">econstructor</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">cop_binary_operation_symbols_preserved</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">intros</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">sizeof_symbols_preserved</span>. <span class="tactic">eapply</span> <span class="id">eval_Esizeof</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">intros</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">alignof_symbols_preserved</span>. <span class="tactic">eapply</span> <span class="id">eval_Ealignof</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(**&nbsp;Evar&nbsp;global&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> 1. <span class="tactic">destruct</span> <span class="id">senv_preserved</span> <span class="kwd">as</span> (<span class="id">A</span>&amp;<span class="id">B</span>&amp;<span class="id">C</span>&amp;<span class="id">D</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Senv.find_symbol</span> <span class="kwd">in</span> <span class="id">B</span>. <span class="tactic">unfold</span> <span class="id">Genv.to_senv</span> <span class="kwd">in</span> *. <span class="tactic">simpl</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">B</span>. <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">eval_Evar_global</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">H2</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">field_offset_symbols_preserved</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">H2</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">eval_expr_symbols_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">e</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eval_expr</span> <span class="id">ge1</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span> <span class="id">e</span> <span class="id">v</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eval_expr</span> <span class="id">ge2</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span> <span class="id">e</span> <span class="id">v</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7819')">Proof.</div>
+<div class="proofscript" id="proof7819">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">le</span>. <span class="tactic">apply</span> <span class="id">eval_expr_lvalue_symbols_preserved</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">eval_lvalue_symbols_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">e</span> <span class="id">b</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eval_lvalue</span> <span class="id">ge1</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span> <span class="id">e</span> <span class="id">b</span> <span class="id">i</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eval_lvalue</span> <span class="id">ge2</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span> <span class="id">e</span> <span class="id">b</span> <span class="id">i</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7820')">Proof.</div>
+<div class="proofscript" id="proof7820">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">le</span>. <span class="tactic">apply</span> <span class="id">eval_expr_lvalue_symbols_preserved</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">eval_exprlist_symbols_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span> <span class="id">al</span> <span class="id">tyargs</span> <span class="id">vargs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eval_exprlist</span> <span class="id">ge1</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span> <span class="id">al</span> <span class="id">tyargs</span> <span class="id">vargs</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eval_exprlist</span> <span class="id">ge2</span> <span class="id">ve</span> <span class="id">le</span> <span class="id">m</span> <span class="id">al</span> <span class="id">tyargs</span> <span class="id">vargs</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7821')">Proof.</div>
+<div class="proofscript" id="proof7821">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="id">econstructor</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">eval_expr_symbols_preserved</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">disable_external_as_builtin1</span>:<br/>
+&nbsp;&nbsp;<span class="id">cc_enable_external_as_builtin</span> (<span class="id">EnableBuiltins</span> := <span class="id">enable_builtins_instance</span>) = <span class="id">false</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">builtin_enabled_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ef</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">builtin_enabled</span> (<span class="id">enable_builtin_instance</span> := <span class="id">enable_builtins_instance</span>) <span class="id">ef</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">builtin_enabled</span> (<span class="id">enable_builtin_instance</span> := <span class="id">compiler_config_ops2</span>) <span class="id">ef</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7822')">Proof.</div>
+<div class="proofscript" id="proof7822">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ef</span>; <span class="tactic">simpl</span>; <span class="tactic">try</span> <span class="tactic">tauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">disable_external_as_builtin1</span>. <span class="tactic">tauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">builtin_functions_properties1</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">name</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extcall_properties</span> (<span class="id">builtin_functions_sem</span> (<span class="id">ExternalCallsOps</span> := <span class="id">external_calls_ops</span>) <span class="id">name</span> <span class="id">sg</span>) <span class="id">sg</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">runtime_functions_properties1</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">name</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extcall_properties</span> (<span class="id">runtime_functions_sem</span> (<span class="id">ExternalCallsOps</span> := <span class="id">external_calls_ops</span>) <span class="id">name</span> <span class="id">sg</span>) <span class="id">sg</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">inline_functions_properties1</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">text</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extcall_properties</span> (<span class="id">inline_assembly_sem</span> (<span class="id">ExternalCallsOps</span> := <span class="id">external_calls_ops</span>) <span class="id">text</span> <span class="id">sg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sg</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">internal_calls_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">f</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.find_funct_ptr</span> <span class="id">ge1</span> <span class="id">b</span> = <span class="id">Some</span> (<span class="id">Ctypes.Internal</span> <span class="id">f</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.find_funct_ptr</span> <span class="id">ge2</span> <span class="id">b</span> = <span class="id">Some</span> (<span class="id">Ctypes.Internal</span> <span class="id">f</span>).<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">builtin_enabled_sem_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ef</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">builtin_enabled</span> (<span class="id">enable_builtin_instance</span> := <span class="id">enable_builtins_instance</span>) <span class="id">ef</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_call</span> (<span class="id">external_calls_ops</span> := <span class="id">external_calls_ops</span>) <span class="id">ef</span> <span class="id">ge1</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_call</span> (<span class="id">external_calls_ops</span> := <span class="id">external_calls_ops2</span>) <span class="id">ef</span> <span class="id">ge2</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">alignof_blockcopy_symbols_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t</span>, <span class="id">Ctypes.alignof_blockcopy</span> <span class="id">ge2</span> <span class="id">t</span> = <span class="id">Ctypes.alignof_blockcopy</span> <span class="id">ge1</span> <span class="id">t</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7823')">Proof.</div>
+<div class="proofscript" id="proof7823">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">t</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">try</span> <span class="id">destr</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">cenv_preserved</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">Heqo</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">cenv_preserved</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">Heqo</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">cenv_preserved</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">Heqo</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">cenv_preserved</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">Heqo</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">assign_loc_symbols_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ty</span> <span class="id">m</span> <span class="id">b</span> <span class="id">o</span> <span class="id">v</span> <span class="id">m</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">assign_loc</span> <span class="id">ge1</span> <span class="id">ty</span> <span class="id">m</span> <span class="id">b</span> <span class="id">o</span> <span class="id">v</span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">assign_loc</span> <span class="id">ge2</span> <span class="id">ty</span> <span class="id">m</span> <span class="id">b</span> <span class="id">o</span> <span class="id">v</span> <span class="id">m</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7824')">Proof.</div>
+<div class="proofscript" id="proof7824">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">ty</span> <span class="id">m</span> <span class="id">b</span> <span class="id">o</span> <span class="id">v</span> <span class="id">m</span>' <span class="id">A</span>; <span class="id">inv</span> <span class="id">A</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">assign_loc_value</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">assign_loc_copy</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">rewrite</span> <span class="id">sizeof_symbols_preserved</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id">alignof_blockcopy_symbols_preserved</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">blocks_of_env_symbols_preserved</span> <span class="id">e</span>:<br/>
+&nbsp;&nbsp;<span class="id">blocks_of_env</span> <span class="id">ge2</span> <span class="id">e</span> = <span class="id">blocks_of_env</span> <span class="id">ge1</span> <span class="id">e</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7825')">Proof.</div>
+<div class="proofscript" id="proof7825">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">blocks_of_env</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">map_ext</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">block_of_binding</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>. <span class="tactic">destruct</span> <span class="id">p</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">sizeof_symbols_preserved</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">alloc_variables_symbols_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span> <span class="id">m</span> <span class="id">l</span> <span class="id">e</span>' <span class="id">m</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">alloc_variables</span> <span class="id">ge1</span> <span class="id">e</span> <span class="id">m</span> <span class="id">l</span> <span class="id">e</span>' <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">alloc_variables</span> <span class="id">ge2</span> <span class="id">e</span> <span class="id">m</span> <span class="id">l</span> <span class="id">e</span>' <span class="id">m</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7826')">Proof.</div>
+<div class="proofscript" id="proof7826">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">sizeof_symbols_preserved</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Variable</span> <span class="id">fn_stack_requirements</span>: <span class="id">ident</span> -&gt; <span class="id">Z</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">step2_not_external_symbols_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">fsr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">s</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOT_EXTERNAL</span>: <span class="id">is_external_state</span> <span class="id">s</span> = <span class="id">false</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">t</span> <span class="id">s</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">enable_builtins_instance</span>) <span class="id">fsr</span> <span class="id">ge1</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>')<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOT_EXTERNAL</span>': <span class="id">is_external_state</span> <span class="id">s</span>' = <span class="id">false</span>)<br/>
+&nbsp;&nbsp;,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops2</span>) <span class="id">fsr</span> <span class="id">ge2</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7827')">Proof.</div>
+<div class="proofscript" id="proof7827">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">STEP</span>; <span class="tactic">subst</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> *; <span class="tactic">try</span> <span class="tactic">discriminate</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="id">econstructor</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">rewrite</span>  <span class="id">blocks_of_env_symbols_preserved</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">eval_expr_symbols_preserved</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eval_lvalue_symbols_preserved</span>, <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eval_exprlist_symbols_preserved</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">assign_loc_symbols_preserved</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;).<br/>
+&nbsp;&nbsp;* <span class="tactic">red</span>. <span class="tactic">destruct</span> <span class="id">vf</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">eexists</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Genv.find_funct</span> <span class="kwd">in</span> <span class="id">H2</span>. <span class="id">destr_in</span> <span class="id">H2</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">red</span> <span class="kwd">in</span> <span class="id">IFI</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">IFI</span> <span class="kwd">as</span> (<span class="id">b1</span> &amp; <span class="id">o1</span> &amp; <span class="id">EQ1</span> &amp; <span class="id">FS1</span>). <span class="id">inv</span> <span class="id">EQ1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">senv_preserved</span> <span class="kwd">as</span> (<span class="id">A</span> &amp; <span class="id">B</span> &amp; <span class="id">C</span> &amp; <span class="id">D</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> *. <span class="tactic">rewrite</span> <span class="id">B</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">destruct</span> <span class="id">vf</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Genv.find_funct</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H2</span>. <span class="id">destr</span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">fd</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>. <span class="id">inv</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">builtin_enabled_preserved</span>. <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;* <span class="id">inv</span> <span class="id">H</span>. <span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">alloc_variables_symbols_preserved</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">blocks_with_info</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">blocks_of_env_symbols_preserved</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">external_functions_sem1_valid_block</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">ge</span>: <span class="id">Senv.t</span>) <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_functions_sem</span> (<span class="id">ExternalCallsOps</span> := <span class="id">external_calls_ops</span>) <span class="id">i</span> <span class="id">sg</span> <span class="id">ge</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.valid_block</span> <span class="id">m1</span> <span class="id">b</span> -&gt; <span class="id">Mem.valid_block</span> <span class="id">m2</span> <span class="id">b</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">external_calls_replaced_syntax</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">ef</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.find_funct_ptr</span> <span class="id">ge1</span> <span class="id">b</span> = <span class="id">Some</span> (<span class="id">Ctypes.External</span> <span class="id">ef</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">f</span>, <span class="id">Genv.find_funct_ptr</span> <span class="id">ge2</span> <span class="id">b</span> = <span class="id">Some</span> <span class="id">f</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">type_of_fundef</span> <span class="id">f</span> = <span class="id">Ctypes.Tfunction</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">m_init</span>: <span class="id">mem</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">external_calls_replaced_semantics</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">ef</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.find_funct_ptr</span> <span class="id">ge1</span> <span class="id">b</span> = <span class="id">Some</span> (<span class="id">Ctypes.External</span> <span class="id">ef</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">args</span> <span class="id">m</span> <span class="id">t</span> <span class="id">res</span> <span class="id">m</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_call</span> (<span class="id">external_calls_ops</span> := <span class="id">external_calls_ops</span>) <span class="id">ef</span> <span class="id">ge1</span> <span class="id">args</span> <span class="id">m</span> <span class="id">t</span> <span class="id">res</span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">f</span>, <span class="id">Genv.find_funct_ptr</span> <span class="id">ge2</span> <span class="id">b</span> = <span class="id">Some</span> <span class="id">f</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.invert_symbol</span> <span class="id">ge2</span> <span class="id">b</span> = <span class="id">Some</span> <span class="id">i</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">star</span> (<span class="id">step2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fn_stack_requirements</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ge2</span> (<span class="id">Callstate</span> <span class="id">f</span> <span class="id">args</span> <span class="id">Kstop</span> <span class="id">m</span> (<span class="id">fn_stack_requirements</span> <span class="id">i</span>)) <span class="id">t</span> (<span class="id">Returnstate</span> <span class="id">res</span> <span class="id">Kstop</span> <span class="id">m</span>').<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">disable_external_as_builtin2</span>:<br/>
+&nbsp;&nbsp;<span class="id">cc_enable_external_as_builtin</span> (<span class="id">EnableBuiltins</span> := <span class="id">compiler_config_ops2</span>) = <span class="id">false</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">builtin_functions_properties2</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">name</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extcall_properties</span> (<span class="id">builtin_functions_sem</span> (<span class="id">ExternalCallsOps</span> := <span class="id">external_calls_ops2</span>) <span class="id">name</span> <span class="id">sg</span>) <span class="id">sg</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">runtime_functions_properties2</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">name</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extcall_properties</span> (<span class="id">runtime_functions_sem</span> (<span class="id">ExternalCallsOps</span> := <span class="id">external_calls_ops2</span>) <span class="id">name</span> <span class="id">sg</span>) <span class="id">sg</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">inline_functions_properties2</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">text</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">extcall_properties</span> (<span class="id">inline_assembly_sem</span> (<span class="id">ExternalCallsOps</span> := <span class="id">external_calls_ops2</span>) <span class="id">text</span> <span class="id">sg</span>) <span class="id">sg</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">match_states</span>: <span class="id">state</span> -&gt; <span class="id">state</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">match_states_not_external</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">s</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hs_not_external</span>: <span class="id">is_external_state</span> <span class="id">s</span> = <span class="id">false</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hnextblock</span>: <span class="id">Ple</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>) (<span class="id">Mem.nextblock</span> (<span class="id">state_mem</span> <span class="id">mem</span> <span class="id">s</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">s</span> <span class="id">s</span><br/>
+&nbsp;&nbsp;| <span class="id">match_states_callstate_external</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">b</span> <span class="id">ef</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hge1</span>: <span class="id">Genv.find_funct_ptr</span> <span class="id">ge1</span> <span class="id">b</span> = <span class="id">Some</span> (<span class="id">Ctypes.External</span> <span class="id">ef</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">f</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hge2</span>: <span class="id">Genv.find_funct_ptr</span> <span class="id">ge2</span> <span class="id">b</span> = <span class="id">Some</span> <span class="id">f</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hsymb</span>: <span class="id">Genv.invert_symbol</span> <span class="id">ge2</span> <span class="id">b</span> = <span class="id">Some</span> <span class="id">i</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">k</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IS_CALL_CONT</span>: <span class="id">is_call_cont</span> <span class="id">k</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hnextblock</span>: <span class="id">Ple</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>) (<span class="id">Mem.nextblock</span> <span class="id">m</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">args</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> (<span class="id">Callstate</span> (<span class="id">Ctypes.External</span> <span class="id">ef</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span>) <span class="id">args</span> <span class="id">k</span> <span class="id">m</span> (<span class="id">fn_stack_requirements</span> <span class="id">i</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Callstate</span> <span class="id">f</span> <span class="id">args</span> <span class="id">k</span> <span class="id">m</span> (<span class="id">fn_stack_requirements</span> <span class="id">i</span>))<br/>
+.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">step2_replace_external</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">s1</span> <span class="id">t</span> <span class="id">s1</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">enable_builtins_instance</span>) <span class="id">fn_stack_requirements</span> <span class="id">ge1</span> <span class="id">s1</span> <span class="id">t</span> <span class="id">s1</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">s1</span> <span class="id">s2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">s2</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">plus</span> (<span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops2</span>) <span class="id">fn_stack_requirements</span>) <span class="id">ge2</span> <span class="id">s2</span> <span class="id">t</span> <span class="id">s2</span>' /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">s1</span>' <span class="id">s2</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7828')">Proof.</div>
+<div class="proofscript" id="proof7828">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 2; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;{ <span class="comment">(*&nbsp;not&nbsp;external&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">case_eq</span> (<span class="id">is_external_state</span> <span class="id">s1</span>').<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="comment">(*&nbsp;destination&nbsp;external&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">EXT</span>. <span class="id">functional</span> <span class="tactic">inversion</span> <span class="id">EXT</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="id">H11</span>. <span class="tactic">unfold</span> <span class="id">Genv.find_funct</span>. <span class="tactic">destruct</span> <span class="id">vf</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">destr</span>. 2: <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">F</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">external_calls_replaced_syntax</span> <span class="kwd">in</span> <span class="id">F</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">F</span> <span class="kwd">as</span> [? [? ?]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H12</span>. <span class="id">inv</span> <span class="id">H12</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplit</span>. <span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id">plus_one</span>. <span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">red</span>. <span class="tactic">destruct</span> <span class="id">senv_preserved</span> <span class="kwd">as</span> (<span class="id">A</span> &amp; <span class="id">B</span> &amp; <span class="id">C</span>). <span class="tactic">setoid_rewrite</span> <span class="id">B</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">eapply</span> <span class="id">eval_expr_symbols_preserved</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">eapply</span> <span class="id">eval_exprlist_symbols_preserved</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">unfold</span> <span class="id">Genv.find_funct</span>. <span class="tactic">rewrite</span> <span class="id">Heqs</span>. <span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> <span class="id">pred_dec_true</span> <span class="kwd">in</span> <span class="id">H11</span>. <span class="id">eassumption</span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">Genv.find_invert_symbol</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">senv_preserved</span> <span class="kwd">as</span> (<span class="id">A</span> &amp; <span class="id">B</span> &amp; <span class="id">C</span>). <span class="tactic">setoid_rewrite</span> <span class="id">B</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">IFI</span> <span class="kwd">as</span> (<span class="id">bb</span> &amp; <span class="id">oo</span> &amp; <span class="id">EQ</span> &amp; <span class="id">EQ</span>').  <span class="id">inv</span> <span class="id">EQ</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">simpl</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">rewnb</span>. <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="comment">(*&nbsp;destination&nbsp;not&nbsp;external&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplit</span>. <span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">plus_one</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">step2_not_external_symbols_preserved</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">eapply</span> <span class="id">Ple_trans</span>. <span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">step2_nextblock</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;external&nbsp;*)</span>&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">external_calls_replaced_semantics</span> <span class="kwd">in</span> <span class="id">H11</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">star2_frame_cont</span> <span class="kwd">in</span> <span class="id">H11</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H11</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">star_plus</span> <span class="kwd">in</span> <span class="id">H11</span>; <span class="tactic">try</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="id">esplit</span>. <span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">constructor</span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Ple_trans</span>. <span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">step2_nextblock</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">WITH2CONFIGOPS</span>.<br/>
+<br/>
+<div class="doc">Now we instantiate the theorem above with our new
+<span class="bracket"><span class="id">ExternalCallsOpsX</span></span> class (fixing the CompCert builtins and inline assembly.
+This is to know which properties we really need on external functions
+of each side. </div>
+<br/>
+<span class="kwd">Require</span> <span class="id">CompCertBuiltins</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHCOMPCERTBUILTINS</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Context</span> {<span class="id">mem</span>} `{<span class="id">memory_model_prf</span>: <span class="id">Mem.MemoryModel</span> <span class="id">mem</span>}.<br/>
+<br/>
+<span class="kwd">Context</span> `{<span class="id">external_calls_ops_x_1</span>: !<span class="id">CompCertBuiltins.ExternalCallsOpsX</span> <span class="id">mem</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">external_calls_ops_x_2</span>: !<span class="id">CompCertBuiltins.ExternalCallsOpsX</span> <span class="id">mem</span>}.<br/>
+<br/>
+<span class="kwd">Context</span> `{<span class="id">SymbolsInject</span>}.<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id">external_calls_ops_1</span> := <span class="id">CompCertBuiltins.external_calls_ops_x_to_external_calls_ops</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">external_calls_ops_x</span> := <span class="id">external_calls_ops_x_1</span>).<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id">external_calls_ops_2</span> := <span class="id">CompCertBuiltins.external_calls_ops_x_to_external_calls_ops</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">external_calls_ops_x</span> := <span class="id">external_calls_ops_x_2</span>).<br/>
+<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id">compiler_config_ops_1</span> : <span class="id">EnableBuiltins</span> <span class="id">_</span> (<span class="id">memory_model_ops</span> :=<span class="id">memory_model_ops</span>)<br/>
+&nbsp;&nbsp;(<span class="id">H</span>:= <span class="id">external_calls_ops_1</span>) :=<br/>
+&nbsp;&nbsp;{|<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cc_enable_external_as_builtin</span> := <span class="id">false</span><br/>
+&nbsp;&nbsp;|}.<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id">compiler_config_ops_2</span> : <span class="id">EnableBuiltins</span> <span class="id">_</span> (<span class="id">memory_model_ops</span> :=<span class="id">memory_model_ops</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">H</span>:= <span class="id">external_calls_ops_2</span>):=<br/>
+&nbsp;&nbsp;{|<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cc_enable_external_as_builtin</span> := <span class="id">false</span><br/>
+&nbsp;&nbsp;|}.<br/>
+<br/>
+<span class="kwd">Variables</span> (<span class="id">ge1</span> <span class="id">ge2</span>: <span class="id">genv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">senv_preserved</span>: <span class="id">Senv.equiv</span> <span class="id">ge1</span> <span class="id">ge2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">cenv_preserved</span>: <span class="kwd">forall</span> <span class="id">i</span>, (<span class="id">genv_cenv</span> <span class="id">ge2</span>) ! <span class="id">i</span> = (<span class="id">genv_cenv</span> <span class="id">ge1</span>) ! <span class="id">i</span>).<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">m_init</span>: <span class="id">mem</span>.<br/>
+<br/>
+<div class="doc">The following can now be proved, since the two sides use the same
+external calls with the only exception of external functions, which
+are not <span class="bracket"><span class="id">builtin_enabled</span></span>. </div>
+<br/>
+<span class="kwd">Let</span> <span class="id">builtin_enabled_sem_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ef</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">builtin_enabled</span> (<span class="id">enable_builtin_instance</span> := <span class="id">compiler_config_ops_1</span>) <span class="id">ef</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_call</span> (<span class="id">external_calls_ops</span> := <span class="id">external_calls_ops_1</span>) <span class="id">ef</span> <span class="id">ge1</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_call</span> (<span class="id">external_calls_ops</span> := <span class="id">external_calls_ops_2</span>) <span class="id">ef</span> <span class="id">ge2</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7829')">Proof.</div>
+<div class="proofscript" id="proof7829">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_call</span> (<span class="id">external_calls_ops</span> := <span class="id">external_calls_ops_1</span>) <span class="id">ef</span> <span class="id">ge2</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;).<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">ec_symbols_preserved</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">external_call_spec</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">CompCertBuiltins.builtin_functions_properties</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">CompCertBuiltins.runtime_functions_properties</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">constructor</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">try</span> <span class="id">contradiction</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ef</span>; <span class="tactic">try</span> <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">contradiction</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Section</span> <span class="id">EXTCALL_REPLACED</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">external_functions_sem1_valid_block</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">ge</span>: <span class="id">Senv.t</span>) <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Events.external_functions_sem</span> (<span class="id">ExternalCallsOps</span> := <span class="id">external_calls_ops_1</span>) <span class="id">i</span> <span class="id">sg</span> <span class="id">ge</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.valid_block</span> <span class="id">m1</span> <span class="id">b</span> -&gt; <span class="id">Mem.valid_block</span> <span class="id">m2</span> <span class="id">b</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">external_functions_sem2_writable_block_weak</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span>, <span class="id">Ple</span> (<span class="id">Mem.nextblock</span> <span class="id">m_init</span>) (<span class="id">Mem.nextblock</span> <span class="id">m</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_functions_sem</span> (<span class="id">ExternalCallsOps</span> := <span class="id">external_calls_ops_2</span>) <span class="id">i</span> <span class="id">sg</span> <span class="id">ge2</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_functions_sem</span> (<span class="id">ExternalCallsOps</span> := <span class="id">external_calls_ops_2</span>)  <span class="id">i</span> <span class="id">sg</span> <span class="id">ge2</span> <span class="id">vargs</span> <span class="id">m1</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m2</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">internal_calls_preserved</span>:<br/>
+<span class="kwd">forall</span> <span class="id">b</span> <span class="id">f</span>,<br/>
+&nbsp;&nbsp;<span class="id">Genv.find_funct_ptr</span> <span class="id">ge1</span> <span class="id">b</span> = <span class="id">Some</span> (<span class="id">Ctypes.Internal</span> <span class="id">f</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.find_funct_ptr</span> <span class="id">ge2</span> <span class="id">b</span> = <span class="id">Some</span> (<span class="id">Ctypes.Internal</span> <span class="id">f</span>).<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">external_calls_replaced_syntax</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">ef</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.find_funct_ptr</span> <span class="id">ge1</span> <span class="id">b</span> = <span class="id">Some</span> (<span class="id">Ctypes.External</span> <span class="id">ef</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">f</span>, <span class="id">Genv.find_funct_ptr</span> <span class="id">ge2</span> <span class="id">b</span> = <span class="id">Some</span> <span class="id">f</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">type_of_fundef</span> <span class="id">f</span> = <span class="id">Ctypes.Tfunction</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">fn_stack_requirements</span>: <span class="id">ident</span> -&gt; <span class="id">Z</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">external_calls_replaced_semantics</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">ef</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.find_funct_ptr</span> <span class="id">ge1</span> <span class="id">b</span> = <span class="id">Some</span> (<span class="id">Ctypes.External</span> <span class="id">ef</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">tcc</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">args</span> <span class="id">m</span> <span class="id">t</span> <span class="id">res</span> <span class="id">m</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_call</span> (<span class="id">external_calls_ops</span> := <span class="id">external_calls_ops_1</span>) <span class="id">ef</span> <span class="id">ge1</span> <span class="id">args</span> <span class="id">m</span> <span class="id">t</span> <span class="id">res</span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">f</span>, <span class="id">Genv.find_funct_ptr</span> <span class="id">ge2</span> <span class="id">b</span> = <span class="id">Some</span> <span class="id">f</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.invert_symbol</span> <span class="id">ge2</span> <span class="id">b</span> = <span class="id">Some</span> <span class="id">i</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">star</span> (<span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops_2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fn_stack_requirements</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ge2</span> (<span class="id">Callstate</span> <span class="id">f</span> <span class="id">args</span> <span class="id">Kstop</span> <span class="id">m</span> (<span class="id">fn_stack_requirements</span> <span class="id">i</span>)) <span class="id">t</span> (<span class="id">Returnstate</span> <span class="id">res</span> <span class="id">Kstop</span> <span class="id">m</span>').<br/>
+<span class="kwd">Context</span> `{<span class="id">external_calls_props_x_1</span>: !<span class="id">CompCertBuiltins.ExternalCallsPropsX</span> <span class="id">mem</span> (<span class="id">external_calls_ops_x</span> := <span class="id">external_calls_ops_x_1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">external_calls_props_x_2</span>: !<span class="id">CompCertBuiltins.ExternalCallsPropsX</span> <span class="id">mem</span> (<span class="id">external_calls_ops_x</span> := <span class="id">external_calls_ops_x_2</span>)}.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">step2_replace_external</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">s1</span> <span class="id">t</span> <span class="id">s1</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops_1</span>) <span class="id">fn_stack_requirements</span> <span class="id">ge1</span> <span class="id">s1</span> <span class="id">t</span> <span class="id">s1</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">ge1</span> <span class="id">ge2</span> <span class="id">fn_stack_requirements</span> <span class="id">m_init</span> <span class="id">s1</span> <span class="id">s2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">s2</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">plus</span> (<span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops_2</span>) <span class="id">fn_stack_requirements</span>) <span class="id">ge2</span> <span class="id">s2</span> <span class="id">t</span> <span class="id">s2</span>' /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">ge1</span> <span class="id">ge2</span> <span class="id">fn_stack_requirements</span> <span class="id">m_init</span> <span class="id">s1</span>' <span class="id">s2</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7830')">Proof.</div>
+<div class="proofscript" id="proof7830">
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">step2_replace_external</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">CompCertBuiltins.builtin_functions_properties</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">CompCertBuiltins.runtime_functions_properties</span>.<br/>
+&nbsp;&nbsp;* <span class="id">constructor</span>; <span class="tactic">simpl</span>; <span class="id">contradiction</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Corollary</span> <span class="id">star2_replace_external</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">s1</span> <span class="id">t</span> <span class="id">s1</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">star</span> (<span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops_1</span>) <span class="id">fn_stack_requirements</span>) <span class="id">ge1</span> <span class="id">s1</span> <span class="id">t</span> <span class="id">s1</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">ge1</span> <span class="id">ge2</span> <span class="id">fn_stack_requirements</span> <span class="id">m_init</span> <span class="id">s1</span> <span class="id">s2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">s2</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">star</span> (<span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops_2</span>) <span class="id">fn_stack_requirements</span>) <span class="id">ge2</span> <span class="id">s2</span> <span class="id">t</span> <span class="id">s2</span>' /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">ge1</span> <span class="id">ge2</span> <span class="id">fn_stack_requirements</span> <span class="id">m_init</span> <span class="id">s1</span>' <span class="id">s2</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7831')">Proof.</div>
+<div class="proofscript" id="proof7831">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1.<br/>
+&nbsp;&nbsp;* <span class="tactic">intros</span>. <span class="id">esplit</span>. <span class="tactic">split</span>. <span class="id">eleft</span>. <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;* <span class="tactic">intros</span>. <span class="id">exploit</span> <span class="id">step2_replace_external</span>'; <span class="tactic">eauto</span>. <span class="tactic">destruct</span> 1 <span class="kwd">as</span> [? [<span class="id">PLUS</span> <span class="id">MATCH</span>]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">plus_star</span> <span class="kwd">in</span> <span class="id">PLUS</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">IHstar</span> <span class="kwd">in</span> <span class="id">MATCH</span>. <span class="tactic">destruct</span> <span class="id">MATCH</span> <span class="kwd">as</span> [? [? ?]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplit</span>. <span class="tactic">split</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">star_trans</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">star2_replace_external</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">b1</span> <span class="id">f1</span> <span class="id">t</span> <span class="id">args</span> <span class="id">res</span> <span class="id">m</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SYMB1</span>: <span class="id">Genv.find_symbol</span> <span class="id">ge1</span> <span class="id">i</span> = <span class="id">Some</span> <span class="id">b1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FUNCT1</span>: <span class="id">Genv.find_funct_ptr</span> <span class="id">ge1</span> <span class="id">b1</span> = <span class="id">Some</span> <span class="id">f1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR1</span>: <span class="id">star</span> (<span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops_1</span>) <span class="id">fn_stack_requirements</span>) <span class="id">ge1</span> (<span class="id">Callstate</span> <span class="id">f1</span> <span class="id">args</span> <span class="id">Kstop</span> <span class="id">m_init</span> (<span class="id">fn_stack_requirements</span> <span class="id">i</span>)) <span class="id">t</span> (<span class="id">Returnstate</span> <span class="id">res</span> <span class="id">Kstop</span> <span class="id">m</span>')),<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">b2</span> <span class="id">f2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.find_symbol</span> <span class="id">ge2</span> <span class="id">i</span> = <span class="id">Some</span> <span class="id">b2</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.find_funct_ptr</span> <span class="id">ge2</span> <span class="id">b2</span> = <span class="id">Some</span> <span class="id">f2</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">star</span> (<span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops_2</span>) <span class="id">fn_stack_requirements</span>) <span class="id">ge2</span> (<span class="id">Callstate</span> <span class="id">f2</span> <span class="id">args</span> <span class="id">Kstop</span> <span class="id">m_init</span> (<span class="id">fn_stack_requirements</span> <span class="id">i</span>)) <span class="id">t</span> (<span class="id">Returnstate</span> <span class="id">res</span> <span class="id">Kstop</span> <span class="id">m</span>').<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7832')">Proof.</div>
+<div class="proofscript" id="proof7832">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">senv_preserved</span> <span class="kwd">as</span> (<span class="id">A</span>&amp;<span class="id">B</span>&amp;<span class="id">C</span>&amp;<span class="id">D</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Senv.find_symbol</span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id">Genv.to_senv</span> <span class="kwd">in</span> *; <span class="tactic">simpl</span> <span class="kwd">in</span> *. <span class="tactic">rewrite</span> ! <span class="id">B</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">f1</span>.<br/>
+&nbsp;&nbsp;* <span class="comment">(*&nbsp;internal&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">internal_calls_preserved</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">FUNCT2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">star2_replace_external</span>'.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">eassumption</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">eleft</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">Ple_refl</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> 1 <span class="kwd">as</span> [? [? <span class="id">MATCH</span>']].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>'.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;* <span class="comment">(*&nbsp;external&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">external_calls_replaced_syntax</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> 1 <span class="kwd">as</span> [? [? ?]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">star2_replace_external</span>'.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">eassumption</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">eright</span>; <span class="tactic">simpl</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">Ple_refl</span>. <span class="tactic">apply</span> <span class="id">Genv.find_invert_symbol</span>. <span class="tactic">rewrite</span> <span class="id">B</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> 1 <span class="kwd">as</span> [? [? <span class="id">MATCH</span>']].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>'.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">EXTCALL_REPLACED</span>.<br/>
+<br/>
+<div class="doc">Now we study the case where the external functions of
+the "higher" side are included in the external functions of the
+"lower" side. (This is to prove so-called "monotonicity".) </div>
+<br/>
+<span class="kwd">Section</span> <span class="id">EXTCALL_PRESERVED</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">functions_preserved</span>:<br/>
+<span class="kwd">forall</span> <span class="id">b</span> <span class="id">f</span>,<br/>
+&nbsp;&nbsp;<span class="id">Genv.find_funct_ptr</span> <span class="id">ge1</span> <span class="id">b</span> = <span class="id">Some</span> <span class="id">f</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.find_funct_ptr</span> <span class="id">ge2</span> <span class="id">b</span> = <span class="id">Some</span> <span class="id">f</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">external_calls_preserved</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ef</span> <span class="id">args</span> <span class="id">m</span> <span class="id">t</span> <span class="id">res</span> <span class="id">m</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_call</span> (<span class="id">external_calls_ops</span> := <span class="id">external_calls_ops_1</span>) <span class="id">ef</span> <span class="id">ge1</span> <span class="id">args</span> <span class="id">m</span> <span class="id">t</span> <span class="id">res</span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">external_call</span> (<span class="id">external_calls_ops</span> := <span class="id">external_calls_ops_2</span>) <span class="id">ef</span> <span class="id">ge2</span> <span class="id">args</span> <span class="id">m</span> <span class="id">t</span> <span class="id">res</span> <span class="id">m</span>'.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">fn_stack_requirements</span>: <span class="id">ident</span> -&gt; <span class="id">Z</span>.<br/>
+<br/>
+<span class="kwd">Context</span> `{<span class="id">external_calls_props_x_1</span>: !<span class="id">CompCertBuiltins.ExternalCallsPropsX</span> <span class="id">mem</span> (<span class="id">external_calls_ops_x</span> := <span class="id">external_calls_ops_x_1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">step2_mono</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">s</span> <span class="id">t</span> <span class="id">s</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops_1</span>) <span class="id">fn_stack_requirements</span> <span class="id">ge1</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>'),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops_2</span>) <span class="id">fn_stack_requirements</span> <span class="id">ge2</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7833')">Proof.</div>
+<div class="proofscript" id="proof7833">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">case_eq</span> (<span class="id">is_external_state</span> <span class="id">s</span>).<br/>
+&nbsp;&nbsp;{ <span class="comment">(*&nbsp;external&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">EXT</span>. <span class="id">functional</span> <span class="tactic">inversion</span> <span class="id">EXT</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">STEP</span>; <span class="tactic">subst</span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;not&nbsp;external&nbsp;*)</span>&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">INT</span>.<br/>
+&nbsp;&nbsp;<span class="id">case_eq</span> (<span class="id">is_external_state</span> <span class="id">s</span>').<br/>
+&nbsp;&nbsp;* <span class="comment">(*&nbsp;destination&nbsp;external&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">EXT</span>. <span class="id">functional</span> <span class="tactic">inversion</span> <span class="id">EXT</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">STEP</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="id">H10</span>. <span class="tactic">unfold</span> <span class="id">Genv.find_funct</span>. <span class="tactic">destruct</span> <span class="id">vf</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Integers.Ptrofs.eq_dec</span> <span class="id">i</span> <span class="id">Integers.Ptrofs.zero</span>) <span class="id">eqn</span>:<span class="id">Heqs</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">functions_preserved</span> <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">eval_expr_symbols_preserved</span>, <span class="id">eval_exprlist_symbols_preserved</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">eexists</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">senv_preserved</span> <span class="kwd">as</span> (<span class="id">A</span> &amp; <span class="id">B</span> &amp;<span class="id">C</span>); <span class="tactic">setoid_rewrite</span> <span class="id">B</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">IFI</span> <span class="kwd">as</span> (<span class="id">bb</span> &amp; <span class="id">oo</span> &amp; <span class="id">EQ</span> &amp; <span class="id">EQ</span>'). <span class="tactic">subst</span>. <span class="id">inv</span> <span class="id">EQ</span>; <span class="tactic">auto</span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Genv.find_funct</span>. <span class="tactic">rewrite</span> <span class="id">Heqs</span>. <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;* <span class="comment">(*&nbsp;destination&nbsp;not&nbsp;external&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">step2_not_external_symbols_preserved</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">eassumption</span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">typeclasses</span> <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">star2_mono</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">s</span> <span class="id">t</span> <span class="id">s</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">star</span> (<span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops_1</span>) <span class="id">fn_stack_requirements</span>) <span class="id">ge1</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>'),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">star</span> (<span class="id">step2</span> (<span class="id">enable_builtins_instance</span> := <span class="id">compiler_config_ops_2</span>) <span class="id">fn_stack_requirements</span>) <span class="id">ge2</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7834')">Proof.</div>
+<div class="proofscript" id="proof7834">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="id">econstructor</span>; <span class="tactic">eauto</span> <span class="kwd">using</span> <span class="id">step2_mono</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">EXTCALL_PRESERVED</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHCOMPCERTBUILTINS</span>.<br/>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module MachX2Mach2X</title>
+<meta name="description" content="Documentation of Coq module MachX2Mach2X" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module MachX2Mach2X</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id">compcert.backend.Mach2Mach2</span>.<br/>
+<span class="kwd">Require</span> <span class="id">MachX</span>.<br/>
+<br/>
+<span class="kwd">Import</span> <span class="id">Coqlib</span> <span class="id">Memory</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SmallstepX</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Globalenvs</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Export</span> <span class="id">Mach2Mach2</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHCONFIG</span>.<br/>
+<span class="kwd">Context</span> `{<span class="id">external_calls_prf</span>: <span class="id">ExternalCalls</span>}.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">prog</span>: <span class="id">Mach.program</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">fn_stack_requirements</span>: <span class="id">AST.ident</span> -&gt; <span class="id">Z</span>.<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id">ge</span> := <span class="id">Genv.globalenv</span> <span class="id">prog</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">m</span>: <span class="id">mem</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">sg</span>: <span class="id">AST.signature</span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id">init_sp_has_stackinfo</span>:<br/>
+&nbsp;&nbsp;<span class="id">Mach.init_sp_stackinfo</span> <span class="id">sg</span> (<span class="id">Mem.stack</span> <span class="id">m</span>).<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">stack_equiv_refl</span> <span class="id">s</span>:<br/>
+&nbsp;&nbsp;<span class="id">stack_equiv</span> <span class="id">s</span> <span class="id">s</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7839')">Proof.</div>
+<div class="proofscript" id="proof7839">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">s</span>; <span class="tactic">simpl</span>; <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transl_initial_states</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">init_rs</span> <span class="id">i</span> <span class="id">args</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">S</span>, <span class="id">MachX.initial_state</span> <span class="id">init_rs</span> <span class="id">prog</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">m</span> <span class="id">S</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">R</span>, <span class="id">MachX.initial_state</span> <span class="id">init_rs</span> <span class="id">prog</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">m</span> <span class="id">R</span> /\ <span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7840')">Proof.</div>
+<div class="proofscript" id="proof7840">
+&nbsp;&nbsp;<span class="tactic">inversion</span> 1; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="id">esplit</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>. <span class="tactic">eauto</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">constructor</span>. <span class="tactic">apply</span> <span class="id">Mem.extends_refl</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">stack_equiv_refl</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">val_lessdef_get_pair</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">sg</span> <span class="id">rs</span> <span class="id">rs</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">r</span>, <span class="id">val_lessdef</span> (<span class="id">rs</span> <span class="id">r</span>) (<span class="id">rs</span>' <span class="id">r</span>)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">val_lessdef</span> (<span class="id">MachX.get_pair</span> <span class="id">sg</span> <span class="id">rs</span>) (<span class="id">MachX.get_pair</span> <span class="id">sg</span> <span class="id">rs</span>').<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7841')">Proof.</div>
+<div class="proofscript" id="proof7841">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">sg0</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Values.Val.longofwords_lessdef</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transl_final_states</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">init_rs</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">S</span> <span class="id">R</span> -&gt; <span class="id">MachX.final_state</span> <span class="id">init_rs</span> <span class="id">sg</span> <span class="id">S</span> <span class="id">r</span> -&gt; <span class="id">final_state_with_extends</span> (<span class="id">MachX.final_state</span> <span class="id">init_rs</span> <span class="id">sg</span>) <span class="id">R</span> <span class="id">r</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7842')">Proof.</div>
+<div class="proofscript" id="proof7842">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">init_rs</span> <span class="id">S</span> <span class="id">R</span> <span class="id">r</span> <span class="id">MS</span> <span class="id">FS</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">FS</span>. <span class="id">inv</span> <span class="id">MS</span>.<br/>
+&nbsp;&nbsp;<span class="id">edestruct</span> <span class="id">Mem.unrecord_stack_block_extends</span> <span class="kwd">as</span> (<span class="id">m2</span>' &amp; <span class="id">USB</span>' &amp; <span class="id">UNCH</span>'); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">eapply</span> <span class="id">Values.Val.lessdef_trans</span>. <span class="tactic">apply</span> <span class="id">CALLEE_SAVE</span>. <span class="tactic">auto</span>. <span class="tactic">eauto</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">val_lessdef_get_pair</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">frame_correct</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">b</span> : <span class="id">Values.block</span>) (<span class="id">f</span> : <span class="id">Mach.function</span>),<br/>
+&nbsp;&nbsp;<span class="id">Genv.find_funct_ptr</span> <span class="id">ge</span> <span class="id">b</span> = <span class="id">Some</span> (<span class="id">AST.Internal</span> <span class="id">f</span>) -&gt; 0 &lt; <span class="id">Mach.fn_stacksize</span> <span class="id">f</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">transf_program_correct</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rao</span> <span class="id">init_rs</span> <span class="id">init_ra</span> <span class="id">i</span> <span class="id">args</span> (<span class="id">IRANU</span>: <span class="id">init_ra</span> &lt;&gt; <span class="id">Values.Vundef</span>),<br/>
+&nbsp;&nbsp;<span class="id">forward_simulation</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MachX.semantics</span> <span class="id">rao</span> <span class="id">Mach.invalidate_frame1</span> <span class="id">init_rs</span> <span class="id">init_ra</span> <span class="id">prog</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">m</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">semantics_with_extends</span> (<span class="id">MachX.semantics</span> <span class="id">rao</span> <span class="id">Mach.invalidate_frame2</span> <span class="id">init_rs</span> <span class="id">init_ra</span> <span class="id">prog</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">m</span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7843')">Proof.</div>
+<div class="proofscript" id="proof7843">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">forward_simulation_step</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">match_states</span> := <span class="kwd">fun</span> <span class="id">s1</span> <span class="id">s2</span> =&gt; <span class="id">match_states</span> <span class="id">s1</span> <span class="id">s2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ <span class="id">Mach.call_stack_consistency</span> <span class="id">ge</span> <span class="id">sg</span> (<span class="id">Mem.stack</span> <span class="id">m</span>) <span class="id">s1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ <span class="id">Mach.has_code</span> <span class="id">rao</span> <span class="id">ge</span> <span class="id">s1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ <span class="id">Mach.call_stack_consistency</span> <span class="id">ge</span> <span class="id">sg</span> (<span class="id">Mem.stack</span> <span class="id">m</span>) <span class="id">s2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ <span class="id">Mach.has_code</span> <span class="id">rao</span> <span class="id">ge</span> <span class="id">s2</span>).<br/>
+&nbsp;&nbsp;- <span class="tactic">reflexivity</span>. <br/>
+&nbsp;&nbsp;- <span class="tactic">simpl</span>; <span class="tactic">intros</span> <span class="id">s1</span> <span class="id">IS</span>. <span class="id">edestruct</span> <span class="id">transl_initial_states</span> <span class="kwd">as</span> (<span class="id">s2</span> &amp; <span class="id">IS2</span> &amp; <span class="id">MS</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">s2</span>; <span class="tactic">split</span>; [|<span class="tactic">split</span>]; <span class="tactic">eauto</span>. <span class="tactic">repeat</span> <span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">IS</span>. <span class="tactic">repeat</span> (<span class="id">constructor</span>; <span class="tactic">try</span> <span class="tactic">red</span>; <span class="tactic">try</span> <span class="id">rewrite_stack_blocks</span>); <span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">IS</span>. <span class="id">constructor</span>. <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">IS2</span>. <span class="tactic">repeat</span> (<span class="id">constructor</span>; <span class="tactic">try</span> <span class="tactic">red</span>; <span class="tactic">try</span> <span class="id">rewrite_stack_blocks</span>); <span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">IS2</span>. <span class="id">constructor</span>. <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">simpl</span>; <span class="tactic">intros</span> <span class="id">s1</span> <span class="id">s2</span> <span class="id">r</span> (<span class="id">MS</span> &amp; <span class="id">CSC1</span> &amp; <span class="id">HC1</span> &amp; <span class="id">CSC2</span> &amp; <span class="id">HC2</span>) <span class="id">FS</span>; <span class="tactic">eapply</span> <span class="id">transl_final_states</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">simpl</span>; <span class="tactic">intros</span> <span class="id">s1</span> <span class="id">t</span> <span class="id">s1</span>' <span class="id">STEP</span> <span class="id">s2</span> (<span class="id">MS</span> &amp; <span class="id">CSC1</span> &amp; <span class="id">HC1</span> &amp; <span class="id">CSC2</span> &amp; <span class="id">HC2</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">edestruct</span> <span class="id">step_correct</span> <span class="kwd">as</span> (<span class="id">s2</span>' &amp; <span class="id">STEPS</span> &amp; <span class="id">MS</span>'); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eexists</span>; <span class="tactic">split</span>; <span class="tactic">eauto</span>. <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mach.csc_step</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mach.invalidate_frame1</span>. <span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mach.invalidate_frame1</span>. <span class="tactic">inversion</span> 1; <span class="tactic">subst</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mach.has_code_step</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mach.csc_step</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mach.invalidate_frame2</span>. <span class="tactic">intros</span>. <span class="id">rewrite_stack_blocks</span>. <span class="tactic">simpl</span>. <span class="tactic">intro</span> <span class="id">A</span>; <span class="tactic">rewrite</span> <span class="id">A</span>; <span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mach.invalidate_frame2</span>. <span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="tactic">red</span>. <span class="id">rewrite_stack_blocks</span>. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">A</span>. <span class="id">constructor</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">easy</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mach.has_code_step</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHCONFIG</span>.<br/>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

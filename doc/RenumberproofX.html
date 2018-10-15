@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module RenumberproofX</title>
+<meta name="description" content="Documentation of Coq module RenumberproofX" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module RenumberproofX</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id">compcert.backend.Renumberproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">RTLX</span>.<br/>
+<br/>
+<span class="kwd">Import</span> <span class="id">Coqlib</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Import</span> <span class="id">SmallstepX</span>.<br/>
+<span class="kwd">Import</span> <span class="id">RTLX</span>.<br/>
+<span class="kwd">Import</span> <span class="id">Renumber</span>.<br/>
+<span class="kwd">Export</span> <span class="id">Renumberproof</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">WITHCONFIG</span>.<br/>
+<span class="kwd">Context</span> `{<span class="id">external_calls_prf</span>: <span class="id">ExternalCalls</span>}.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">prog</span>: <span class="id">program</span>.<br/>
+<span class="kwd">Let</span> <span class="id">tprog</span> := <span class="id">transf_program</span> <span class="id">prog</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">fn_stack_requirements</span>: <span class="id">AST.ident</span> -&gt; <span class="id">Z</span>.<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id">MATCH_PROG</span>: <span class="id">match_prog</span> <span class="id">prog</span> <span class="id">tprog</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7517')">Proof.</div>
+<div class="proofscript" id="proof7517">
+ <span class="tactic">apply</span> <span class="id">transf_program_match</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Let</span> <span class="id">ge</span> := <span class="id">Genv.globalenv</span> <span class="id">prog</span>.<br/>
+<span class="kwd">Let</span> <span class="id">tge</span> := <span class="id">Genv.globalenv</span> <span class="id">tprog</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transf_initial_states</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span>, <span class="id">initial_state</span> <span class="id">fn_stack_requirements</span> <span class="id">prog</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">m</span> <span class="id">st1</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">st2</span>, <span class="id">initial_state</span> <span class="id">fn_stack_requirements</span> <span class="id">tprog</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">m</span> <span class="id">st2</span> /\ <span class="id">match_states</span> <span class="id">st1</span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7518')">Proof.</div>
+<div class="proofscript" id="proof7518">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">esplit</span>. <span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">tprog</span>. <span class="id">erewrite</span> <span class="id">symbols_preserved</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">tprog</span>. <span class="tactic">eapply</span> <span class="id">function_ptr_translated</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">sig_preserved</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">constructor</span>; <span class="tactic">auto</span>. <span class="id">constructor</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">transf_final_states</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> <span class="id">st2</span> <span class="id">r</span>, <br/>
+&nbsp;&nbsp;<span class="id">match_states</span> <span class="id">st1</span> <span class="id">st2</span> -&gt; <span class="id">final_state</span> <span class="id">sg</span> <span class="id">st1</span> <span class="id">r</span> -&gt; <span class="id">final_state</span> <span class="id">sg</span> <span class="id">st2</span> <span class="id">r</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7519')">Proof.</div>
+<div class="proofscript" id="proof7519">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">STACKS</span>. <span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">transf_program_correct</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">sg</span> <span class="id">args</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;<span class="id">forward_simulation</span> (<span class="id">RTLX.semantics</span> <span class="id">fn_stack_requirements</span> <span class="id">prog</span> <span class="id">i</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span>) (<span class="id">RTLX.semantics</span> <span class="id">fn_stack_requirements</span> <span class="id">tprog</span> <span class="id">i</span> <span class="id">m</span> <span class="id">sg</span> <span class="id">args</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7520')">Proof.</div>
+<div class="proofscript" id="proof7520">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">forward_simulation_step</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">senv_preserved</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">transf_initial_states</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">transf_final_states</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">step_simulation</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">WITHCONFIG</span>.<br/>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>

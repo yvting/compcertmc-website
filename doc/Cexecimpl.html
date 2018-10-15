@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Cexecimpl</title>
+<meta name="description" content="Documentation of Coq module Cexecimpl" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Cexecimpl</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id"><a href="Cexec.html">Cexec</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="Memimpl.html">Memimpl</a></span>.<br/>
+<br/>
+<h1> Instantiate Cexec with a memory model and external functions.
+   NOTE: This file poses axioms that differ from <span class="bracket"><span class="id">Compilerimpl</span></span>.
+   The axioms posed here are valid only for the verified C interpreter,
+   not for the compiler.
+   Contrary to <span class="bracket"><span class="id">Compilerimpl</span></span>, this file is extracted, for use with
+   driver/Interp.ml.
+ </h1>
+<br/>
+<h2> Memory model. </h2>
+<br/>
+<span class="kwd">Local</span> <span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">Memimpl.Mem.memory_model_ops</span>.<br/>
+<span class="kwd">Local</span> <span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">Memimpl.Mem.memory_model_prf</span>.<br/>
+<br/>
+<h2> External function semantics.
+    In Interp.ml, do_external_function is used for all three of
+    externals, builtins, and runtime. We axiomatize it here.
+  </h2>
+<br/>
+<span class="kwd">Parameter</span> <span class="id"><a name="do_external_function">do_external_function</a></span>:<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html#string">String.string</a></span> -&gt; <span class="id"><a href="AST.html#signature">AST.signature</a></span> -&gt; <span class="id"><a href="Globalenvs.html#Senv.t">Globalenvs.Senv.t</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="Determinism.html#world">Determinism.world</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="Values.html#val">Values.val</a></span> -&gt; <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="Determinism.html#world">Determinism.world</a></span> * <span class="id"><a href="Events.html#trace">Events.trace</a></span> * <span class="id"><a href="Values.html#val">Values.val</a></span> * <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>).<br/>
+<br/>
+<span class="kwd">Axiom</span> <span class="id"><a name="do_external_function_possible_trace">do_external_function_possible_trace</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">id</span> <span class="id">sg</span> <span class="id">ge</span> <span class="id">w</span> <span class="id">vargs</span> <span class="id">m</span> <span class="id">w</span>' <span class="id">t</span> <span class="id">vres</span> <span class="id">m</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#do_external_function">do_external_function</a></span> <span class="id"><a href="Cexecimpl.html#id">id</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span> <span class="id"><a href="Cexecimpl.html#ge">ge</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#vargs">vargs</a></span> <span class="id"><a href="Cexecimpl.html#m">m</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">w</span>', <span class="id"><a href="Cexecimpl.html#t">t</a></span>, <span class="id"><a href="Cexecimpl.html#vres">vres</a></span>, <span class="id">m</span>') -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Determinism.html#possible_trace">Determinism.possible_trace</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id">w</span>' /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">w_</span> <span class="id">w</span>'<span class="id">_</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Determinism.html#possible_trace">Determinism.possible_trace</a></span> <span class="id"><a href="Cexecimpl.html#w_">w_</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id">w</span>'<span class="id">_</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#do_external_function">do_external_function</a></span> <span class="id"><a href="Cexecimpl.html#id">id</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span> <span class="id"><a href="Cexecimpl.html#ge">ge</a></span> <span class="id"><a href="Cexecimpl.html#w_">w_</a></span> <span class="id"><a href="Cexecimpl.html#vargs">vargs</a></span> <span class="id"><a href="Cexecimpl.html#m">m</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">w</span>'<span class="id">_</span>, <span class="id"><a href="Cexecimpl.html#t">t</a></span>, <span class="id"><a href="Cexecimpl.html#vres">vres</a></span>, <span class="id">m</span>').<br/>
+<br/>
+<div class="doc">Then, we use this axiomatization to instantiate the actual
+    semantics of external functions. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="external_functions_sem">external_functions_sem</a></span>:<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html#string">String.string</a></span> -&gt; <span class="id"><a href="AST.html#signature">AST.signature</a></span> -&gt; <span class="id"><a href="Events.html#extcall_sem">Events.extcall_sem</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">id</span> <span class="id">sg</span> <span class="id">ge</span> <span class="id">vargs</span> <span class="id">m</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">w</span> <span class="id">w</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#do_external_function">do_external_function</a></span> <span class="id"><a href="Cexecimpl.html#id">id</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span> <span class="id"><a href="Cexecimpl.html#ge">ge</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#vargs">vargs</a></span> <span class="id"><a href="Cexecimpl.html#m">m</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">w</span>', <span class="id"><a href="Cexecimpl.html#t">t</a></span>, <span class="id"><a href="Cexecimpl.html#vres">vres</a></span>, <span class="id">m</span>').<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="do_external_function_sound">do_external_function_sound</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">id</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html#string">String.string</a></span>) (<span class="id">sg</span> : <span class="id"><a href="AST.html#signature">AST.signature</a></span>) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ge0</span> : <span class="id"><a href="Globalenvs.html#Senv.t">Globalenvs.Senv.t</a></span>) (<span class="id">vargs</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="Values.html#val">Values.val</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span> : <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>) (<span class="id">t</span> : <span class="id"><a href="Events.html#trace">Events.trace</a></span>) (<span class="id">vres</span> : <span class="id"><a href="Values.html#val">Values.val</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span>' : <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>) (<span class="id">w</span> <span class="id">w</span>' : <span class="id"><a href="Determinism.html#world">Determinism.world</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#do_external_function">do_external_function</a></span> <span class="id"><a href="Cexecimpl.html#id">id</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span> <span class="id"><a href="Cexecimpl.html#ge0">ge0</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#vargs">vargs</a></span> <span class="id"><a href="Cexecimpl.html#m">m</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">w</span>', <span class="id"><a href="Cexecimpl.html#t">t</a></span>, <span class="id"><a href="Cexecimpl.html#vres">vres</a></span>, <span class="id">m</span>') -&gt;<br/>
+&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#external_functions_sem">external_functions_sem</a></span> <span class="id"><a href="Cexecimpl.html#id">id</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span> <span class="id"><a href="Cexecimpl.html#ge0">ge0</a></span> <span class="id"><a href="Cexecimpl.html#vargs">vargs</a></span> <span class="id"><a href="Cexecimpl.html#m">m</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id"><a href="Cexecimpl.html#vres">vres</a></span> <span class="id">m</span>' /\<br/>
+&nbsp;&nbsp;&nbsp;<span class="id"><a href="Determinism.html#possible_trace">Determinism.possible_trace</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id">w</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5991')">Proof.</div>
+<div class="proofscript" id="proof5991">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">id</span> <span class="id">sg</span> <span class="id">ge0</span> <span class="id">vargs</span> <span class="id">m</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m</span>' <span class="id">w</span> <span class="id">w</span>' <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">red</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id"><a href="Cexecimpl.html#do_external_function_possible_trace">do_external_function_possible_trace</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="do_external_function_complete">do_external_function_complete</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">id</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html#string">String.string</a></span>) (<span class="id">sg</span> : <span class="id"><a href="AST.html#signature">AST.signature</a></span>) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ge0</span> : <span class="id"><a href="Globalenvs.html#Senv.t">Globalenvs.Senv.t</a></span>) (<span class="id">vargs</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="Values.html#val">Values.val</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span> : <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>) (<span class="id">t</span> : <span class="id"><a href="Events.html#trace">Events.trace</a></span>) (<span class="id">vres</span> : <span class="id"><a href="Values.html#val">Values.val</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span>' : <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>) (<span class="id">w</span> <span class="id">w</span>' : <span class="id"><a href="Determinism.html#world">Determinism.world</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#external_functions_sem">external_functions_sem</a></span> <span class="id"><a href="Cexecimpl.html#id">id</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span> <span class="id"><a href="Cexecimpl.html#ge0">ge0</a></span> <span class="id"><a href="Cexecimpl.html#vargs">vargs</a></span> <span class="id"><a href="Cexecimpl.html#m">m</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id"><a href="Cexecimpl.html#vres">vres</a></span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;<span class="id"><a href="Determinism.html#possible_trace">Determinism.possible_trace</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id">w</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#do_external_function">do_external_function</a></span> <span class="id"><a href="Cexecimpl.html#id">id</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span> <span class="id"><a href="Cexecimpl.html#ge0">ge0</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#vargs">vargs</a></span> <span class="id"><a href="Cexecimpl.html#m">m</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">w</span>', <span class="id"><a href="Cexecimpl.html#t">t</a></span>, <span class="id"><a href="Cexecimpl.html#vres">vres</a></span>, <span class="id">m</span>').<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5992')">Proof.</div>
+<div class="proofscript" id="proof5992">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">id</span> <span class="id">sg</span> <span class="id">ge0</span> <span class="id">vargs</span> <span class="id">m</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m</span>' <span class="id">w</span> <span class="id">w</span>' <span class="id">H</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">w_</span> &amp; <span class="id">w</span>'<span class="id">_</span> &amp; <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="Cexecimpl.html#do_external_function_possible_trace">do_external_function_possible_trace</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">Events.symbols_inject_instance</span>.<br/>
+<span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">StackADT.inject_perm_all</span>.<br/>
+<br/>
+<span class="kwd">Axiom</span> <span class="id"><a name="external_functions_properties">external_functions_properties</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">id</span> <span class="id">sg</span>, <span class="id"><a href="Events.html#extcall_properties">Events.extcall_properties</a></span> (<span class="id"><a href="Cexecimpl.html#external_functions_sem">external_functions_sem</a></span> <span class="id"><a href="Cexecimpl.html#id">id</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span>) <span class="id"><a href="Cexecimpl.html#sg">sg</a></span>.<br/>
+<br/>
+<div class="doc">Previously, do_inline_assembly was set to None in Interp.ml. Now we set it here,
+    directly from within Coq.   </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="do_inline_assembly">do_inline_assembly</a></span>:<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html#string">String.string</a></span> -&gt; <span class="id"><a href="AST.html#signature">AST.signature</a></span> -&gt; <span class="id"><a href="Globalenvs.html#Senv.t">Globalenvs.Senv.t</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="Determinism.html#world">Determinism.world</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="Values.html#val">Values.val</a></span> -&gt; <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="Determinism.html#world">Determinism.world</a></span> * <span class="id"><a href="Events.html#trace">Events.trace</a></span> * <span class="id"><a href="Values.html#val">Values.val</a></span> * <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>)<br/>
+&nbsp;&nbsp;:=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="inline_assembly_sem">inline_assembly_sem</a></span>:<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html#string">String.string</a></span> -&gt; <span class="id"><a href="AST.html#signature">AST.signature</a></span> -&gt; <span class="id"><a href="Events.html#extcall_sem">Events.extcall_sem</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">id</span> <span class="id">sg</span> <span class="id">ge</span> <span class="id">vargs</span> <span class="id">m</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">w</span> <span class="id">w</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#do_inline_assembly">do_inline_assembly</a></span> <span class="id"><a href="Cexecimpl.html#id">id</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span> <span class="id"><a href="Cexecimpl.html#ge">ge</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#vargs">vargs</a></span> <span class="id"><a href="Cexecimpl.html#m">m</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">w</span>', <span class="id"><a href="Cexecimpl.html#t">t</a></span>, <span class="id"><a href="Cexecimpl.html#vres">vres</a></span>, <span class="id">m</span>').<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="inline_assembly_sem_empty">inline_assembly_sem_empty</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">id</span> <span class="id">sg</span> <span class="id">ge</span> <span class="id">vargs</span> <span class="id">m</span> <span class="id">t</span> <span class="id">vres</span> <span class="id">m</span>':<br/>
+&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#inline_assembly_sem">inline_assembly_sem</a></span> <span class="id"><a href="Cexecimpl.html#id">id</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span> <span class="id"><a href="Cexecimpl.html#ge">ge</a></span> <span class="id"><a href="Cexecimpl.html#vargs">vargs</a></span> <span class="id"><a href="Cexecimpl.html#m">m</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id"><a href="Cexecimpl.html#vres">vres</a></span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5993')">Proof.</div>
+<div class="proofscript" id="proof5993">
+&nbsp;&nbsp;<span class="tactic">destruct</span> 1 <span class="kwd">as</span> (<span class="id">w</span> &amp; <span class="id">w</span>' &amp; <span class="id">INL</span>); <span class="tactic">discriminate</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="do_inline_assembly_sound">do_inline_assembly_sound</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">txt</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html#string">String.string</a></span>) (<span class="id">sg</span> : <span class="id"><a href="AST.html#signature">AST.signature</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ge0</span> : <span class="id"><a href="Globalenvs.html#Senv.t">Globalenvs.Senv.t</a></span>) (<span class="id">vargs</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="Values.html#val">Values.val</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span> : <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>) (<span class="id">t</span> : <span class="id"><a href="Events.html#trace">Events.trace</a></span>) (<span class="id">vres</span> : <span class="id"><a href="Values.html#val">Values.val</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span>' : <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>) (<span class="id">w</span> <span class="id">w</span>' : <span class="id"><a href="Determinism.html#world">Determinism.world</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#do_inline_assembly">do_inline_assembly</a></span> <span class="id"><a href="Cexecimpl.html#txt">txt</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span> <span class="id"><a href="Cexecimpl.html#ge0">ge0</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#vargs">vargs</a></span> <span class="id"><a href="Cexecimpl.html#m">m</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">w</span>', <span class="id"><a href="Cexecimpl.html#t">t</a></span>, <span class="id"><a href="Cexecimpl.html#vres">vres</a></span>, <span class="id">m</span>') -&gt;<br/>
+&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#inline_assembly_sem">inline_assembly_sem</a></span> <span class="id"><a href="Cexecimpl.html#txt">txt</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span> <span class="id"><a href="Cexecimpl.html#ge0">ge0</a></span> <span class="id"><a href="Cexecimpl.html#vargs">vargs</a></span> <span class="id"><a href="Cexecimpl.html#m">m</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id"><a href="Cexecimpl.html#vres">vres</a></span> <span class="id">m</span>' /\<br/>
+&nbsp;&nbsp;&nbsp;<span class="id"><a href="Determinism.html#possible_trace">Determinism.possible_trace</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id">w</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5994')">Proof.</div>
+<div class="proofscript" id="proof5994">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">discriminate</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="do_inline_assembly_complete">do_inline_assembly_complete</a></span>:<br/>
+&nbsp;<span class="kwd">forall</span> (<span class="id">txt</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html#string">String.string</a></span>) (<span class="id">sg</span> : <span class="id"><a href="AST.html#signature">AST.signature</a></span>) <br/>
+&nbsp;&nbsp;&nbsp;(<span class="id">ge0</span> : <span class="id"><a href="Globalenvs.html#Senv.t">Globalenvs.Senv.t</a></span>) (<span class="id">vargs</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="Values.html#val">Values.val</a></span>) <br/>
+&nbsp;&nbsp;&nbsp;(<span class="id">m</span> : <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>) (<span class="id">t</span> : <span class="id"><a href="Events.html#trace">Events.trace</a></span>) (<span class="id">vres</span> : <span class="id"><a href="Values.html#val">Values.val</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;(<span class="id">m</span>' : <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>) (<span class="id">w</span> <span class="id">w</span>' : <span class="id"><a href="Determinism.html#world">Determinism.world</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#inline_assembly_sem">inline_assembly_sem</a></span> <span class="id"><a href="Cexecimpl.html#txt">txt</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span> <span class="id"><a href="Cexecimpl.html#ge0">ge0</a></span> <span class="id"><a href="Cexecimpl.html#vargs">vargs</a></span> <span class="id"><a href="Cexecimpl.html#m">m</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id"><a href="Cexecimpl.html#vres">vres</a></span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;<span class="id"><a href="Determinism.html#possible_trace">Determinism.possible_trace</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id">w</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#do_inline_assembly">do_inline_assembly</a></span> <span class="id"><a href="Cexecimpl.html#txt">txt</a></span> <span class="id"><a href="Cexecimpl.html#sg">sg</a></span> <span class="id"><a href="Cexecimpl.html#ge0">ge0</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#vargs">vargs</a></span> <span class="id"><a href="Cexecimpl.html#m">m</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">w</span>', <span class="id"><a href="Cexecimpl.html#t">t</a></span>, <span class="id"><a href="Cexecimpl.html#vres">vres</a></span>, <span class="id">m</span>').<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5995')">Proof.</div>
+<div class="proofscript" id="proof5995">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="id">edestruct</span> <span class="id"><a href="Cexecimpl.html#inline_assembly_sem_empty">inline_assembly_sem_empty</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Instance</span> <span class="id"><a name="external_calls_ops">external_calls_ops</a></span>: <span class="id"><a href="Events.html#ExternalCallsOps">Events.ExternalCallsOps</a></span> <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5996')">Proof.</div>
+<div class="proofscript" id="proof5996">
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="Cexecimpl.html#external_functions_sem">external_functions_sem</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="Cexecimpl.html#external_functions_sem">external_functions_sem</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="Cexecimpl.html#external_functions_sem">external_functions_sem</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="Cexecimpl.html#inline_assembly_sem">inline_assembly_sem</a></span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Instance</span> <span class="id"><a name="external_calls_prf">external_calls_prf</a></span>: <span class="id"><a href="Events.html#ExternalCallsProps">Events.ExternalCallsProps</a></span> <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5997')">Proof.</div>
+<div class="proofscript" id="proof5997">
+&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="Cexecimpl.html#external_functions_properties">external_functions_properties</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="Cexecimpl.html#external_functions_properties">external_functions_properties</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="Cexecimpl.html#external_functions_properties">external_functions_properties</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">split</span>; <span class="tactic">intros</span>; <span class="id">edestruct</span> <span class="id"><a href="Cexecimpl.html#inline_assembly_sem_empty">inline_assembly_sem_empty</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Instance</span> <span class="id"><a name="enable_builtins_instance">enable_builtins_instance</a></span>: !<span class="id"><a href="Events.html#EnableBuiltins">Events.EnableBuiltins</a></span> <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5998')">Proof.</div>
+<div class="proofscript" id="proof5998">
+&nbsp;&nbsp;<span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">exact</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Instance</span> <span class="id"><a name="external_calls_instance">external_calls_instance</a></span>: <span class="id"><a href="Events.html#ExternalCalls">Events.ExternalCalls</a></span> <span class="id"><a href="Memimpl.html#Mem.mem">Memimpl.Mem.mem</a></span>.<br/>
+<br/>
+<br/>
+<h2> Instantiate Cexec. </h2>
+<br/>
+<div class="doc">Force <span class="bracket"><span class="id">Cexec</span></span> to be extracted with the memory model instantiated. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="state">state</a></span> := <span class="id"><a href="Csem.html#state">Csem.state</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="do_step">do_step</a></span> <span class="id">ge</span> := <span class="id"><a href="Cexec.html#do_step">Cexec.do_step</a></span> <span class="id"><a href="Cexecimpl.html#ge">ge</a></span> <span class="id"><a href="Cexecimpl.html#do_external_function">do_external_function</a></span> <span class="id"><a href="Cexecimpl.html#do_external_function">do_external_function</a></span> <span class="id"><a href="Cexecimpl.html#do_external_function">do_external_function</a></span> <span class="id"><a href="Cexecimpl.html#do_inline_assembly">do_inline_assembly</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="do_initial_state">do_initial_state</a></span> := <span class="id"><a href="Cexec.html#do_initial_state">Cexec.do_initial_state</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="at_final_state">at_final_state</a></span> := <span class="id"><a href="Cexec.html#at_final_state">Cexec.at_final_state</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="step_expr">step_expr</a></span> <span class="id">ge</span> := <span class="id"><a href="Cexec.html#step_expr">Cexec.step_expr</a></span> <span class="id"><a href="Cexecimpl.html#ge">ge</a></span> <span class="id"><a href="Cexecimpl.html#do_external_function">do_external_function</a></span> <span class="id"><a href="Cexecimpl.html#do_external_function">do_external_function</a></span> <span class="id"><a href="Cexecimpl.html#do_external_function">do_external_function</a></span> <span class="id"><a href="Cexecimpl.html#do_inline_assembly">do_inline_assembly</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="init_mem">init_mem</a></span> <span class="id">F</span> <span class="id">V</span> := <span class="id"><a href="Globalenvs.html#Genv.init_mem">Globalenvs.Genv.init_mem</a></span> (<span class="id">F</span> := <span class="id"><a href="Cexecimpl.html#F">F</a></span>) (<span class="id">V</span> := <span class="id"><a href="Cexecimpl.html#V">V</a></span>).<br/>
+<span class="id">Arguments</span> <span class="id"><a href="Cexecimpl.html#init_mem">init_mem</a></span> [<span class="id">_</span> <span class="id">_</span>] <span class="id">_</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="do_step_sound">do_step_sound</a></span> <span class="id">fsr</span> <span class="id">ge</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">w</span> <span class="id">S</span> <span class="id">rule</span> <span class="id">t</span> <span class="id">S</span>',<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">List.In</a></span> (<span class="id"><a href="Cexec.html#TR">Cexec.TR</a></span> <span class="id"><a href="Cexecimpl.html#rule">rule</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id">S</span>') (<span class="id"><a href="Cexecimpl.html#do_step">do_step</a></span> <span class="id"><a href="Cexecimpl.html#ge">ge</a></span> <span class="id"><a href="Cexecimpl.html#fsr">fsr</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#S">S</a></span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="Csem.html#step">Csem.step</a></span> <span class="id"><a href="Cexecimpl.html#fsr">fsr</a></span> <span class="id"><a href="Cexecimpl.html#ge">ge</a></span> <span class="id"><a href="Cexecimpl.html#S">S</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id">S</span>' \/ (<span class="id"><a href="Cexecimpl.html#t">t</a></span> = <span class="id"><a href="Events.html#E0">Events.E0</a></span> /\ <span class="id">S</span>' = <span class="id"><a href="Csem.html#Stuckstate">Csem.Stuckstate</a></span> /\ <span class="id"><a href="Cexec.html#can_crash_world">Cexec.can_crash_world</a></span> <span class="id"><a href="Cexecimpl.html#ge">ge</a></span> <span class="id"><a href="Cexecimpl.html#fsr">fsr</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#S">S</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5999')">Proof.</div>
+<div class="proofscript" id="proof5999">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Cexec.html#do_step_sound">Cexec.do_step_sound</a></span>;<br/>
+&nbsp;&nbsp;<span class="tactic">eauto</span> <span class="kwd">using</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#do_external_function_sound">do_external_function_sound</a></span>, <span class="id"><a href="Cexecimpl.html#do_external_function_complete">do_external_function_complete</a></span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#do_inline_assembly_sound">do_inline_assembly_sound</a></span>, <span class="id"><a href="Cexecimpl.html#do_inline_assembly_complete">do_inline_assembly_complete</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="do_step_complete">do_step_complete</a></span> <span class="id">fsr</span> <span class="id">ge</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">w</span> <span class="id">S</span> <span class="id">t</span> <span class="id">S</span>' <span class="id">w</span>',<br/>
+&nbsp;&nbsp;<span class="id"><a href="Determinism.html#possible_trace">Determinism.possible_trace</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id">w</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="Csem.html#step">Csem.step</a></span> <span class="id"><a href="Cexecimpl.html#fsr">fsr</a></span> <span class="id"><a href="Cexecimpl.html#ge">ge</a></span> <span class="id"><a href="Cexecimpl.html#S">S</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id">S</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">rule</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">List.In</a></span> (<span class="id"><a href="Cexec.html#TR">Cexec.TR</a></span> <span class="id"><a href="Cexecimpl.html#rule">rule</a></span> <span class="id"><a href="Cexecimpl.html#t">t</a></span> <span class="id">S</span>') (<span class="id"><a href="Cexecimpl.html#do_step">do_step</a></span> <span class="id"><a href="Cexecimpl.html#ge">ge</a></span> <span class="id"><a href="Cexecimpl.html#fsr">fsr</a></span> <span class="id"><a href="Cexecimpl.html#w">w</a></span> <span class="id"><a href="Cexecimpl.html#S">S</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6000')">Proof.</div>
+<div class="proofscript" id="proof6000">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="Cexec.html#do_step_complete">Cexec.do_step_complete</a></span>;<br/>
+&nbsp;&nbsp;<span class="tactic">eauto</span> <span class="kwd">using</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#do_external_function_sound">do_external_function_sound</a></span>, <span class="id"><a href="Cexecimpl.html#do_external_function_complete">do_external_function_complete</a></span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="Cexecimpl.html#do_inline_assembly_sound">do_inline_assembly_sound</a></span>, <span class="id"><a href="Cexecimpl.html#do_inline_assembly_complete">do_inline_assembly_complete</a></span>.<br/>
+Qed.</div>
+</div>
+<div class="footer"><hr/>Generated by coq2html</div>
+</body>
+</html>
