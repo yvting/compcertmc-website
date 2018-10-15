@@ -197,5 +197,12 @@ CompCert MC extends Stack-Aware CompCert with the following phases (all the file
 
   - `RSAsmToElf.ml` is a OCaml program that writes `RockSaltAsm` programs into an ELF_x86_32 executable file.
  
- ### Stack-Aware CompCertX (For Pierre to finish)
+ ### Stack-Aware CompCertX
+ 
+ The `compcertx` folder contains new files for the contextual compilation aspect of this work.
+ Each language semantics has an `X` version in this folder, where the semantics are redefined so that they do not denote the meaning of a main program without arguments but rather the execution of an arbitrary function in a program, starting from an arbitrary memory state and register state (when applicable). Look for example at [ClightX](doc/ClightX.html) or [RTLX](doc/RTLX.html). The `step` relation is kept but the initial and final states are redefined.
+ 
+ The correctness proofs in `*proofX.v` are mostly reused from the classic CompCert version, with some adjustments for the new initial and final states.
+ 
+ The final theorem for CompCertX is found in [`SeparateCompilerproof.v`](doc/SeparateCompilerproof.html).
  
