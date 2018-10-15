@@ -153,45 +153,45 @@ CompCert MC extends Stack-Aware CompCert with the following phases (all the file
 
 * Merging stack blocks into a single stack. We have designed an alternative semantics for CompCert assembly (we call `RawAsm`) which operates on a single stack that merges the original stack blocks.
 
-  - `RawAsm.v` contains the semantics of assembly using a single stack
-  - `RawAsmproof.v` contains the simulation proof from CompCert Asm to RawAsm
+  - [`RawAsm.v`](doc/RawAsm.html) contains the semantics of assembly using a single stack
+  - [`RawAsmproof.v`](doc/RawAsmproof.html) contains the simulation proof from CompCert Asm to RawAsm
   
-* Elimination of Pseudo Instructions  (For Pierre to finish)
+* Elimination of Pseudo Instructions 
 
-   - `PseudoInstructions.v`
-   - `PseudoInstructionsproof.v`
-   - `RealAsm.v`
-   - `RealAsmproof2.v`
+   - [`RealAsm.v`](doc/RealAsm.html) is an alternate semantics for assembly, where the responsibility of pushing the return address at a call site is transferred from the callee (in CompCert Asm) to the caller (as in regular x86 assembly), similarly for function return, and pseudo instructions are updated accordingly.
+   - [`RealAsmproof2.v`](doc/RealAsmproof2.html) contains a proof that the RealAsm semantics simulates the RawAsm semantics, i.e. every behaviour of the RealAsm semantics is also a behaviour of the RawAsm semantics.
+   - [`PseudoInstructions.v`](doc/PseudoInstructions.html) is a compiler pass from RealAsm to RealAsm, where pseudo-instructions are eliminated. 
+   - [`PseudoInstructionsproof.v`](doc/PseudoInstructionsproof.html) contains the correctness proof of the pseudo-instructions elimination pass.
    
 * Layout the code and data in a flat memory. In this step, we concatenate the blocks for the global variables into a continous data segment and the instructions in global functions in a continous code segment.
 
-   - `Segment.v` defines segments for code and data
-   - `FlatAsmBuiltin.v` contains buildin definitions for FlatAsm
-   - `FlatAsmProgram.v` contains the definition of functions, instructions and programs for assembly with a flat memroy space
-   - `FlatAsmGlobenv.v` contains the definition of global environments for `FlatAsm` programs. We define a new version of global environment because the origianl CompCert assumes functions and data reside in separate blocks, which is no longer true for `FlatAsm` programs.
-   - `FlatAsm.v` defines am assembly language that operates on the flat code and data segments. 
-   - `FlatAsmgen.v` defines the generation of `FlatAsm` programs from `RealAsm` programs.
-   - `FlatAsmgenproof.v` contains the simulation proof for `FlatAsmgen`.
-   - `FlatAsmSep.v` defines the linking operators for `FlatAsm` programs and proves separate compilation of `FlatAsm` programs.
+   - [`Segment.v`](doc/Segment.html) defines segments for code and data
+   - [`FlatAsmBuiltin.v`](doc/FlatAsmBuiltin.html) contains builtin definitions for FlatAsm
+   - [`FlatAsmProgram.v`](doc/FlatAsmProgram.html) contains the definition of functions, instructions and programs for assembly with a flat memroy space
+   - [`FlatAsmGlobenv.v`](doc/FlatAsmGlobenv.html) contains the definition of global environments for `FlatAsm` programs. We define a new version of global environment because the origianl CompCert assumes functions and data reside in separate blocks, which is no longer true for `FlatAsm` programs.
+   - [`FlatAsm.v`](doc/FlatAsm.html) defines an assembly language that operates on the flat code and data segments. 
+   - [`FlatAsmgen.v`](doc/FlatAsmgen.html) defines the generation of `FlatAsm` programs from `RealAsm` programs.
+   - [`FlatAsmgenproof.v`](doc/FlatAsmgenproof.html) contains the simulation proof for `FlatAsmgen`.
+   - [`FlatAsmSep.v`](doc/FlatAsmSep.html) defines the linking operators for `FlatAsm` programs and proves separate compilation of `FlatAsm` programs.
    
-* Resolution of IDs. We transform FlatAsm programs by replacing the absolution addressing to relative addressing.
+* Resolution of IDs. We transform FlatAsm programs by replacing the absolute addressing with relative addressing.
 
-   - `MC.v` defines a language where all the labels are replaced by relative offsets and control flow operates by using those offsets
-   - `MCgen.v` defines the generation from `FlatAsm` programs to `MC` programs
-   - `MCgenproof.v` contains the simulation proof for `MCgen`
-   - `MCSep.v` defines the linking operators for `MC` programs and proves separate compilation of `MC` programs.
+   - [`MC.v`](doc/MC.html) defines a language where all the labels are replaced by relative offsets and control flow operates by using those offsets
+   - [`MCgen.v`](doc/MCgen.html) defines the generation from `FlatAsm` programs to `MC` programs
+   - [`MCgenproof.v`](doc/MCgenproof.html) contains the simulation proof for `MCgen`
+   - [`MCSep.v`](doc/MCSep.html) defines the linking operators for `MC` programs and proves separate compilation of `MC` programs.
    
 * The Correcntess proofs of the compilation chain to MC
 
-  We have linked the simulation proofs for all the passes to form the correcntess proofs of the compilation chain down to MC. They are the following theorems in `driver/Compiler.v`.
+  We have linked the simulation proofs for all the passes to form the correcntess proofs of the compilation chain down to MC. They are the following theorems in [`driver/Compiler.v`](doc/Compiler.html).
   
-  - `c_semantic_preservation_mc` is the correcntess of compilation of whole programs
-  - `separate_transf_c_program_correct_mc` is the correctness of separate compilation
+  - [`c_semantic_preservation_mc`](doc/Compiler.html#c_semantic_preservation_mc) is the correcntess of compilation of whole programs
+  - [`separate_transf_c_program_correct_mc`](doc/Compiler.html#separate_transf_c_program_correct_mc) is the correctness of separate compilation
  
 * Generation of RockSalt Asm programs (not verified)
  
-  - `RockSaltAsm.v` defines the assembly language based on RockSalt
-  - `RockSaltAsmGen.v` generates `RockSaltAsm` programs from `MC` programs
+  - [`RockSaltAsm.v`](doc/RockSaltAsm.html) defines the assembly language based on RockSalt
+  - [`RockSaltAsmGen.v`](doc/RockSaltAsmGen.html) generates `RockSaltAsm` programs from `MC` programs
   
 * Generation of ELF files (not verified)
 
