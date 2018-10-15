@@ -17,7 +17,7 @@ The development is known to compile with the following software:
 
 Download the source code and untar it to a directory.
 
-The easiest way to setup the development environment is to use the Nix package manager. We provide a configuration file for a nix environment. Simply run 'nix-shell' in the directory will install all the dependent pacakages and enter into a shell for compiling our source code.
+The easiest way to setup the development environment is to use the [Nix package manager](https://nixos.org/nix/). We provide a configuration file for a nix environment. Simply run `nix-shell` in the directory will install all the dependent pacakages and enter into a shell for compiling our source code.
 
 You can also setup the environment using your preferred method (such as OPAM).
 
