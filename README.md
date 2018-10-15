@@ -123,13 +123,29 @@ We also export our code as [browsable HTML files](./doc/).
 
 We have made the following changes to the origianl CompCert for our compilers
 
-### Stack-Aware CompCert (For Pierre to finish)
+### Stack-Aware CompCert
 
-* Addition of Abstract Stack to Memory Model 
+* Extension of the Memory Model with an Abstract Stack
+
+The abstract stack is defined in [StackADT.v](doc/StackADT.html#stack). The definitions of stages, frames and abstract blocks described in the paper can be found in this file. Lower in this file are the definition of [stack injection](doc/StackADT.html#stack_inject).
+
+Then in [Memimpl](doc/Memimpl.html#mem'), the CompCert memory model is enriched with a stack and some invariants on this stack, described as the `stack_inv` predicate. The new operations [record](doc/Memimpl.html#Mem.record_stack_blocks), [push_stage](doc/Memimpl.html#Mem.push_new_stage) and [pop_stage](doc/Memimpl.html#Mem.unrecord_stack_block) are defined here.
 
 * Instrumentation of Semantics
 
+The semantics of every language is instrumented to insert stack operations. Let us have a look for example at the semantics for [Cminor](doc/Cminor.html#step_internal_function). The rule `step_internal_function` records a new frame, based on the size of the stack block. The rule `step_return` pops the current stage and the `step_call` rule pushes a new stage.
+
+Similar changes can be observed in the semantics of all languages except Mach and Asm: [RTL](doc/RTL.html), [Clight](doc/Clight.v) for instance.
+
 * Proofs of preservation of stack access policy and stack consumption
+
+The stack access policy is stated as [the `stack_access` predicate](doc/StackADT.html#stack_access). It is preserved under injection, as shown [here](doc/StackADT.html#stack_access_inj_gen).
+
+The size of the stack is defined [here](doc/StackADT.html#size_stack). For most compiler passes, the stacks are in the [`stack_equiv`](doc/StackADT.html#stack_equiv) relation, implying they are of the same size.
+
+For Inlining, the stacks are in the [`inline_sizes`](doc/Inliningproof.html#inline_sizes) relation, meaning a number of stages in the source correspond to one frame in the target stack. A [corollary of this relation](doc/Inliningproof.html#inline_sizes_size_stack) is that the target stack is not larget than the source stack.
+
+Similarly for Tailcall recognition: the relation is [`tc_sizes`](doc/Tailcallproof.v#tc_sizes).
 
 ### CompCertMC
 
