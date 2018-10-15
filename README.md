@@ -1,37 +1,53 @@
-## Welcome to GitHub Pages
+## An Abstract Stack Based Approach to Verified Compositional Compilation to Machine Code
 
-You can use the [editor on GitHub](https://github.com/CertiKOS/compcertmc/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+This is the website hosting the artifact associated with our POPL'19 submission.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+You will find our source code in [this archive](compcertmc.zip).
 
-### Markdown
+### Requirements
+The development is known to compile with the following software:
+- Menhir v.20170712 or later
+- Coq v8.6.1
+- OCaml v4.02.3
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+### Instructions
+To compile our development, first configure the target architecture:
 
-```markdown
-Syntax highlighted code block
+  ./configure x86_32-linux
+  
+This will configure the development for the 32-bit x86 architecture. (We are limited to the 32-bit x86 architecture because of the RockSalt instruction encoder.)
+Then generate the dependencies:
 
-# Header 1
-## Header 2
-### Header 3
+  make depend
+  
+Finally compile the whole development
 
-- Bulleted
-- List
+  make -j
+  
+This takes approximately 15-25 minutes depending on your machine.
 
-1. Numbered
-2. List
+### Usage
 
-**Bold** and _Italic_ and `Code` text
+There is a number of examples in `c_examples`.
 
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/CertiKOS/compcertmc/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+  $ cd c_examples
+  $ cat fib.c
+    int fib (int n)
+    {
+      if (n <= 2) 
+        return 1;
+      else 
+        return fib(n-1) + fib(n-2);
+    }
+    
+    int n = 12;
+    
+    int main() 
+    {
+      return fib(n);
+    }
+  
+  $ ../ccomp -machinecode fib.c
+  $ ./fib.o 
+  $ echo $?
+    144
