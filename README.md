@@ -66,3 +66,60 @@ The Compiler is verified up to the MC language which is very close to machine co
   $ echo $?
     144
 </pre>
+
+### Structure of the proofs
+
+For reference, you can browse the original CompCert source code at [here](http://compcert.inria.fr/doc/index.html).
+
+We have made the following changes to the origianl CompCert for our compilers
+
+## Stack-Aware CompCert (For Pierre to finish)
+
+* Addition of Abstract Stack to Memory Model 
+
+* Instrumentation of Semantics
+
+* Proofs of preservation of stack access policy and stack consumption
+
+## CompCertMC
+
+CompCert MC extends Stack-Aware CompCert with the following phases (all the files listed below are new additions we made to CompCert):
+
+* Merging stack blocks into a single stack. We have designed an alternative semantics for CompCert assembly (we call `RawAsm`) which operates on a single stack that merges the original stack blocks.
+
+  - `RawAsm.v` contains the semantics of assembly using a single stack
+  - `RawAsmproof.v` contains the simulation proof from CompCert Asm to RawAsm
+  
+* Elimination of Pseudo Instructions  (For Pierre to finish)
+
+   - `PseudoInstructions.v`
+   - `PseudoInstructionsproof.v`
+   - `RealAsm.v`
+   - `RealAsmproof2.v`
+   
+* Layout the code and data in a flat memory. In this step, we concatenate the blocks for the global variables into a continous data segment and the instructions in global functions in a continous code segment.
+
+   - `FlatAsmBuiltin.v` contains buildin definitions for FlatAsm
+   - `FlatAsmProgram.v` contains the definition of functions, instructions and programs for assembly with a flat memroy space
+   - `FlatAsmGlobenv.v` contains the definition of global environments for `FlatAsm` programs. We define a new version of global environment because the origianl CompCert assumes functions and data reside in separate blocks, which is no longer true for `FlatAsm` programs.
+   - `FlatAsm.v` defines am assembly language that operates on the flat code and data segments. 
+   - `FlatAsmgen.v` defines the generation of `FlatAsm` programs from `RealAsm` programs.
+   - `FlatAsmgenproof.v` contains the simulation proof for `FlatAsmgen`.
+   - `FlatAsmSep.v` defines the linking operators for `FlatAsm` programs and proves separate compilation of `FlatAsm` programs.
+   
+* Resolution of IDs. We transform FlatAsm programs by replacing the absolution addressing to relative addressing.
+
+   - `MC.v` defines a language where all the labels are replaced by relative offsets and control flow operates by using those offsets
+   - `MCgen.v` defines the generation from `FlatAsm` programs to `MC` programs
+   - `MCgenproof.v` contains the simulation proof for `MCgen`
+   - `MCSep.v` defines the linking operators for `MC` programs and proves separate compilation of `MC` programs.
+   - 
+ overall
+ * The Correcntess proofs of the compilation chain to MC
+ 
+ * Generation of RockSalt Asm programs (not verified)
+ 
+ * Generation of ELF files
+ 
+ ## Stack-Aware CompCertX (For Pierre to finish)
+ 
