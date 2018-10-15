@@ -6,7 +6,7 @@ You will find our source code in [this archive](popl19-artifact.tar.gz).
 
 ## Requirements
 
-The compiler is basd on CompCert. You can find the user manual of CompCert at [here](http://compcert.inria.fr/man/)
+The compiler is basd on CompCert. You can find the user manual of CompCert [here](http://compcert.inria.fr/man/)
 
 The development is known to compile with the following software:
 - Menhir v.20170712 or later
@@ -17,7 +17,7 @@ The development is known to compile with the following software:
 
 Download the source code and untar it to a directory.
 
-The easiest way to setup the development environment is to use the Nix package manager. We already provide a configuration file for a nix environment. Simply run 'nix-shell' in the directory will install all the dependent pacakages and enter into a shell for compiling our source code.
+The easiest way to setup the development environment is to use the Nix package manager. We provide a configuration file for a nix environment. Simply run 'nix-shell' in the directory will install all the dependent pacakages and enter into a shell for compiling our source code.
 
 You can also setup the environment using your preferred method (such as OPAM).
 
@@ -68,9 +68,9 @@ The Compiler is verified up to the MC language which is very close to machine co
     144
 </pre>
 
-Note that the the return values will be truncated if they exceeds 256. So sometimes you will see results that are not correct.
+Note that the return value is truncated to a byte.
 
-The most non-trivial example is an algorithm for solving the N-queen problem, which will return the number of solutions (See the table at [this wiki page](https://en.wikipedia.org/wiki/Eight_queens_puzzle) to find out the number of solutions). The following is an example that computes the number of solutions for 8-queen problem. Here the `-timings` flag is used to show the compilation passes it goes through.
+Another example is an algorithm for solving the N-queen problem, which will return the number of solutions (See the table at [this wiki page](https://en.wikipedia.org/wiki/Eight_queens_puzzle) to find out the number of solutions).  Here the `-timings` flag is used to show the compilation passes it goes through.
 
 <pre>
 $ ../ccomp -timings -machinecode nqueen.c 
@@ -117,7 +117,9 @@ $ echo $?
 
 ## Structure of the proofs
 
-For reference, you can browse the original CompCert source code at [here](http://compcert.inria.fr/doc/index.html).
+For reference, you can browse the original CompCert source code [here](http://compcert.inria.fr/doc/index.html).
+
+We also export our code as [browsable HTML files](./doc/).
 
 We have made the following changes to the origianl CompCert for our compilers
 
