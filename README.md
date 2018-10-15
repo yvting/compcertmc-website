@@ -1,4 +1,4 @@
-## An Abstract Stack Based Approach to Verified Compositional Compilation to Machine Code
+# An Abstract Stack Based Approach to Verified Compositional Compilation to Machine Code
 
 This is the website hosting the artifact associated with our POPL'19 submission.
 
