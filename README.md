@@ -68,6 +68,8 @@ The Compiler is verified up to the MC language which is very close to machine co
     144
 </pre>
 
+Note that the the return values will be truncated if they exceeds 256. So sometimes you will see results that are not correct.
+
 The most non-trivial example is an algorithm for solving the N-queen problem, which will return the number of solutions (See the table at [this wiki page](https://en.wikipedia.org/wiki/Eight_queens_puzzle) to find out the number of solutions). The following is an example that computes the number of solutions for 8-queen problem. Here the `-timings` flag is used to show the compilation passes it goes through.
 
 <pre>
