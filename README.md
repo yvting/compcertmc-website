@@ -2,7 +2,7 @@
 
 This is the website hosting the artifact associated with our POPL'19 submission.
 
-You will find our source code in [this archive](popl19-artifact.tar.gz).
+You will find our source code in [this archive](compcert-new-popl19-32bits.zip).
 
 ## Requirements
 
