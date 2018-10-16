@@ -6,7 +6,7 @@ You will find our source code in [this archive](compcert-new-popl19-32bits.zip).
 
 ## Requirements
 
-The compiler is basd on CompCert. You can find the user manual of CompCert [here](http://compcert.inria.fr/man/)
+The compiler is basd on CompCert. You can find the user manual of CompCert [here](http://compcert.inria.fr/man/).
 
 The development is known to compile with the following software:
 - Menhir v.20170712 or later
@@ -15,9 +15,9 @@ The development is known to compile with the following software:
 
 ## Instructions
 
-Download the source code and untar it to a directory.
+Download the source code and unzip it to a directory.
 
-The easiest way to setup the development environment is to use the [Nix package manager](https://nixos.org/nix/). We provide a configuration file for a nix environment. Simply run `nix-shell` in the directory will install all the dependent pacakages and enter into a shell for compiling our source code.
+The easiest way to setup the development environment is to use the [Nix package manager](https://nixos.org/nix/). We provide a configuration file (`default.nix`) for a nix environment. Simply run `nix-shell` in the directory will install all the dependent pacakages and enter into a shell for compiling our source code.
 
 You can also setup the environment using your preferred method (such as OPAM).
 
@@ -25,7 +25,7 @@ To compile our development, first configure the target architecture:
 
   <pre>./configure x86_32-linux</pre>
   
-This will configure the development for the 32-bit x86 architecture. Note that our approach for machine code generation is architecture independent. We are limited to the 32-bit x86 architecture because the RockSalt instruction encoder only supports x86_32. 
+This will configure the development for the 32-bit x86 architecture. Note that generally speaking our approach for machine code generation is architecture independent. We are limited to the 32-bit x86 architecture because the [RockSalt](https://github.com/gangtan/CPUmodels) instruction encoder we use for this project only supports x86_32. 
 
 Then generate the dependencies:
 
@@ -37,11 +37,13 @@ Finally compile the whole development
   
 This will compile CompCertMC (which Stack-Aware CompCert is a part of) and Stack-Aware CompCertX.
 
-This takes approximately 30-40 minutes depending on your machine. Note that the compilation of RockSalt encoder consumes a lot of memory. We recommand to have at least 16GB memory (We use a workstation with 64GB memory). Otherwise, the compilation may run out of memory.
+This takes approximately 30-40 minutes depending on your machine. Note that the compilation of RockSalt encoder consumes a lot of memory. To avoid running out of memory, we recommand to have at least 16GB memory (We use a workstation with 64GB memory).
 
 ## Usage
 
-The Compiler is verified up to the MC language which is very close to machine code. Further compiler to machine code (ELF_X88_32 format) is supported through an unverified process. For now we only support encoding of a subset of CompCert assembly instructions and the compilation to an ELF executable (not object) files. Moreover, the call to external functions are not supported because it would require us to implement a linker to link with the standard C libraries (which we have not time to do yet). For demonstration purpose, we have set up some examples in `c_examples`. As an example, you can run the following example of fibonacci numbers.
+The Stack-Aware CompCert is a part of CompCertMC which on its own works in the same way as the original CompCert. CompCertMC supports compilation to ELF files. Stack-Aware CompCertX supports contextual compilation, which will replace CompCertX in the [CertiKOS](http://flint.cs.yale.edu/certikos/) project.
+
+The CompCertMC compiler is verified up to the MC language which is very close to machine code. Further compiler to machine code (ELF_X88_32 format) is supported through an unverified process. For now we only support encoding of a subset of CompCert assembly instructions and the compilation to an ELF executable (not object) files. Moreover, the call to external functions are not supported because it would require us to implement a linker to link with the standard C libraries (we are still trying to figure out how to implement such a linker). For demonstration purpose, we have set up some examples in `c_examples`. As an example, you can compile and run the following program for computing fibonacci numbers.
 
 <pre>
   $ cd c_examples
@@ -68,9 +70,71 @@ The Compiler is verified up to the MC language which is very close to machine co
     144
 </pre>
 
-Note that the return value is truncated to a byte.
+The `-machinecode` flag is passed to CompCertMC for generating machine code. The resulting ELF file is `fib.o`. The last echo command outputs the most recent return value, which is the 12th fibonacci number. 
 
-Another example is an algorithm for solving the N-queen problem, which will return the number of solutions (See the table at [this wiki page](https://en.wikipedia.org/wiki/Eight_queens_puzzle) to find out the number of solutions).  Here the `-timings` flag is used to show the compilation passes it goes through.
+The following is another example of compiling and running a program that computes factorials.
+
+</pre>
+$ cat fac.c 
+
+int fac(int n)
+{
+  int v = 0;
+
+  if (n == 0) {
+    v = 1;
+  } else {
+    v = n * fac(n-1);
+  }
+
+  return v;
+}
+
+int main()
+{
+  return fac(6);
+}
+
+$ ../ccomp -timings -machinecode fac.c 
+   0.00s  Parsing
+   0.00s  Elaboration
+   0.00s  Emulations
+   0.00s  CompCert C generation
+   0.00s  Clight generation
+   0.00s  Simplification of locals
+   0.00s  C#minor generation
+   0.00s  Cminor generation
+   0.00s  Instruction selection
+   0.00s  RTL generation
+   0.00s  Tail calls
+   0.00s  Inlining
+   0.00s  Renumbering
+   0.00s  Constant propagation
+   0.00s  CSE
+   0.00s  Redundancy elimination
+   0.00s  Unused globals
+   0.00s  Register allocation
+   0.00s  Branch tunneling
+   0.00s  CFG linearization
+   0.00s  Label cleanup
+   0.00s  Mach generation
+   0.00s  Asm generation
+   0.00s  Elimination of pseudo instruction
+   0.00s  Generation of FlatAsm
+   0.00s  Generation of MC
+   0.01s  Generation of RockSalt program
+   0.03s  Total compilation time
+
+$ chmod +x ./fac.o 
+$ ./fac.o 
+$ echo $?
+208
+
+</pre>
+
+Here we use the `-timings` flag to show the compilation passes went through. Note that the correct result is 720. We got 208 because return value is truncated to a byte.
+
+Our most non-trivial example is an algorithm for solving the N-queen problem, which will return the number of solutions (See the table at [this wiki page](https://en.wikipedia.org/wiki/Eight_queens_puzzle) to find out the number of solutions).  
 
 <pre>
 $ ../ccomp -timings -machinecode nqueen.c 
