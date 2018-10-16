@@ -43,7 +43,7 @@ This takes approximately 30-40 minutes depending on your machine. Note that the 
 
 The Stack-Aware CompCert is a part of CompCertMC which on its own works in the same way as the original CompCert. CompCertMC supports compilation to ELF files. Stack-Aware CompCertX supports contextual compilation, which will replace CompCertX in the [CertiKOS](http://flint.cs.yale.edu/certikos/) project.
 
-The CompCertMC compiler is verified up to the MC language which is very close to machine code. Further compiler to machine code (ELF_X88_32 format) is supported through an unverified process. For now we only support encoding of a subset of CompCert assembly instructions and the compilation to an ELF executable (not object) files. Moreover, the call to external functions are not supported because it would require us to implement a linker to link with the standard C libraries (we are still trying to figure out how to implement such a linker). For demonstration purpose, we have set up some examples in `c_examples`. As an example, you can compile and run the following program for computing fibonacci numbers.
+The CompCertMC compiler is verified up to the MC language which is very close to machine code. Further compiler to machine code (ELF_X88_32 format) is supported through an unverified process. For now we only support encoding of a subset of CompCert assembly instructions and the compilation to an ELF executable (not object) files. Moreover, the call to external functions are not supported because it would require us to implement a linker to link with the standard C libraries (we are still trying to figure out how to implement such a linker). For the purpose of demonstration, we have set up some examples in `c_examples`. As an example, you can compile and run the following program for computing fibonacci numbers.
 
 <pre>
   $ cd c_examples
@@ -185,7 +185,7 @@ For reference, you can browse the original CompCert source code [here](http://co
 
 We also export our code as [browsable HTML files](./doc/).
 
-We have made the following changes to the origianl CompCert for our compilers
+We have made the following changes to the origianl CompCert for our compilers.
 
 ### Stack-Aware CompCert
 
@@ -193,7 +193,7 @@ We have made the following changes to the origianl CompCert for our compilers
 
 The abstract stack is defined in [StackADT.v](doc/StackADT.html#stack). The definitions of stages, frames and abstract blocks described in the paper can be found in this file. Lower in this file are the definition of [stack injection](doc/StackADT.html#stack_inject).
 
-Then in [Memimpl](doc/Memimpl.html#mem'), the CompCert memory model is enriched with a stack and some invariants on this stack, described as the `stack_inv` predicate. The new operations [record](doc/Memimpl.html#Mem.record_stack_blocks), [push_stage](doc/Memimpl.html#Mem.push_new_stage) and [pop_stage](doc/Memimpl.html#Mem.unrecord_stack_block) are defined here.
+Then in [Memimpl.v](doc/Memimpl.html#mem'), the CompCert memory model is enriched with a stack and some invariants on this stack, described as the `stack_inv` predicate. The new operations [record](doc/Memimpl.html#Mem.record_stack_blocks), [push_stage](doc/Memimpl.html#Mem.push_new_stage) and [pop_stage](doc/Memimpl.html#Mem.unrecord_stack_block) are defined here.
 
 * Instrumentation of Semantics
 
@@ -220,14 +220,14 @@ CompCert MC extends Stack-Aware CompCert with the following phases (all the file
   - [RawAsm.v](doc/RawAsm.html) contains the semantics of assembly using a single stack
   - [RawAsmproof.v](doc/RawAsmproof.html) contains the simulation proof from CompCert Asm to RawAsm
   
-* Elimination of Pseudo Instructions 
+* Elimination of pseudo instructions. This pass eleminates pseudo instructions in CompCert assembly that do not correspond to actual machine instructions, including `Pallocframe`, `Pfreeframe` and `Pload_parent_pointer`.
 
    - [RealAsm.v](doc/RealAsm.html) is an alternate semantics for assembly, where the responsibility of pushing the return address at a call site is transferred from the callee (in CompCert Asm) to the caller (as in regular x86 assembly), similarly for function return, and pseudo instructions are updated accordingly.
    - [RealAsmproof2.v](doc/RealAsmproof2.html) contains a proof that the RealAsm semantics simulates the RawAsm semantics, i.e. every behaviour of the RealAsm semantics is also a behaviour of the RawAsm semantics.
    - [PseudoInstructions.v](doc/PseudoInstructions.html) is a compiler pass from RealAsm to RealAsm, where pseudo-instructions are eliminated. 
    - [PseudoInstructionsproof.v](doc/PseudoInstructionsproof.html) contains the correctness proof of the pseudo-instructions elimination pass.
    
-* Layout the code and data in a flat memory. In this step, we concatenate the blocks for the global variables into a continous data segment and the instructions in global functions in a continous code segment.
+* Layout the code and data in a flat memory. In this step, we concatenate the blocks for the global variables into a continous data segment and the instructions in global functions into a continous code segment.
 
    - [Segment.v](doc/Segment.html) defines segments for code and data
    - [FlatAsmBuiltin.v](doc/FlatAsmBuiltin.html) contains builtin definitions for FlatAsm
@@ -245,23 +245,23 @@ CompCert MC extends Stack-Aware CompCert with the following phases (all the file
    - [MCgenproof.v](doc/MCgenproof.html) contains the simulation proof for `MCgen`
    - [MCSep.v](doc/MCSep.html) defines the linking operators for `MC` programs and proves separate compilation of `MC` programs.
    
-* The Correcntess proofs of the compilation chain to MC
+* The correcntess proof of the compilation chain to MC
 
   We have linked the simulation proofs for all the passes to form the correcntess proofs of the compilation chain down to MC. They are the following theorems in [`driver/Compiler.v`](doc/Compiler.html).
   
   - [c_semantic_preservation_mc](doc/Compiler.html#c_semantic_preservation_mc) is the correcntess of compilation of whole programs
   - [separate_transf_c_program_correct_mc](doc/Compiler.html#separate_transf_c_program_correct_mc) is the correctness of separate compilation
  
-* Generation of RockSalt Asm programs (not verified)
+* Generation of RockSalt Asm programs (not verified). This makes use of the RockSalt x86 machine model (in the directory `cpu_models`).
  
   - [RockSaltAsm.v](doc/RockSaltAsm.html) defines the assembly language based on RockSalt
   - [RockSaltAsmGen.v](doc/RockSaltAsmGen.html) generates `RockSaltAsm` programs from `MC` programs
   
 * Generation of ELF files (not verified)
 
-  - RSAsmToElf.ml is a OCaml program that writes `RockSaltAsm` programs into an ELF_x86_32 executable file.
+  - RSAsmToElf.ml is an OCaml program that writes `RockSaltAsm` programs into an ELF_x86_32 executable file.
  
- ### Stack-Aware CompCertX
+### Stack-Aware CompCertX
  
  The `compcertx` folder contains new files for the contextual compilation aspect of this work.
  Each language semantics has an `X` version in this folder, where the semantics are redefined so that they do not denote the meaning of a main program without arguments but rather the execution of an arbitrary function in a program, starting from an arbitrary memory state and register state (when applicable). Look for example at [ClightX](doc/ClightX.html) or [RTLX](doc/RTLX.html). The `step` relation is kept but the initial and final states are redefined.
