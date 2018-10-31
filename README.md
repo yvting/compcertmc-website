@@ -199,7 +199,7 @@ Then in [Memimpl.v](doc/Memimpl.html#mem'), the CompCert memory model is enriche
 
 The semantics of every language is instrumented to insert stack operations. Let us have a look for example at the semantics for [Cminor](doc/Cminor.html#step_internal_function). The rule `step_internal_function` records a new frame, based on the size of the stack block. The rule `step_return` pops the current stage and the `step_call` rule pushes a new stage.
 
-Similar changes can be observed in the semantics of all languages except Mach and Asm: [RTL](doc/RTL.html), [Clight](doc/Clight.v) for instance.
+Similar changes can be observed in the semantics of all languages except Mach and Asm: [RTL](doc/RTL.html), [Clight](doc/Clight.html) for instance.
 
 * Proofs of preservation of stack access policy and stack consumption
 
