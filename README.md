@@ -6,7 +6,7 @@ You will find our source code in [this archive](compcert-new-popl19-32bits.zip).
 
 ## Requirements
 
-The compiler is basd on CompCert. You can find the user manual of CompCert [here](http://compcert.inria.fr/man/).
+The compiler is based on CompCert. You can find the user manual of CompCert [here](http://compcert.inria.fr/man/).
 
 The development is known to compile with the following software:
 - Menhir v.20170712 or later
@@ -17,7 +17,7 @@ The development is known to compile with the following software:
 
 Download the source code and unzip it to a directory.
 
-The easiest way to setup the development environment is to use the [Nix package manager](https://nixos.org/nix/). We provide a configuration file (`default.nix`) for a nix environment. Simply run `nix-shell` in the directory will install all the dependent pacakages and enter into a shell for compiling our source code.
+The easiest way to setup the development environment is to use the [Nix package manager](https://nixos.org/nix/). We provide a configuration file (`default.nix`) for a nix environment. Simply run `nix-shell` in the directory will install all the dependent packages and enter into a shell for compiling our source code.
 
 You can also setup the environment using your preferred method (such as OPAM).
 
@@ -37,7 +37,7 @@ Finally compile the whole development
   
 This will compile CompCertMC (which Stack-Aware CompCert is a part of) and Stack-Aware CompCertX.
 
-This takes approximately 30-40 minutes depending on your machine. Note that the compilation of RockSalt encoder consumes a lot of memory. To avoid running out of memory, we recommand to have at least 16GB memory (We use a workstation with 64GB memory).
+This takes approximately 30-40 minutes depending on your machine. Note that the compilation of RockSalt encoder consumes a lot of memory. To avoid running out of memory, we recommend to have at least 16GB memory (We use a workstation with 64GB memory).
 
 ## Usage
 
@@ -185,7 +185,7 @@ For reference, you can browse the original CompCert source code [here](http://co
 
 We also export our code as [browsable HTML files](./doc/).
 
-We have made the following changes to the origianl CompCert for our compilers.
+We have made the following changes to the original CompCert for our compilers.
 
 ### Stack-Aware CompCert
 
@@ -207,7 +207,7 @@ The stack access policy is stated as [the `stack_access` predicate](doc/StackADT
 
 The size of the stack is defined [here](doc/StackADT.html#size_stack). For most compiler passes, the stacks are in the [`stack_equiv`](doc/StackADT.html#stack_equiv) relation, implying they are of the same size.
 
-For Inlining, the stacks are in the [`inline_sizes`](doc/Inliningproof.html#inline_sizes) relation, meaning a number of stages in the source correspond to one frame in the target stack. A [corollary of this relation](doc/Inliningproof.html#inline_sizes_size_stack) is that the target stack is not larget than the source stack.
+For Inlining, the stacks are in the [`inline_sizes`](doc/Inliningproof.html#inline_sizes) relation, meaning a number of stages in the source correspond to one frame in the target stack. A [corollary of this relation](doc/Inliningproof.html#inline_sizes_size_stack) is that the target stack is not larger than the source stack.
 
 Similarly for Tailcall recognition: the relation is [`tc_sizes`](doc/Tailcallproof.v#tc_sizes).
 
@@ -220,19 +220,19 @@ CompCert MC extends Stack-Aware CompCert with the following phases (all the file
   - [RawAsm.v](doc/RawAsm.html) contains the semantics of assembly using a single stack
   - [RawAsmproof.v](doc/RawAsmproof.html) contains the simulation proof from CompCert Asm to RawAsm
   
-* Elimination of pseudo instructions. This pass eleminates pseudo instructions in CompCert assembly that do not correspond to actual machine instructions, including `Pallocframe`, `Pfreeframe` and `Pload_parent_pointer`.
+* Elimination of pseudo instructions. This pass eliminates pseudo instructions in CompCert assembly that do not correspond to actual machine instructions, including `Pallocframe`, `Pfreeframe` and `Pload_parent_pointer`.
 
    - [RealAsm.v](doc/RealAsm.html) is an alternate semantics for assembly, where the responsibility of pushing the return address at a call site is transferred from the callee (in CompCert Asm) to the caller (as in regular x86 assembly), similarly for function return, and pseudo instructions are updated accordingly.
    - [RealAsmproof2.v](doc/RealAsmproof2.html) contains a proof that the RealAsm semantics simulates the RawAsm semantics, i.e. every behaviour of the RealAsm semantics is also a behaviour of the RawAsm semantics.
    - [PseudoInstructions.v](doc/PseudoInstructions.html) is a compiler pass from RealAsm to RealAsm, where pseudo-instructions are eliminated. 
    - [PseudoInstructionsproof.v](doc/PseudoInstructionsproof.html) contains the correctness proof of the pseudo-instructions elimination pass.
    
-* Layout the code and data in a flat memory. In this step, we concatenate the blocks for the global variables into a continous data segment and the instructions in global functions into a continous code segment.
+* Layout the code and data in a flat memory. In this step, we concatenate the blocks for the global variables into a continuous data segment and the instructions in global functions into a continuous code segment.
 
    - [Segment.v](doc/Segment.html) defines segments for code and data
    - [FlatAsmBuiltin.v](doc/FlatAsmBuiltin.html) contains builtin definitions for FlatAsm
-   - [FlatAsmProgram.v](doc/FlatAsmProgram.html) contains the definition of functions, instructions and programs for assembly with a flat memroy space
-   - [FlatAsmGlobenv.v](doc/FlatAsmGlobenv.html) contains the definition of global environments for `FlatAsm` programs. We define a new version of global environment because the origianl CompCert assumes functions and data reside in separate blocks, which is no longer true for `FlatAsm` programs.
+   - [FlatAsmProgram.v](doc/FlatAsmProgram.html) contains the definition of functions, instructions and programs for assembly with a flat memory space
+   - [FlatAsmGlobenv.v](doc/FlatAsmGlobenv.html) contains the definition of global environments for `FlatAsm` programs. We define a new version of global environment because the original CompCert assumes functions and data reside in separate blocks, which is no longer true for `FlatAsm` programs.
    - [FlatAsm.v](doc/FlatAsm.html) defines an assembly language that operates on the flat code and data segments. 
    - [FlatAsmgen.v](doc/FlatAsmgen.html) defines the generation of `FlatAsm` programs from `RealAsm` programs.
    - [FlatAsmgenproof.v](doc/FlatAsmgenproof.html) contains the simulation proof for `FlatAsmgen`.
@@ -245,11 +245,11 @@ CompCert MC extends Stack-Aware CompCert with the following phases (all the file
    - [MCgenproof.v](doc/MCgenproof.html) contains the simulation proof for `MCgen`
    - [MCSep.v](doc/MCSep.html) defines the linking operators for `MC` programs and proves separate compilation of `MC` programs.
    
-* The correcntess proof of the compilation chain to MC
+* The correctness proof of the compilation chain to MC
 
-  We have linked the simulation proofs for all the passes to form the correcntess proofs of the compilation chain down to MC. They are the following theorems in [`driver/Compiler.v`](doc/Compiler.html).
+  We have linked the simulation proofs for all the passes to form the correctness proofs of the compilation chain down to MC. They are the following theorems in [`driver/Compiler.v`](doc/Compiler.html).
   
-  - [c_semantic_preservation_mc](doc/Compiler.html#c_semantic_preservation_mc) is the correcntess of compilation of whole programs
+  - [c_semantic_preservation_mc](doc/Compiler.html#c_semantic_preservation_mc) is the correctness of compilation of whole programs
   - [separate_transf_c_program_correct_mc](doc/Compiler.html#separate_transf_c_program_correct_mc) is the correctness of separate compilation
  
 * Generation of RockSalt Asm programs (not verified). This makes use of the RockSalt x86 machine model (in the directory `cpu_models`).
