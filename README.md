@@ -209,7 +209,7 @@ The size of the stack is defined [here](doc/StackADT.html#size_stack). For most 
 
 For Inlining, the stacks are in the [`inline_sizes`](doc/Inliningproof.html#inline_sizes) relation, meaning a number of stages in the source correspond to one frame in the target stack. A [corollary of this relation](doc/Inliningproof.html#inline_sizes_size_stack) is that the target stack is not larger than the source stack.
 
-Similarly for Tailcall recognition: the relation is [`tc_sizes`](doc/Tailcallproof.v#tc_sizes).
+Similarly for Tailcall recognition: the relation is [`tc_sizes`](doc/Tailcallproof.html#tc_sizes).
 
 ### CompCertMC
 
